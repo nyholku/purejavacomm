@@ -86,7 +86,7 @@ public class CommPortIdentifier {
 		synchronized (m_Mutex) {
 			String owner = m_Owners.get(m_PortName);
 			if (owner != null)
-				fireOwnerShiptEvent(CommPortOwnershipListener.PORT_OWNERSHIP_REQUESTED);
+				fireOwnershiptEvent(CommPortOwnershipListener.PORT_OWNERSHIP_REQUESTED);
 			if (isCurrentlyOwned())
 				throw new PortInUseException();
 
@@ -98,7 +98,7 @@ public class CommPortIdentifier {
 				port = new PureJavaSerialPort(m_PortName, timeout);
 			m_OpenPorts.put(port, this);
 			m_Owners.put(this, appname);
-			fireOwnerShiptEvent(CommPortOwnershipListener.PORT_OWNED);
+			fireOwnershiptEvent(CommPortOwnershipListener.PORT_OWNED);
 			return port;
 		}
 	}
@@ -108,7 +108,7 @@ public class CommPortIdentifier {
 		synchronized (m_Mutex) {
 			m_Owners.remove(port.name);
 			CommPortIdentifier portid = m_OpenPorts.remove(port);
-			portid.fireOwnerShiptEvent(CommPortOwnershipListener.PORT_UNOWNED);
+			portid.fireOwnershiptEvent(CommPortOwnershipListener.PORT_UNOWNED);
 		}
 	}
 
@@ -185,7 +185,7 @@ public class CommPortIdentifier {
 		}
 	}
 
-	private void fireOwnerShiptEvent(int type) {
+	private void fireOwnershiptEvent(int type) {
 		synchronized (m_Mutex) {
 			List<CommPortOwnershipListener> list = m_OwnerShipListeners.get(this);
 			if (list == null)
