@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="project" default="buildjar" basedir=".">
+<!-- this does NOT compile the project, instead packages the classes and soources to two jar files-->
+<project name="purejavacomm" default="buildjar" basedir=".">
 	<target name="init">
 	</target>
 	<!-- create .jar -->
