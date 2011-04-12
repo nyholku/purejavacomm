@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="project" default="buildjar" basedir=".">
+	<target name="init">
+	</target>
+	<!-- create .jar -->
+	<target name="buildjar" depends="init">
+	    <delete file="./bin/purejavacomm.jar"/>
+		<jar jarfile="./bin/purejavacomm.jar" basedir="./classes">
+		</jar>
+	</target>
+
+</project>
+
+<!-- end file build.xml -->
