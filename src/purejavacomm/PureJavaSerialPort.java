@@ -132,7 +132,6 @@ public class PureJavaSerialPort extends SerialPort {
 			throw new TooManyListenersException();
 		m_EventListener = eventListener;
 		m_Thread.start();
-
 	}
 
 	@Override
@@ -367,7 +366,6 @@ public class PureJavaSerialPort extends SerialPort {
 
 		mReceiveTimeOutEnabled = true;
 		mReceiveTimeOutValue = value;
-
 	}
 
 	@Override
@@ -407,7 +405,6 @@ public class PureJavaSerialPort extends SerialPort {
 		checkReturnCode(tcsetattr(m_FD, TCSANOW, options));
 
 		m_FlowControlMode = mode;
-
 	}
 
 	@Override
@@ -629,7 +626,6 @@ public class PureJavaSerialPort extends SerialPort {
 					throw new IOException();
 				}
 			}
-
 		};
 	}
 
@@ -757,8 +753,6 @@ public class PureJavaSerialPort extends SerialPort {
 		m_Parity = SerialPort.PARITY_NONE;
 		m_StopBits = SerialPort.STOPBITS_1;
 
-		// FIXME what to do if port is in use or open fails
-
 		Termios termios = new Termios();
 		checkReturnCode(tcgetattr(m_FD, termios));
 		termios.c_cflag |= CLOCAL | CREAD;
@@ -804,7 +798,7 @@ public class PureJavaSerialPort extends SerialPort {
 						int n = 0;
 						if (!read && !write)
 							Thread.sleep(TIMEOUT);
-						else { // do all this only if we actually wait for read or wtite
+						else { // do all this only if we actually wait for read or write
 							if (USE_SELECT) {
 								FD_ZERO(rset);
 								FD_ZERO(wset);
@@ -830,8 +824,6 @@ public class PureJavaSerialPort extends SerialPort {
 									log = log && log(1, "poll() returned POLLNVAL\n");
 									if (log)
 										perror("perror(): ");
-									//close();
-									//break;
 								}
 								read = read && (re & POLLIN) != 0;
 								write = write && (re & POLLOUT) != 0;
