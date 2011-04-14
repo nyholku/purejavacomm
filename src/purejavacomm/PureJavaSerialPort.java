@@ -826,7 +826,6 @@ public class PureJavaSerialPort extends SerialPort {
 								pollfd[0].revents = 0;
 								n = poll(pollfd, 1, TIMEOUT);
 								int re = pollfd[0].revents;
-								System.out.printf("%d %d %04X %04X\n", n, pollfd[0].fd, pollfd[0].events, pollfd[0].revents);
 								if ((re & POLLNVAL) != 0) {
 									log = log && log(1, "poll() returned POLLNVAL\n");
 									if (log)
