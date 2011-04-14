@@ -797,58 +797,65 @@ public class PureJavaSerialPort extends SerialPort {
 				} else
 					pollfd = USE_SELECT ? null : new Pollfd[] { new Pollfd() };
 
-				while (m_FD >= 0) { // lets die if the file descript dies on us ie the port closes
-					boolean read = (m_NotifyOnDataAvailable && !m_DataAvailableNotified);
-					boolean write = (m_NotifyOnOutputEmpty && !m_OutputEmptyNotified);
-					int n;
-					if (USE_SELECT) {
-						FD_ZERO(rset);
-						FD_ZERO(wset);
-						if (read)
-							FD_SET(m_FD, rset);
-						if (write)
-							FD_SET(m_FD, wset);
-						n = select(m_FD + 1, rset, wset, null, timeout);
-						read = read && FD_ISSET(m_FD, rset);
-						write = write && FD_ISSET(m_FD, wset);
-					} else { // use poll
-						pollfd[0].fd = m_FD;
-						short e = 0;
-						if (read)
-							e |= POLLIN;
-						if (write)
-							e |= POLLOUT;
-						pollfd[0].events = e;
-						pollfd[0].revents = 0;
-						n = poll(pollfd, 1, TIMEOUT);
-						int re = pollfd[0].revents;
-						System.out.printf("%d %d %04X %04X\n", n, pollfd[0].fd, pollfd[0].events, pollfd[0].revents);
-						if ((re & POLLNVAL) != 0) {
-							log = log && log(1, "poll() returned POLLNVAL\n");
-							if (log)
-								perror("perror(): ");
-							//close();
-							//break;
+				try {
+					while (m_FD >= 0) { // lets die if the file descript dies on us ie the port closes
+						boolean read = (m_NotifyOnDataAvailable && !m_DataAvailableNotified);
+						boolean write = (m_NotifyOnOutputEmpty && !m_OutputEmptyNotified);
+						int n = 0;
+						if (!read && !write)
+							Thread.sleep(TIMEOUT);
+						else { // do all this only if we actually wait for read or wtite
+							if (USE_SELECT) {
+								FD_ZERO(rset);
+								FD_ZERO(wset);
+								if (read)
+									FD_SET(m_FD, rset);
+								if (write)
+									FD_SET(m_FD, wset);
+								n = select(m_FD + 1, rset, wset, null, timeout);
+								read = read && FD_ISSET(m_FD, rset);
+								write = write && FD_ISSET(m_FD, wset);
+							} else { // use poll
+								pollfd[0].fd = m_FD;
+								short e = 0;
+								if (read)
+									e |= POLLIN;
+								if (write)
+									e |= POLLOUT;
+								pollfd[0].events = e;
+								pollfd[0].revents = 0;
+								n = poll(pollfd, 1, TIMEOUT);
+								int re = pollfd[0].revents;
+								System.out.printf("%d %d %04X %04X\n", n, pollfd[0].fd, pollfd[0].events, pollfd[0].revents);
+								if ((re & POLLNVAL) != 0) {
+									log = log && log(1, "poll() returned POLLNVAL\n");
+									if (log)
+										perror("perror(): ");
+									//close();
+									//break;
+								}
+								read = read && (re & POLLIN) != 0;
+								write = write && (re & POLLOUT) != 0;
+							}
+							if (Thread.currentThread().isInterrupted())
+								break;
+							if (n < 0) {
+								log = log && log(1, "select() or poll() returned %d\n", n);
+								if (log)
+									perror("perror(): ");
+								close();
+								break;
+							}
 						}
-						read = read && (re & POLLIN) != 0;
-						write = write && (re & POLLOUT) != 0;
-					}
-					if (Thread.currentThread().isInterrupted())
-						break;
-					if (n < 0) {
-						log = log && log(1, "select() or poll() returned %d\n", n);
-						if (log)
-							perror("perror(): ");
-						close();
-						break;
-					}
 
-					if (m_EventListener != null) {
-						if (read || write)
-							sendDataEvents(read, write);
-						if (m_NotifyOnCTS || m_NotifyOnDSR || m_NotifyOnRI || m_NotifyOnCD)
-							sendNonDataEvents();
+						if (m_EventListener != null) {
+							if (read || write)
+								sendDataEvents(read, write);
+							if (m_NotifyOnCTS || m_NotifyOnDSR || m_NotifyOnRI || m_NotifyOnCD)
+								sendNonDataEvents();
+						}
 					}
+				} catch (InterruptedException ie) {
 				}
 			}
 		};
