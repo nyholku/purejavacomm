@@ -69,7 +69,13 @@ public class CommPortIdentifier {
 
 	public static CommPortIdentifier getPortIdentifier(String portName) throws NoSuchPortException {
 		synchronized (m_Mutex) {
-			return null; //FIXME
+			Enumeration e = CommPortIdentifier.getPortIdentifiers();
+			while (e.hasMoreElements()) {
+				CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
+				if (portid.getName().equals(portName))
+					return portid;
+			}
+			throw new NoSuchPortException();
 		}
 	}
 
