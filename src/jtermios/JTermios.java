@@ -254,7 +254,7 @@ public class JTermios {
 	}
 
 	static { // INSTANTIATION 
-		JTermiosLogging.setLogLevel(1);
+		JTermiosLogging.setLogLevel(0);
 		int path_max;
 		if (Platform.isMac()) {
 			m_Termios = new jtermios.macosx.JTermiosImpl();
