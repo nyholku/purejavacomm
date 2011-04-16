@@ -871,7 +871,7 @@ public class PureJavaSerialPort extends SerialPort {
 		if (state)
 			status[0] |= line;
 		else
-			status[0] &= line;
+			status[0] &= ~line;
 		if (ioctl(m_FD, TIOCMSET, status) == -1)
 			throw new IllegalStateException();
 	}
