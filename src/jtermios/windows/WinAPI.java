@@ -565,7 +565,7 @@ public class WinAPI {
 	static public boolean GetCommModemStatus(HANDLE hFile, int[] stat) {
 		log = log & log(5, "call GetCommModemStatus, %s\n", lineno());
 		boolean res = m_K32lib.GetCommModemStatus(hFile, stat);
-		log = log & log(4, "GetCommModemStatus(%s,0x%08X) => %s\n", hFile, stat, res);
+		log = log & log(4, "GetCommModemStatus(%s,0x%08X) => %s\n", hFile, stat[0], res);
 		return res;
 	}
 
