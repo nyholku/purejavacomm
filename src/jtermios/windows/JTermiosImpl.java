@@ -242,6 +242,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		Port port = new Port();
 		port.m_OpenFlags = flags;
 		try {
+			if (!filename.startsWith("\\\\"))
+				filename = "\\\\.\\" + filename;
+
 			port.m_Comm = CreateFileW(new WString(filename), GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
 
 			if (INVALID_HANDLE_VALUE == port.m_Comm)
