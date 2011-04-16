@@ -90,11 +90,17 @@ public class CommPortIdentifier {
 
 	public CommPort open(String appname, int timeout) throws PortInUseException {
 		synchronized (m_Mutex) {
+			long t0 = System.currentTimeMillis();
+
 			String owner = m_Owners.get(m_PortName);
 			if (owner != null) {
 				fireOwnershiptEvent(CommPortOwnershipListener.PORT_OWNERSHIP_REQUESTED);
 				try {
-					m_Mutex.wait(5);
+					while (System.currentTimeMillis() - t0 < timeout) {
+						m_Mutex.wait(5);
+						if (!isCurrentlyOwned())
+							break;
+					}
 				} catch (InterruptedException ie) {
 					// can't throw it, can't swallow it, try to propagate it
 					Thread.currentThread().interrupt();
@@ -107,8 +113,8 @@ public class CommPortIdentifier {
 			CommPort port;
 			if (info != null)
 				port = info.m_Driver.getCommPort(m_PortName, info.m_PortType);
-			else
-				port = new PureJavaSerialPort(m_PortName, timeout);
+			else 
+				port = new PureJavaSerialPort(m_PortName, timeout);  // FIXME timeout here is not used
 			m_OpenPorts.put(port, this);
 			m_Owners.put(this, appname);
 			fireOwnershiptEvent(CommPortOwnershipListener.PORT_OWNED);
