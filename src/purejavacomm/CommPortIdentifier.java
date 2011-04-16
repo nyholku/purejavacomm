@@ -42,15 +42,15 @@ import java.util.List;
 public class CommPortIdentifier {
 	public static final int PORT_SERIAL = 1;
 	public static final int PORT_PARALLEL = 2;
-	private static Object m_Mutex = new Object();
-	private String m_PortName;
-	private int m_PortType;
-	private CommPort m_CommPort;
-	private CommDriver m_Driver;
-	private static Hashtable<String, CommPortIdentifier> m_PortIdentifiers = new Hashtable<String, CommPortIdentifier>();
-	private static Hashtable<CommPort, CommPortIdentifier> m_OpenPorts = new Hashtable<CommPort, CommPortIdentifier>();
-	private static Hashtable<CommPortIdentifier, String> m_Owners = new Hashtable<CommPortIdentifier, String>();
-	private Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>> m_OwnerShipListeners = new Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>>();
+	private static volatile Object m_Mutex = new Object();
+	private volatile String m_PortName;
+	private volatile int m_PortType;
+	private volatile CommPort m_CommPort;
+	private volatile CommDriver m_Driver;
+	private volatile static Hashtable<String, CommPortIdentifier> m_PortIdentifiers = new Hashtable<String, CommPortIdentifier>();
+	private volatile static Hashtable<CommPort, CommPortIdentifier> m_OpenPorts = new Hashtable<CommPort, CommPortIdentifier>();
+	private volatile static Hashtable<CommPortIdentifier, String> m_Owners = new Hashtable<CommPortIdentifier, String>();
+	private volatile Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>> m_OwnerShipListeners = new Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>>();
 
 	/**
 	 * This has not been tested at all
@@ -91,8 +91,15 @@ public class CommPortIdentifier {
 	public CommPort open(String appname, int timeout) throws PortInUseException {
 		synchronized (m_Mutex) {
 			String owner = m_Owners.get(m_PortName);
-			if (owner != null)
+			if (owner != null) {
 				fireOwnershiptEvent(CommPortOwnershipListener.PORT_OWNERSHIP_REQUESTED);
+				try {
+					m_Mutex.wait(5);
+				} catch (InterruptedException ie) {
+					// can't throw it, can't swallow it, try to propagate it
+					Thread.currentThread().interrupt();
+				}
+			}
 			if (isCurrentlyOwned())
 				throw new PortInUseException();
 
