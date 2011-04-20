@@ -58,7 +58,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static String DEVICE_DIR_PATH = "/dev/";
 	static MacOSX_C_lib m_Clib = (MacOSX_C_lib) Native.loadLibrary("c", MacOSX_C_lib.class);
 
-	public interface MacOSX_C_lib extends Library {
+	public interface MacOSX_C_lib extends com.sun.jna.Library {
 
 		public int tcdrain(int fd);
 

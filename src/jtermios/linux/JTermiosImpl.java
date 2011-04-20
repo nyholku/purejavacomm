@@ -58,7 +58,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static String DEVICE_DIR_PATH = "/dev/";
 	static Linux_C_lib m_Clib = (Linux_C_lib) Native.loadLibrary("c", Linux_C_lib.class);
 
-	public interface Linux_C_lib extends Library {
+	public interface Linux_C_lib extends com.sun.jna.Library {
 
 		public int tcdrain(int fd);
 
