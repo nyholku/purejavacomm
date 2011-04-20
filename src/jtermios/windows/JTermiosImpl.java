@@ -663,10 +663,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int select(int n, FDSet readfds, FDSet writefds, FDSet exceptfds, TimeVal timeout) {
-		LinkedList<Port> locked = new LinkedList();
+		LinkedList<Port> locked = new LinkedList<Port>();
 		try {
 			try {
-				LinkedList<Port> waiting = new LinkedList();
+				LinkedList<Port> waiting = new LinkedList<Port>();
 				int ready = 0;
 				for (int fd = 0; fd < n; fd++) {
 					boolean rd = FD_ISSET(fd, readfds);
