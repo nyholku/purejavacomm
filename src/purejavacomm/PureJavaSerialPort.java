@@ -634,6 +634,7 @@ public class PureJavaSerialPort extends SerialPort {
 		return new InputStream() {
 			private TimeVal m_TimeOut = new TimeVal();
 			private int[] m_Available = { 0 };
+			private byte[] m_Buffer = new byte[2048];
 
 			@Override
 			public int available() throws IOException {
@@ -659,7 +660,15 @@ public class PureJavaSerialPort extends SerialPort {
 			@Override
 			public int read(byte[] b, int off, int len) throws IOException {
 				checkState();
-				int n = jtermios.JTermios.read(m_FD, b, len);
+				int n;
+				if (off > 0) {
+					if (len > m_Buffer.length)
+						len = m_Buffer.length;
+					n = jtermios.JTermios.read(m_FD, m_Buffer, len);
+					if (n > 0)
+						System.arraycopy(m_Buffer, 0, b, off, n);
+				} else
+					n = jtermios.JTermios.read(m_FD, b, len);
 				m_DataAvailableNotified = false;
 				return n;
 			}
