@@ -33,6 +33,7 @@ package purejavacomm.testsuite;
 import java.io.InputStream;
 
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Random;
 
@@ -44,7 +45,7 @@ import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class TestSuite {
-	private volatile String m_TestPortName="ttyUSB0";
+	private volatile String m_TestPortName = "cu.usbserial-FTOXM3NX";
 	private volatile SerialPort m_Port;
 	private volatile Random rnd = new Random();
 	private volatile byte[] m_ReceiveBuffer = new byte[10000];
@@ -56,10 +57,6 @@ public class TestSuite {
 	private volatile int m_RxCount = 0;
 	private volatile int m_ErrorCount = 0;
 	private volatile boolean m_Stop;
-
-	private void start(String name, String desc) {
-		System.out.println("Starting test: '" + name + "' -- " + desc);
-	}
 
 	private void openPort() throws Exception {
 		m_TxCount = 0;
@@ -74,10 +71,10 @@ public class TestSuite {
 				break;
 		}
 		if (portid != null) {
-			System.out.printf("Openin port '%s'\n", portid.getName());
+			System.out.printf("-openin port '%s'\n", portid.getName());
 			m_Port = (SerialPort) portid.open("PureJavaCommTestSuite", 1000);
 		} else
-			System.out.printf("Could no open port '%s'\n", m_TestPortName);
+			System.out.printf("-could no open port '%s'\n", m_TestPortName);
 	}
 
 	private void closePort() {
@@ -147,6 +144,8 @@ public class TestSuite {
 	 */
 	void test_loopbackWithEventListener() {
 		try {
+			//jtermios.JTermios.JTermiosLogging.setLogLevel(4);
+
 			openPort();
 			System.out.print("test_loopbackWithEventListener starting\n");
 			m_Port.notifyOnDataAvailable(true);
@@ -154,6 +153,7 @@ public class TestSuite {
 			m_Port.setFlowControlMode(SerialPort.FLOWCONTROL_XONXOFF_IN + SerialPort.FLOWCONTROL_XONXOFF_OUT);
 			final OutputStream outs = m_Port.getOutputStream();
 			final InputStream ins = m_Port.getInputStream();
+			drain(ins);
 			final boolean[] stop = { false };
 			m_T0 = System.currentTimeMillis();
 			m_Port.addEventListener(new SerialPortEventListener() {
@@ -182,7 +182,7 @@ public class TestSuite {
 			while (!m_Stop) {
 				try {
 					Thread.sleep(1000);
-					System.out.printf("test progress so far: %d messages %d failed\n", m_RxCount, m_ErrorCount);
+					System.out.printf("-test progress so far: %d messages %d failed\n", m_RxCount, m_ErrorCount);
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -206,7 +206,62 @@ public class TestSuite {
 
 	}
 
+	private void drain(InputStream ins) throws Exception {
+		Thread.sleep(100);
+		int n;
+		while ((n = ins.available()) > 0) {
+			System.out.printf("-draining %d bytes\n", n);
+			for (int i = 0; i < n; ++i)
+				ins.read();
+			Thread.sleep(100);
+		}
+	}
+
+	private void test_all_ascii() {
+		try {
+			System.out.print("test_all_ascii starting\n");
+			openPort();
+			//m_Port.notifyOnDataAvailable(true);
+			//m_Port.notifyOnOutputEmpty(true);
+			//m_Port.setFlowControlMode(SerialPort.FLOWCONTROL_XONXOFF_IN + SerialPort.FLOWCONTROL_XONXOFF_OUT);
+			byte[] sent = new byte[256];
+			for (int i = 0; i < 256; i++)
+				sent[i] = (byte) i;
+			//byte[] sent = "ABCDEFG".getBytes();
+			byte[] rcvd = new byte[sent.length];
+			m_Port.enableReceiveTimeout(1000);
+			OutputStream outs = m_Port.getOutputStream();
+			InputStream ins = m_Port.getInputStream();
+
+			drain(ins);
+
+			outs.write(sent);
+
+			System.out.printf("- sent:");
+			for (int i = 0; i < sent.length; i++)
+				System.out.printf(" %02X", 0xFF & sent[i]);
+			System.out.println();
+
+			Thread.sleep(100);
+
+			int n = ins.read(rcvd);
+
+			System.out.printf("- rcvd:");
+			for (int i = 0; i < n; i++)
+				System.out.printf(" %02X", 0xFF & rcvd[i]);
+			System.out.println();
+
+			System.out.printf("test_all_ascii completed %s\n", Arrays.equals(sent, rcvd) ? "OK" : "FAIL");
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			closePort();
+		}
+
+	}
+
 	private void run() {
+		test_all_ascii();
 		test_loopbackWithEventListener();
 	}
 
