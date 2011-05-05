@@ -53,8 +53,10 @@ public class PureJavaSerialPort extends SerialPort {
 	private volatile int m_Parity;
 	private volatile int m_StopBits;
 
-	private volatile boolean mReceiveTimeOutEnabled;
-	private volatile int mReceiveTimeOutValue;
+	private volatile boolean m_ReceiveTimeOutEnabled;
+	private volatile int m_ReceiveTimeOutValue;
+	private volatile boolean m_ReceiveThresholdEnabled;
+	private volatile int m_ReceiveThresholdValue;
 
 	private volatile boolean m_NotifyOnDataAvailable;
 	private volatile boolean m_DataAvailableNotified;
@@ -306,21 +308,15 @@ public class PureJavaSerialPort extends SerialPort {
 	@Override
 	synchronized public void disableReceiveThreshold() {
 		checkState();
-		// Not supported
+		m_ReceiveThresholdEnabled = false;
+		setReceiveTimeout();
 	}
 
 	@Override
 	synchronized public void disableReceiveTimeout() {
 		checkState();
-		Termios termios = new Termios();
-		mReceiveTimeOutEnabled = false;
-		checkReturnCode(tcgetattr(m_FD, termios));
-
-		// what about setting blocking mode
-		termios.c_cc[VMIN] = 1;
-		termios.c_cc[VTIME] = 0;
-
-		checkReturnCode(tcsetattr(m_FD, TCSANOW, termios));
+		m_ReceiveTimeOutEnabled = false;
+		setReceiveTimeout();
 	}
 
 	@Override
@@ -330,9 +326,14 @@ public class PureJavaSerialPort extends SerialPort {
 	}
 
 	@Override
-	synchronized public void enableReceiveThreshold(int arg0) throws UnsupportedCommOperationException {
+	synchronized public void enableReceiveThreshold(int value) throws UnsupportedCommOperationException {
 		checkState();
-		throw new UnsupportedCommOperationException();
+		if (value > 255 || value < 0)
+			throw new UnsupportedCommOperationException();
+
+		m_ReceiveThresholdEnabled = true;
+		m_ReceiveThresholdValue = value;
+		setReceiveTimeout();
 	}
 
 	@Override
@@ -355,17 +356,9 @@ public class PureJavaSerialPort extends SerialPort {
 		if (value / 100 > 255)
 			throw new UnsupportedCommOperationException();
 
-		Termios termios = new Termios();
-
-		checkReturnCode(tcgetattr(m_FD, termios));
-
-		termios.c_cc[VMIN] = 0;
-		termios.c_cc[VTIME] = (byte) (value / 100);
-
-		checkReturnCode(tcsetattr(m_FD, TCSANOW, termios));
-
-		mReceiveTimeOutEnabled = true;
-		mReceiveTimeOutValue = value;
+		m_ReceiveTimeOutEnabled = true;
+		m_ReceiveTimeOutValue = value;
+		setReceiveTimeout();
 	}
 
 	@Override
@@ -692,7 +685,7 @@ public class PureJavaSerialPort extends SerialPort {
 	@Override
 	synchronized public int getReceiveTimeout() {
 		checkState();
-		return mReceiveTimeOutValue;
+		return m_ReceiveTimeOutValue;
 	}
 
 	@Override
@@ -712,7 +705,7 @@ public class PureJavaSerialPort extends SerialPort {
 	@Override
 	synchronized public boolean isReceiveTimeoutEnabled() {
 		checkState();
-		return mReceiveTimeOutEnabled;
+		return m_ReceiveTimeOutEnabled;
 	}
 
 	@Override
@@ -801,7 +794,7 @@ public class PureJavaSerialPort extends SerialPort {
 					pollfd = USE_SELECT ? null : new Pollfd[] { new Pollfd() };
 
 				try {
-					while (m_FD >= 0) { // lets die if the file descript dies on us ie the port closes
+					while (m_FD >= 0) { // lets die if the file descriptor dies on us ie the port closes
 						boolean read = (m_NotifyOnDataAvailable && !m_DataAvailableNotified);
 						boolean write = (m_NotifyOnOutputEmpty && !m_OutputEmptyNotified);
 						int n = 0;
@@ -883,6 +876,19 @@ public class PureJavaSerialPort extends SerialPort {
 			status[0] &= ~line;
 		if (ioctl(m_FD, TIOCMSET, status) == -1)
 			throw new IllegalStateException();
+	}
+
+	private void setReceiveTimeout() {
+
+		Termios termios = new Termios();
+
+		checkReturnCode(tcgetattr(m_FD, termios));
+
+		termios.c_cc[VMIN] = m_ReceiveThresholdEnabled ? (byte) m_ReceiveThresholdValue : 0;
+		termios.c_cc[VTIME] = m_ReceiveTimeOutEnabled ? (byte) (m_ReceiveTimeOutValue / 100) : 0;
+
+		checkReturnCode(tcsetattr(m_FD, TCSANOW, termios));
+
 	}
 
 	private void checkState() {
