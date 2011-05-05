@@ -956,7 +956,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				LinkedList<String> list = new LinkedList<String>();
 				int offset = 0;
 				String port;
-				while (!(port = getString(buffer, offset)).isEmpty()) {
+				while ((port = getString(buffer, offset)).length()>0) {
 					if (port.startsWith("COM"))
 						list.add(port);
 
