@@ -30,6 +30,7 @@
 
 package purejavacomm.testsuite;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import java.io.OutputStream;
@@ -56,13 +57,19 @@ public class TestSuite {
 	private volatile int m_TxCount = 0;
 	private volatile int m_RxCount = 0;
 	private volatile int m_ErrorCount = 0;
-	private volatile boolean m_Stop;
+	private volatile OutputStream m_Out;
+	private volatile InputStream m_In;
+	private volatile boolean m_Done;
+	private volatile boolean m_OK;
+	private volatile String m_Message;
 
 	private void openPort() throws Exception {
 		m_TxCount = 0;
 		m_BytesReceived = 0;
 		m_RxCount = 0;
 		m_ErrorCount = 0;
+		m_Done = false;
+		m_OK = false;
 		CommPortIdentifier portid = null;
 		Enumeration e = CommPortIdentifier.getPortIdentifiers();
 		while (e.hasMoreElements()) {
@@ -73,6 +80,9 @@ public class TestSuite {
 		if (portid != null) {
 			System.out.printf("-openin port '%s'\n", portid.getName());
 			m_Port = (SerialPort) portid.open("PureJavaCommTestSuite", 1000);
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
+			drain(m_In);
 		} else
 			System.out.printf("-could no open port '%s'\n", m_TestPortName);
 	}
@@ -142,7 +152,7 @@ public class TestSuite {
 	 * Sending LF terminated random ASCII (32..95) messages with check sum and
 	 * receiving them via a loopback cable.
 	 */
-	void test_loopbackWithEventListener() {
+	void test_loopbackWithEventListener() throws Exception {
 		try {
 			//jtermios.JTermios.JTermiosLogging.setLogLevel(4);
 
@@ -151,26 +161,28 @@ public class TestSuite {
 			m_Port.notifyOnDataAvailable(true);
 			m_Port.notifyOnOutputEmpty(true);
 			m_Port.setFlowControlMode(SerialPort.FLOWCONTROL_XONXOFF_IN + SerialPort.FLOWCONTROL_XONXOFF_OUT);
-			final OutputStream outs = m_Port.getOutputStream();
-			final InputStream ins = m_Port.getInputStream();
-			drain(ins);
+			drain(m_In);
 			final boolean[] stop = { false };
 			m_T0 = System.currentTimeMillis();
 			m_Port.addEventListener(new SerialPortEventListener() {
 				public void serialEvent(SerialPortEvent event) {
 					try {
 						if (event.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-							byte[] buffer = new byte[ins.available()];
-							int n = ins.read(buffer);
-							m_TotalReceived += n;
-							processBuffer(buffer, n);
-							if (m_RxCount++ >= 1000) {
-								m_Stop = true;
+							byte[] buffer = new byte[m_In.available()];
+							int n = m_In.read(buffer);
+							if (!m_Done) {
+								m_TotalReceived += n;
+								processBuffer(buffer, n);
+								if (m_RxCount++ >= 1000) {
+									m_Done = true;
+								}
 							}
 						}
 						if (event.getEventType() == SerialPortEvent.OUTPUT_BUFFER_EMPTY) {
-							byte[] buffer = generateRandomMessage();
-							outs.write(buffer, 0, buffer.length);
+							if (!m_Done) {
+								byte[] buffer = generateRandomMessage();
+								m_Out.write(buffer, 0, buffer.length);
+							}
 						}
 
 					} catch (Exception e) {
@@ -179,7 +191,7 @@ public class TestSuite {
 				}
 			});
 			//outs.write("huuhaa".getBytes(),0,6);
-			while (!m_Stop) {
+			while (!m_Done) {
 				try {
 					Thread.sleep(1000);
 					System.out.printf("-test progress so far: %d messages %d failed\n", m_RxCount, m_ErrorCount);
@@ -188,7 +200,8 @@ public class TestSuite {
 				}
 			}
 			m_T1 = System.currentTimeMillis();
-			System.out.printf("test_loopbackWithEventListener completed: %s %s\n", (m_ErrorCount == 0) ? "OK" : "FAILED", m_ErrorCount > 0 ? "" + m_ErrorCount + " of " + m_RxCount + " messages failed" : "");
+			m_OK = m_ErrorCount == 0;
+			System.out.printf("test_loopbackWithEventListener completed: %s %s\n", m_OK ? "OK" : "FAILED", m_ErrorCount > 0 ? "" + m_ErrorCount + " of " + m_RxCount + " messages failed" : "");
 
 			int cs = m_Port.getDataBits() + 2;
 			System.out.printf("avarage speed %1.0f b/sec at baud rate %d\n", m_TotalReceived * cs * 1000.0 / (m_T1 - m_T0), m_Port.getBaudRate());
@@ -198,8 +211,7 @@ public class TestSuite {
 				ex.printStackTrace();
 			}
 
-		} catch (Exception e) {
-			e.printStackTrace();
+			drain(m_In);
 		} finally {
 			closePort();
 		}
@@ -217,7 +229,7 @@ public class TestSuite {
 		}
 	}
 
-	private void test_all_ascii() {
+	private void test_all_ascii() throws Exception {
 		try {
 			System.out.print("test_all_ascii starting\n");
 			openPort();
@@ -230,12 +242,12 @@ public class TestSuite {
 			//byte[] sent = "ABCDEFG".getBytes();
 			byte[] rcvd = new byte[sent.length];
 			m_Port.enableReceiveTimeout(1000);
-			OutputStream outs = m_Port.getOutputStream();
-			InputStream ins = m_Port.getInputStream();
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
 
-			drain(ins);
+			drain(m_In);
 
-			outs.write(sent);
+			m_Out.write(sent);
 
 			System.out.printf("- sent:");
 			for (int i = 0; i < sent.length; i++)
@@ -244,16 +256,264 @@ public class TestSuite {
 
 			Thread.sleep(100);
 
-			int n = ins.read(rcvd);
+			int n = m_In.read(rcvd);
 
 			System.out.printf("- rcvd:");
 			for (int i = 0; i < n; i++)
 				System.out.printf(" %02X", 0xFF & rcvd[i]);
 			System.out.println();
 
-			System.out.printf("test_all_ascii completed %s\n", Arrays.equals(sent, rcvd) ? "OK" : "FAIL");
-		} catch (Exception e) {
-			e.printStackTrace();
+			m_OK = Arrays.equals(sent, rcvd);
+			System.out.printf("test_all_ascii completed %s\n", m_OK ? "OK" : "FAIL");
+		} finally {
+			closePort();
+		}
+
+	}
+
+	private void sleep(int t) throws InterruptedException {
+		Thread.sleep(t);
+	}
+
+	private void waitStep(int[] txstep, int[] rxstep) throws InterruptedException {
+		while (txstep[0] == rxstep[0]) {
+			sleep(100);
+		}
+		txstep[0] = rxstep[0];
+	}
+
+	private volatile boolean m_SyncSema4 = false;
+
+	private synchronized void sync() throws InterruptedException {
+		if (m_SyncSema4) {
+			m_SyncSema4 = false;
+			notify();
+		} else {
+			m_SyncSema4 = true;
+			wait();
+		}
+	}
+
+	private void test_blocking_heaviour() throws Exception {
+		try {
+			System.out.print("test_blocking_heaviour starting\n");
+			openPort();
+
+			final int[] rxstep = { 1 };
+			final int[] txstep = { 1 };
+
+			// receiving thread
+			Thread receiver = new Thread(new Runnable() {
+				public void run() {
+					try {
+						{
+							sync();
+							// step 1: read a char, which should block for more than 10 seconds
+							long T0 = System.currentTimeMillis();
+							System.out.println("-rcve: waiting for a byte");
+							byte[] b = { 0 };
+							int n = m_In.read(b);
+							long dT = System.currentTimeMillis() - T0;
+							if (n != 1) {
+								System.out.println("-did not block, read returned " + n);
+								return;
+							}
+							if (b[0] != 73) {
+								System.out.println("-did not get looped back '73' got '" + b[0] + "'");
+								return;
+							}
+							if (dT < 10000) {
+								System.out.println("-did not block for 10000 msec, received loopback in " + dT + " msec");
+								return;
+							}
+							System.out.println("-check 1 ok, blocks by default ");
+						}
+
+						{
+							sync();
+							// step 2: check that the timeout works
+							m_Port.enableReceiveThreshold(0);
+							m_Port.enableReceiveTimeout(1000);
+							long T0 = System.currentTimeMillis();
+							byte[] b = { 0 };
+							System.out.println("-rcve: waiting for timeout");
+							int n = m_In.read(b);
+							long dT = System.currentTimeMillis() - T0;
+							if (n != 0) {
+								System.out.println("-did not time out as expected, read returned " + n);
+								return;
+							}
+							if (dT < 1000) {
+								System.out.println("-timed out early, expected 1000 msec, got  " + dT + " msec");
+								return;
+							}
+							if (dT > 1010) {
+								System.out.println("-timed out with suspicious delay, expected 1000 msec, got  " + dT + " msec");
+							}
+							System.out.println("-check 2 ok, times out as expected ");
+
+						}
+
+						{
+							sync();
+							// step 3: check that the timeout + threshold works
+							m_Port.enableReceiveThreshold(4);
+							m_Port.enableReceiveTimeout(1000);
+							long T0 = System.currentTimeMillis();
+							byte[] b = new byte[8];
+							System.out.println("-rcve: waiting for 4 bytes");
+							int n = m_In.read(b);
+							long dT = System.currentTimeMillis() - T0;
+							if (n != 4) {
+								System.out.println("-did not get 4 bytes as expected, read returned " + n);
+								return;
+							}
+							if (dT >= 1000) {
+								System.out.println("-timed out though we got 4 bytes");
+							}
+							System.out.println("-check 3 ok, got 4 bytes within timeout");
+
+						}
+						{
+							sync();
+							// step 4: check that the threshold works
+							m_Port.enableReceiveThreshold(7);
+							m_Port.disableReceiveTimeout();
+							long T0 = System.currentTimeMillis();
+							byte[] b = new byte[8];
+							System.out.println("-rcve: waiting for 7 bytes");
+							int n = m_In.read(b);
+							long dT = System.currentTimeMillis() - T0;
+							if (n != 7) {
+								System.out.println("-did not get 7 bytes as expected, read returned " + n);
+								return;
+							}
+							if (dT < 10000) {
+								System.out.println("-timed out though we got 4 bytes");
+							}
+							System.out.println("-check 3 ok, got 4 bytes within timeout");
+
+						}
+						m_OK = true;
+
+					} catch (InterruptedException e) {
+
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						m_Done = true;
+					}
+				};
+			});
+
+			// sending thread
+			Thread transmitter = new Thread(new Runnable() {
+				public void run() {
+					try {
+						{
+							sync();
+							// step 1: wait 10 seconds and the send one char
+							System.out.println("-send: wait 10000 msec");
+							sleep(10000);
+							System.out.println("-send: send '73'");
+							m_Out.write(73);
+						}
+
+						{// step 2: 
+							sync();
+							System.out.println("-send: not sending anything");
+						}
+
+						{// step 3:
+							sync();
+							System.out.println("-send: send 4 bytes");
+							m_Out.write(new byte[4]);
+						}
+						{
+							sync();
+							// step 4:
+							System.out.println("-send: wait 10000 msec");
+							sleep(10000);
+							System.out.println("-send: send 7 bytes");
+							m_Out.write(new byte[7]);
+						}
+
+					} catch (InterruptedException e) {
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						m_Done = true;
+					}
+				};
+			});
+
+			receiver.start();
+			transmitter.start();
+
+			while (!m_Done) {
+				sleep(100);
+			}
+			receiver.interrupt();
+			transmitter.interrupt();
+
+			System.out.printf("test_blocking_heaviour completed %s\n", m_OK ? "OK" : "FAIL");
+		} finally {
+			closePort();
+		}
+
+	}
+
+	private void test_control_lines() throws Exception {
+
+		try {
+			openPort();
+			System.out.print("test_control_lines starting\n");
+			m_Port.setRTS(false);
+			m_Port.setDTR(false);
+
+			m_Port.notifyOnCTS(true);
+			m_Port.notifyOnRingIndicator(true);
+			m_Port.notifyOnCarrierDetect(true);
+			m_Port.notifyOnDSR(true);
+			final int[] counts = new int[11];
+			m_Port.addEventListener(new SerialPortEventListener() {
+				public void serialEvent(SerialPortEvent event) {
+					try {
+						if (event.getEventType() == SerialPortEvent.CTS)
+							counts[SerialPortEvent.CTS]++;
+						if (event.getEventType() == SerialPortEvent.RI)
+							counts[SerialPortEvent.RI]++;
+						if (event.getEventType() == SerialPortEvent.CD)
+							counts[SerialPortEvent.CD]++;
+						if (event.getEventType() == SerialPortEvent.DSR)
+							counts[SerialPortEvent.DSR]++;
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			try {
+				for (int i = 0; i < 128; i++) {
+					m_Port.setRTS((i & 1) != 0);
+					m_Port.setDTR((i & 2) != 0);
+					Thread.sleep(10);
+				}
+				m_OK = true;
+				if (m_OK &= (counts[SerialPortEvent.CTS] != 127))
+					System.out.printf("- CTS loopback fail, expected 127 got " + counts[SerialPortEvent.CTS]);
+				if (m_OK &= (counts[SerialPortEvent.CTS] != 63))
+					System.out.printf("- DSR loopback fail, expected 63 got " + counts[SerialPortEvent.DSR]);
+				if (m_OK &= (counts[SerialPortEvent.CTS] != 127))
+					System.out.printf("- RI loopback fail, expected 127 got " + counts[SerialPortEvent.RI]);
+				if (m_OK &= (counts[SerialPortEvent.CD] != 63))
+					System.out.printf("- CTS loopback fail, expected 63 got " + counts[SerialPortEvent.CD]);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			m_T1 = System.currentTimeMillis();
+			m_OK = m_ErrorCount == 0;
+			System.out.printf("test_control_lines completed: %s\n", m_OK ? "OK" : "FAILED");
+
 		} finally {
 			closePort();
 		}
@@ -261,8 +521,14 @@ public class TestSuite {
 	}
 
 	private void run() {
-		test_all_ascii();
-		test_loopbackWithEventListener();
+		try {
+			test_control_lines();
+			//test_blocking_heaviour();
+			//test_all_ascii();
+			//test_loopbackWithEventListener();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void main(String[] args) {
