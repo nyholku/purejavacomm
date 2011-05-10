@@ -27,39 +27,59 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm.testsuite;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Random;
-
-import com.sun.jna.Native;
-
-import purejavacomm.CommPortIdentifier;
-import purejavacomm.SerialPort;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
-public class TestSuite {
-	public static void main(String[] args) {
-		Native.setProtected(true);
-		TestBase.init(args);
+public class Test1 extends TestBase {
+	static void run() throws Exception {
+
 		try {
-			System.out.println("PureJavaComm Test Suite");
-			Test1.run();
-			Test2.run();
-			Test3.run();
-			Test4.run();
-			System.out.println("All tests passed OKs.");
-		} catch (TestBase.TestFailedException e) {
-			System.out.println("Test failure");
-		} catch (Exception e) {
-			e.printStackTrace();
+			begin("Test1 - control lines ");
+			openPort();
+			m_Port.setRTS(false);
+			m_Port.setDTR(false);
+
+			m_Port.notifyOnCTS(true);
+			m_Port.notifyOnRingIndicator(true);
+			m_Port.notifyOnCarrierDetect(true);
+			m_Port.notifyOnDSR(true);
+			final int[] counts = new int[11];
+			m_Port.addEventListener(new SerialPortEventListener() {
+				public void serialEvent(SerialPortEvent event) {
+					try {
+						if (event.getEventType() == SerialPortEvent.CTS)
+							counts[SerialPortEvent.CTS]++;
+						if (event.getEventType() == SerialPortEvent.RI)
+							counts[SerialPortEvent.RI]++;
+						if (event.getEventType() == SerialPortEvent.CD)
+							counts[SerialPortEvent.CD]++;
+						if (event.getEventType() == SerialPortEvent.DSR)
+							counts[SerialPortEvent.DSR]++;
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			int N = 128;
+			for (int i = 0; i < N; i++) {
+				m_Port.setRTS((i & 1) != 0);
+				m_Port.setDTR((i & 2) != 0);
+				sleep(10);
+			}
+			if (counts[SerialPortEvent.CTS] != N - 1)
+				fail("CTS loopback failed, expected %d toggles, got %d", N - 1, counts[SerialPortEvent.CTS]);
+			if (counts[SerialPortEvent.DSR] != N / 2 - 1)
+				fail("DSR loopback failed, expected %d toggles, got %d", N / 2 - 1, counts[SerialPortEvent.DSR]);
+			if (counts[SerialPortEvent.RI] != N - 1)
+				fail("RI loopback failed, expected %d toggles, got %d", N-1, counts[SerialPortEvent.RI]);
+			if (counts[SerialPortEvent.CD] != N / 2 - 1)
+				fail("CTS loopback failed, expected %d toggles, got %d", N / 2 - 1, counts[SerialPortEvent.CD]);
+			finishedOK();
+		} finally {
+			closePort();
 		}
+
 	}
 }

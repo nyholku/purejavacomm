@@ -27,39 +27,42 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm.testsuite;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Random;
 
-import com.sun.jna.Native;
-
-import purejavacomm.CommPortIdentifier;
-import purejavacomm.SerialPort;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
-public class TestSuite {
-	public static void main(String[] args) {
-		Native.setProtected(true);
-		TestBase.init(args);
+public class Test3 extends TestBase {
+	static void run() throws Exception {
 		try {
-			System.out.println("PureJavaComm Test Suite");
-			Test1.run();
-			Test2.run();
-			Test3.run();
-			Test4.run();
-			System.out.println("All tests passed OKs.");
-		} catch (TestBase.TestFailedException e) {
-			System.out.println("Test failure");
-		} catch (Exception e) {
-			e.printStackTrace();
+			begin("Test3 - transmit all characters");
+			openPort();
+			byte[] sent = new byte[256];
+			byte[] rcvd = new byte[256];
+			for (int i = 0; i < 256; i++)
+				sent[i] = (byte) i;
+			m_Port.enableReceiveTimeout(1000);
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
+			m_Out.write(sent);
+
+			sleep(500);
+
+			int n = m_In.read(rcvd);
+
+			for (int i = 0; i < 256; ++i) {
+				if (sent[i] != rcvd[i])
+					fail("failed to transmit/receive char '%d'", i);
+			}
+			if (n < 256)
+				fail("did not receive all 256 chars, got %d", n);
+
+			finishedOK();
+		} finally {
+			closePort();
 		}
+
 	}
 }
