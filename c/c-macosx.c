@@ -26,6 +26,7 @@ main(){
 	printf("F_SETFL = 0x%08X;\n",F_SETFL);
 
 	printf("// errno.h stuff\n");
+	printf("EAGAIN = %d;\n",EAGAIN);
 	printf("EBADF = %d;\n",EBADF);
 	printf("EACCES= %d;\n",EINVAL);
 	printf("EEXIST= %d;\n",EEXIST);
