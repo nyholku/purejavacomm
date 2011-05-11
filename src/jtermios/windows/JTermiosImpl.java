@@ -307,6 +307,14 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		return cs;
 	}
 
+	private static int min(int a, int b) {
+		return a<b?a:b;
+	}
+	
+	private static int max(int a, int b) {
+		return a>b?a:b;
+	}
+	
 	public int read(int fd, byte[] buffer, int length) {
 		Port port = getPort(fd);
 		if (port == null)
@@ -321,41 +329,31 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 					return 0;
 				int error;
 
-				int vtime = port.m_Termios.c_cc[VTIME] * 100; // in msec
-
 				if ((port.m_OpenFlags & O_NONBLOCK) != 0) {
-
-					// We do this because if there is less than 'length' bytes
-					// coming our way then the WaitForSingleObject will timeout
-					// and we will fail and not any bytes, where as the logical
-					// and correction operation is to return those bytes
-					// Loop here until timeout or we have received what we need
-					long start = System.currentTimeMillis();
-					int[] errp = { 0 };
-					int left = length;
-					while (left > 0) {
-						if (!ClearCommError(port.m_Comm, port.m_RdErr, port.m_RdStat))
-							port.fail();
-						long now = System.currentTimeMillis();
-						if (vtime != 0 && now - start >= vtime) {
-							// timeout, so break the wait loop
-							length = port.m_RdStat.cbInQue; // now we should be able to read
-							// as much as there is in
-							// the queue
-							break;
-						}
-						left = length - port.m_RdStat.cbInQue;
-						if (left > 0) {
-							// following assumes c_ispeed is baudrate not some wierd constant
-							int baud = port.m_Termios.c_ispeed;
-							if (baud <= 0)
-								baud = 9600; // default to something, so we don't get div by zero or negative wait
-							long wait = 1000000000L * left * getCharBits(port.m_Termios) / baud;
-							nanoSleep(wait); // usec
-						}
-
+					if (!ClearCommError(port.m_Comm, port.m_RdErr, port.m_RdStat))
+						port.fail();
+					int available=port.m_RdStat.cbInQue;
+					if (available==0) {
+						m_ErrNo=EAGAIN;
+						return -1;
 					}
-				}
+					length= min(length,available);
+				} else {
+					int vtime = port.m_Termios.c_cc[VTIME];
+					int vmin = port.m_Termios.c_cc[VMIN];
+
+					if (!ClearCommError(port.m_Comm, port.m_RdErr, port.m_RdStat))
+						port.fail();
+					int available=port.m_RdStat.cbInQue;
+					
+					if (vmin == 0 && vtime == 0) {
+						if (available==0)
+							return 0;
+						length= min(length,available);
+					}
+					if (vmin > 0) 
+						length=min(max(vmin,available),length);
+					}
 
 				if (!ResetEvent(port.m_RdOVL.hEvent))
 					port.fail();
@@ -363,14 +361,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				if (!ReadFile(port.m_Comm, port.m_RdBuffer, length, port.m_RdN, port.m_RdOVL)) {
 					if (GetLastError() != ERROR_IO_PENDING)
 						port.fail();
-					if (WaitForSingleObject(port.m_RdOVL.hEvent, vtime != 0 ? vtime : INFINITE) != WAIT_OBJECT_0)
+					if (WaitForSingleObject(port.m_RdOVL.hEvent, INFINITE)!= WAIT_OBJECT_0)
 						port.fail();
-					if (!GetOverlappedResult(port.m_Comm, port.m_RdOVL, port.m_RdN, vtime == 0))
+					if (!GetOverlappedResult(port.m_Comm, port.m_RdOVL, port.m_RdN, true))
 						port.fail();
 				}
 
-				int btsn = port.m_RdN[0];
-				port.m_RdBuffer.read(0, buffer, 0, btsn);
+				port.m_RdBuffer.read(0, buffer, 0, port.m_RdN[0]);
 				return port.m_RdN[0];
 			} catch (Fail ie) {
 				return -1;
@@ -393,37 +390,32 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						length = room;
 				}
 
-				int[] np = { 0 };
 				int old_flag;
 
 				if (!ResetEvent(port.m_WrOVL.hEvent))
 					port.fail();
 
 				port.m_WrBuffer.write(0, buffer, 0, length); // copy from buffer to Memory
-				boolean ok = WriteFile(port.m_Comm, port.m_WrBuffer, length, np, port.m_WrOVL);
-				int btsn = np[0];
+				boolean ok = WriteFile(port.m_Comm, port.m_WrBuffer, length, port.m_WrN, port.m_WrOVL);
 
 				if (!ok) {
 					if (GetLastError() != ERROR_IO_PENDING)
 						port.fail();
 
 					while (true) {
-						//if (!ResetEvent(port.m_WrOVL.hEvent))
-						//	port.fail();
 						// FIXME would need to implement thread interruption
-						int res = WaitForSingleObject(port.m_WrOVL.hEvent, 1000);
+						int res = WaitForSingleObject(port.m_WrOVL.hEvent, INFINITE);
 						if (res == WAIT_TIMEOUT) {
 							clearCommErrors(port);
 							log = log && log(1, "write pending, cbInQue %d cbOutQue %d\n", port.m_ClearStat.cbInQue, port.m_ClearStat.cbOutQue);
 							continue;
 						}
-						if (!GetOverlappedResult(port.m_Comm, port.m_WrOVL, np, false))
+						if (!GetOverlappedResult(port.m_Comm, port.m_WrOVL, port.m_WrN, false))
 							port.fail();
-						btsn = np[0];
 						break;
 					}
 				}
-				return btsn;
+				return port.m_WrN[0];
 			} catch (Fail f) {
 				return -1;
 			}
@@ -519,7 +511,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 	}
 
-	//FIXME this needs serios code review from peopel who know this stuff...
+	//FIXME this needs serious code review from people who know this stuff...
 	public int updateFromTermios(Port port) throws Fail {
 		Termios tios = port.m_Termios;
 		DCB dcb = port.m_DCB;
@@ -601,7 +593,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		dcb.EofChar = tios.c_cc[VEOF];
 
 		int vmin = port.m_Termios.c_cc[VMIN] & 0xFF;
-		int vtime = port.m_Termios.c_cc[VTIME] & 0xFF;
+		int vtime = (port.m_Termios.c_cc[VTIME] & 0xFF)*100;
 		COMMTIMEOUTS touts = port.m_Timeouts;
 		// There are really no write timeouts in classic unix termios
 		// FIXME test that we can still interrupt the tread
@@ -618,8 +610,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			// VMIN = 0 and VTIME > 0 => timed read, return as soon as data is
 			// available, VTIME = total time
 			touts.ReadIntervalTimeout = MAXDWORD;
-			touts.ReadTotalTimeoutConstant = MAXDWORD;
-			touts.ReadTotalTimeoutMultiplier = vtime;
+			touts.ReadTotalTimeoutConstant = vtime;
+			touts.ReadTotalTimeoutMultiplier = MAXDWORD;
 		}
 		if (vmin > 0 && vtime > 0) {
 			// VMIN > 0 and VTIME > 0 => blocks until VMIN chars has arrived or
@@ -642,7 +634,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		if (!SetCommTimeouts(port.m_Comm, port.m_Timeouts))
 			port.fail();
-
 		return 0;
 	}
 
