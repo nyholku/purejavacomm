@@ -29,132 +29,142 @@
  */
 package purejavacomm.testsuite;
 
-import java.util.Arrays;
-import java.util.Random;
-
-import purejavacomm.SerialPort;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class Test4 extends TestBase {
-	private static boolean m_Done;
-	private static volatile Random rnd = new Random();
-	private static volatile byte[] m_ReceiveBuffer = new byte[10000];
-	private static volatile int m_BytesReceived = 0;
-	private static volatile int m_TotalReceived;
-	private static volatile long m_T1;
-	private static volatile int m_TxCount = 0;
-	private static volatile int m_RxCount = 0;
-	private static volatile int m_ErrorCount = 0;
-	private static int N = 1000;
+	private static Exception m_Exception = null;
+	private static Thread receiver;
+	private static Thread transmitter;
 
 	static void run() throws Exception {
 		try {
-			m_Done = false;
-			rnd = new Random();
-			m_BytesReceived = 0;
-			m_TotalReceived = 0;
-			m_TxCount = 0;
-			m_RxCount = 0;
-			m_ErrorCount = 0;
-
-			begin("Test4 - tx/rx with event listener");
+			begin("Test4 - blocking behaviour");
 			openPort();
-			m_Port.notifyOnDataAvailable(true);
-			m_Port.notifyOnOutputEmpty(true);
-			m_Port.setFlowControlMode(SerialPort.FLOWCONTROL_XONXOFF_IN + SerialPort.FLOWCONTROL_XONXOFF_OUT);
-			m_Port.setSerialPortParams(19200, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-			final boolean[] stop = { false };
-			m_T0 = System.currentTimeMillis();
-			m_Port.addEventListener(new SerialPortEventListener() {
-				public void serialEvent(SerialPortEvent event) {
+			// receiving thread
+			receiver = new Thread(new Runnable() {
+				public void run() {
 					try {
-						if (event.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-							byte[] buffer = new byte[m_In.available()];
-							int n = m_In.read(buffer);
-							if (!m_Done) {
-								m_TotalReceived += n;
-								processBuffer(buffer, n);
-								if (m_RxCount++ >= N) {
-									m_Done = true;
-								}
-							}
-						}
-						if (event.getEventType() == SerialPortEvent.OUTPUT_BUFFER_EMPTY) {
-							if (m_TxCount < N) {
-								byte[] buffer = generateRandomMessage();
-								m_Out.write(buffer, 0, buffer.length);
-								m_TxCount++;
-							}
+						{ // step 1
+							sync(2);
+							// step 1: read a char, which should block for more than 10 seconds
+							long T0 = System.currentTimeMillis();
+							byte[] b = { 0 };
+							int n = m_In.read(b);
+							long dT = System.currentTimeMillis() - T0;
+							if (n != 1)
+								fail("read did not block, read returned %d", n);
+							if (b[0] != 73)
+								fail("read did not get looped back '73' got '%d'", b[0]);
+							if (dT < 10000)
+								fail("read did not block for 10000 msec, received loopback in %d msec", dT);
 						}
 
+						{ // step 2
+							sync(2);
+							m_Port.enableReceiveThreshold(0);
+							m_Port.enableReceiveTimeout(1000);
+							long T0 = System.currentTimeMillis();
+							byte[] b = { 0 };
+							int n = m_In.read(b);
+							long dT = System.currentTimeMillis() - T0;
+							if (n != 0)
+								fail("read did not time out as expected, read returned %d", n);
+							if (dT < 1000)
+								fail("-timed out early, expected 1000 msec, got %d msec", dT);
+							if (dT > 1010)
+								fail("read timed out with suspicious delay, expected 1000 msec, got %d msec", dT);
+
+						}
+
+						{// step 3
+							sync(2);
+							m_Port.enableReceiveThreshold(4);
+							m_Port.enableReceiveTimeout(1000);
+							long T0 = System.currentTimeMillis();
+							byte[] b = new byte[8];
+							int n = m_In.read(b);
+							long dT = System.currentTimeMillis() - T0;
+							if (n != 4)
+								fail("read did not get 4 bytes as expected, got %d ", n);
+							if (dT >= 1000)
+								fail("read timed out though we got 4 bytes");
+
+						}
+						{ // step 4
+							sync(2);
+							m_Port.enableReceiveThreshold(7);
+							m_Port.disableReceiveTimeout();
+							long T0 = System.currentTimeMillis();
+							byte[] b = new byte[8];
+							int n = m_In.read(b);
+							long dT = System.currentTimeMillis() - T0;
+							if (n != 7)
+								fail("read did not get 7 bytes as expected, got %d", n);
+							if (dT < 10000)
+								fail("-timed out though we got 4 bytes");
+
+						}
+
+					} catch (InterruptedException e) {
+					} catch (Exception e) {
+						if (m_Exception == null)
+							m_Exception = e;
+						receiver.interrupt();
+						transmitter.interrupt();
+					}
+				};
+			});
+
+			// sending thread
+			transmitter = new Thread(new Runnable() {
+				public void run() {
+					try {
+						{// step 1
+							sync(2);
+							sleep(10000);
+							m_Out.write(73);
+						}
+
+						{// step 2
+							sync(2);
+						}
+
+						{// step 3
+							sync(2);
+							m_Out.write(new byte[4]);
+						}
+						{// step 4
+							sync(2);
+							// step 4:
+							sleep(10000);
+							m_Out.write(new byte[7]);
+						}
+
+					} catch (InterruptedException e) {
 					} catch (Exception e) {
 						e.printStackTrace();
+						if (m_Exception == null)
+							m_Exception = e;
+						receiver.interrupt();
+						transmitter.interrupt();
 					}
-				}
+				};
 			});
-			while (!m_Done) {
-				try {
-					sleep(100);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-			m_T1 = System.currentTimeMillis();
-			if (m_ErrorCount > 0)
-				fail("checksum sum failure in %d out %d messages", m_ErrorCount, N);
 
-			int cs = m_Port.getDataBits() + 2;
-			double actual = m_TotalReceived * cs * 1000.0 / (m_T1 - m_T0);
-			int requested = m_Port.getBaudRate();
-			if (actual < requested * 0.98)
-				finishedOK("average speed %1.0f b/sec less than 95% of the requested baud rate %d", actual, requested);
-			finishedOK("average speed %1.0f b/sec at baud rate %d", actual, requested);
+			receiver.start();
+			transmitter.start();
+
+			while (receiver.isAlive() || transmitter.isAlive()) {
+				sleep(100);
+			}
+
+			if (m_Exception != null)
+				throw m_Exception;
+			finishedOK();
 		} finally {
 			closePort();
 		}
 
-	}
-
-	static private byte[] generateRandomMessage() {
-		int n = 4 + (rnd.nextInt() & 63);
-		byte[] buffer = new byte[n + 2];
-		//System.out.print("Sending: " + new String(buffer));
-		int s = 0;
-		int i;
-		for (i = 0; i < n; i++) {
-			byte b = (byte) (32 + (rnd.nextInt() & 63));
-			buffer[i] = b;
-			s += b;
-		}
-		buffer[i++] = (byte) (32 + (s & 63));
-		buffer[i++] = '\n';
-		return buffer;
-	}
-
-	static private void processBuffer(byte[] buffer, int n) {
-		for (int i = 0; i < n; ++i) {
-			byte b = buffer[i];
-			if (n > buffer.length) {
-				m_ErrorCount++;
-				return;
-			}
-
-			m_ReceiveBuffer[m_BytesReceived++] = b;
-			if (b == '\n') {
-				//System.out.print("Received: " + new String(linebuf, 0, inp));
-				int s = 0;
-				int j;
-				for (j = 0; j < m_BytesReceived - 2; j++)
-					s += m_ReceiveBuffer[j];
-				byte cb = (byte) (32 + (s & 63));
-				if (cb != m_ReceiveBuffer[j] && m_RxCount > 0) {
-					System.out.println("check sum failure");
-					m_ErrorCount++;
-				}
-				m_RxCount++;
-				m_BytesReceived = 0;
-			}
-		}
 	}
 }
