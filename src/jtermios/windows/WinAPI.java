@@ -642,7 +642,7 @@ public class WinAPI {
 	static public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list) {
 		log = log & log(5, "call FormatMessageW, %s\n", lineno());
 		int res = m_K32lib.FormatMessageW(flags, src, msgId, langId, dst, sze, va_list);
-		log(0, "FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s  ) => %d\n", flags, src, msgId, langId, dst, sze, va_list, res);
+		log = log & log(4, "FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s  ) => %d\n", flags, src, msgId, langId, dst, sze, va_list, res);
 		return res;
 	}
 
