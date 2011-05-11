@@ -77,6 +77,7 @@ public class JTermios {
 	public static int F_GETFL = 0x00000003;
 	public static int F_SETFL = 0x00000004;
 	// errno.h stuff
+	public static int EAGAIN = 35;
 	public static int EBADF = 9;
 	public static int EACCES = 22;
 	public static int EEXIST = 17;
@@ -196,8 +197,6 @@ public class JTermios {
 	public interface JTermiosInterface {
 		void shutDown();
 
-		int fcntl(int fd, int cmd, int[] arg);
-
 		int fcntl(int fd, int cmd, int arg);
 
 		long cfgetispeed(Termios termios);
@@ -273,10 +272,6 @@ public class JTermios {
 				}
 			}));
 		}
-	}
-
-	static public int fcntl(int fd, int cmd, int[] arg) {
-		return m_Termios.fcntl(fd, cmd, arg);
 	}
 
 	static public int fcntl(int fd, int cmd, int arg) {
