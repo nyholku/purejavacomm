@@ -65,17 +65,9 @@ public class PureJavaSerialPort extends SerialPort {
 	private volatile boolean m_OutputEmptyNotified;
 
 	private volatile boolean m_NotifyOnRI;
-	private volatile boolean m_NotifiedStateOfRI;
-
 	private volatile boolean m_NotifyOnCTS;
-	private volatile boolean m_NotifiedStateOfCTS;
-
 	private volatile boolean m_NotifyOnDSR;
-	private volatile boolean m_NotifiedStateOfDSR;
-
 	private volatile boolean m_NotifyOnCD;
-	private volatile boolean m_NotifiedStateOfCD;
-
 	private volatile boolean m_NotifyOnOverrunError;
 	private volatile boolean m_NotifyOnParityError;
 	private volatile boolean m_NotifyOnFramingError;
