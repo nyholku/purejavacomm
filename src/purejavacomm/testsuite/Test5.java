@@ -32,30 +32,32 @@ package purejavacomm.testsuite;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
-public class Test4 extends TestBase {
+public class Test5 extends TestBase {
 	private static Exception m_Exception = null;
 	private static Thread receiver;
 	private static Thread transmitter;
 
 	static void run() throws Exception {
 		try {
-			begin("Test4 - indefinite blocking");
+			begin("Test5 - timeout");
 			openPort();
 			// receiving thread
 			receiver = new Thread(new Runnable() {
 				public void run() {
 					try {
 						sync(2);
+						m_Port.enableReceiveThreshold(0);
+						m_Port.enableReceiveTimeout(1000);
 						long T0 = System.currentTimeMillis();
 						byte[] b = { 0 };
 						int n = m_In.read(b);
 						long dT = System.currentTimeMillis() - T0;
-						if (n != 1)
-							fail("read did not block, read returned %d", n);
-						if (b[0] != 73)
-							fail("read did not get looped back '73' got '%d'", b[0]);
-						if (dT < 10000)
-							fail("read did not block for 10000 msec, received loopback in %d msec", dT);
+						if (n != 0)
+							fail("read did not time out as expected, read returned %d", n);
+						if (dT < 1000)
+							fail("-timed out early, expected 1000 msec, got %d msec", dT);
+						if (dT > 1010)
+							fail("read timed out with suspicious delay, expected 1000 msec, got %d msec", dT);
 					} catch (InterruptedException e) {
 					} catch (Exception e) {
 						if (m_Exception == null)
@@ -71,9 +73,6 @@ public class Test4 extends TestBase {
 				public void run() {
 					try {
 						sync(2);
-						sleep(10000);
-						m_Out.write(73);
-
 					} catch (InterruptedException e) {
 					} catch (Exception e) {
 						e.printStackTrace();
