@@ -107,8 +107,6 @@ public class Test2 extends TestBase {
 			int cs = m_Port.getDataBits() + 2;
 			double actual = m_TotalReceived * cs * 1000.0 / (m_T1 - m_T0);
 			int requested = m_Port.getBaudRate();
-			if (actual < requested * 0.98)
-				finishedOK("average speed %1.0f b/sec less than 95% of the requested baud rate %d", actual, requested);
 			finishedOK("average speed %1.0f b/sec at baud rate %d", actual, requested);
 		} finally {
 			closePort();
