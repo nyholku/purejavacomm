@@ -35,6 +35,7 @@ import java.util.Enumeration;
 import java.util.Random;
 
 import purejavacomm.CommPortIdentifier;
+import purejavacomm.NoSuchPortException;
 import purejavacomm.SerialPort;
 
 public class TestBase {
@@ -42,7 +43,7 @@ public class TestBase {
 
 	}
 
-	protected static volatile String m_TestPortName = "cu.usbserial-FTOXM3NX";
+	protected static volatile String m_TestPortName;
 	protected static volatile SerialPort m_Port;
 	protected static volatile long m_T0;
 	protected static volatile OutputStream m_Out;
@@ -64,21 +65,15 @@ public class TestBase {
 	}
 
 	static protected void openPort() throws Exception {
-		CommPortIdentifier portid = null;
-		Enumeration e = CommPortIdentifier.getPortIdentifiers();
-		while (e.hasMoreElements()) {
-			portid = (CommPortIdentifier) e.nextElement();
-			if (portid.getName().equals(m_TestPortName))
-				break;
-		}
-		if (portid != null) {
-			//System.out.printf("-openin port '%s'\n", portid.getName());
+		try {
+			CommPortIdentifier portid = CommPortIdentifier.getPortIdentifier(m_TestPortName);
 			m_Port = (SerialPort) portid.open("PureJavaCommTestSuite", 1000);
 			m_Out = m_Port.getOutputStream();
 			m_In = m_Port.getInputStream();
 			drain(m_In);
-		} else
+		} catch (NoSuchPortException e) {
 			fail("could no open port '%s'\n", m_TestPortName);
+		}
 	}
 
 	static protected void closePort() {
@@ -137,8 +132,28 @@ public class TestBase {
 		System.out.println();
 	}
 
-	static protected void init(String[] args) {
+	static public void init(String[] args) {
+		m_TestPortName = "cu.usbserial-FTOXM3NX";
 		if (args.length > 0)
 			m_TestPortName = args[0];
+		Enumeration e = CommPortIdentifier.getPortIdentifiers();
+		boolean found = false;
+		String last = null;
+		while (e.hasMoreElements()) {
+			CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
+			if (portid.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+				if (portid.getName().equals(m_TestPortName))
+					found = true;
+				last = portid.getName();
+			}
+		}
+		if (!found)
+			m_TestPortName = last;
+
+	}
+
+	static public String getPortName() {
+		return m_TestPortName;
+
 	}
 }
