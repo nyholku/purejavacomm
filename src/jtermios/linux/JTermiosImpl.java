@@ -177,7 +177,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		F_GETFL = 0x00000003;
 		F_SETFL = 0x00000004;
 		//errno.h stuff
-		EBADF = 9;
+		EAGAIN = 35;
 		EACCES= 22;
 		EEXIST= 17;
 		EINTR= 4;
