@@ -220,11 +220,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 	}
 
-	public long cfgetispeed(Termios termios) {
+	public int cfgetispeed(Termios termios) {
 		return termios.c_ispeed;
 	}
 
-	public long cfgetospeed(Termios termios) {
+	public int cfgetospeed(Termios termios) {
 		return termios.c_ospeed;
 	}
 
