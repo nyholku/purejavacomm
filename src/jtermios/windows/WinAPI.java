@@ -433,232 +433,232 @@ public class WinAPI {
 	};
 
 	static public HANDLE CreateFileA(String name, int access, int sharing, SECURITY_ATTRIBUTES security, int create, int attribs, Pointer template) {
-		log = log & log(5, "call CreateFileA, %s\n", lineno());
+		log = log && log(5, "> CreateFileA(%s, 0x%08X, 0x%08X, %s, 0x%08X, 0x%08X,%s)\n", name, access, sharing, security, create, attribs, template);
 		HANDLE h = m_K32lib.CreateFileA(name, access, sharing, security, create, attribs, template);
-		log = log & log(4, "CreateFileA(%s, 0x%08X, 0x%08X, %s, 0x%08X, 0x%08X,%s) => %s\n", name, access, sharing, security, create, attribs, template, h);
+		log = log && log(4, "< CreateFileA(%s, 0x%08X, 0x%08X, %s, 0x%08X, 0x%08X,%s) => %s\n", name, access, sharing, security, create, attribs, template, h);
 		return h;
 	}
 
 	static public HANDLE CreateFileW(WString name, int access, int sharing, SECURITY_ATTRIBUTES security, int create, int attribs, Pointer template) {
-		log = log & log(5, "call CreateFileW, %s\n", lineno());
+		log = log && log(5, "> CreateFileW(%s, 0x%08X, 0x%08X, %s, 0x%08X, 0x%08X,%s)\n", name, access, sharing, security, create, attribs, template);
 		HANDLE h = m_K32lib.CreateFileW(name, access, sharing, security, create, attribs, template);
-		log = log & log(4, "CreateFileW(%s, 0x%08X, 0x%08X, %s, 0x%08X, 0x%08X,%s) => %s\n", name, access, sharing, security, create, attribs, template, h);
+		log = log && log(4, "< CreateFileW(%s, 0x%08X, 0x%08X, %s, 0x%08X, 0x%08X,%s) => %s\n", name, access, sharing, security, create, attribs, template, h);
 		return h;
 	}
 
 	// This is for synchronous writes only
 	static public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn) {
-		log = log & log(5, "call WriteFile, %s\n", lineno());
+		log = log && log(5, "> WriteFile(%s, %s, %d, [%d])\n", hFile, log(buf, wrn), wrn, nwrtn[0]);
 		boolean res = m_K32lib.WriteFile(hFile, buf, wrn, nwrtn, null);
-		log = log & log(4, "WriteFile(%s, %s, %d, [%d]) => %s\n", hFile, log(buf, wrn), wrn, nwrtn[0], res);
+		log = log && log(4, "< WriteFile(%s, %s, %d, [%d]) => %s\n", hFile, log(buf, wrn), wrn, nwrtn[0], res);
 		return res;
 	}
 
 	// This can be used with synchronous as well as overlapped writes
 	static public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, OVERLAPPED ovrlp) {
-		log = log & log(5, "call WriteFile, %s\n", lineno());
+		log = log && log(5, "> WriteFile(%s, %s, %d, [%d], %s)\n", hFile, log(buf.getByteArray(0, wrn), 5), wrn, nwrtn[0], ref(ovrlp));
 		boolean res = m_K32lib.WriteFile(hFile, buf, wrn, nwrtn, ovrlp);
-		log = log & log(4, "WriteFile(%s, %s, %d, [%d], %s) => %s\n", hFile, log(buf.getByteArray(0, wrn), 5), wrn, nwrtn[0], ref(ovrlp), res);
+		log = log && log(4, "< WriteFile(%s, %s, %d, [%d], %s) => %s\n", hFile, log(buf.getByteArray(0, wrn), 5), wrn, nwrtn[0], ref(ovrlp), res);
 		return res;
 	}
 
 	// This is for synchronous reads only
 	static public boolean ReadFile(HANDLE hFile, byte[] buf, int rdn, int[] nrd) {
-		log = log & log(5, "call ReadFile, %s\n", lineno());
+		log = log && log(5, "> ReadFile(%s, %s, %d, [%d])\n", hFile, log(buf, rdn), rdn, nrd[0]);
 		boolean res = m_K32lib.ReadFile(hFile, buf, rdn, nrd, null);
-		log = log & log(4, "ReadFile(%s, %s, %d, [%d]) => %s\n", hFile, log(buf, rdn), rdn, nrd[0], res);
+		log = log && log(4, "< ReadFile(%s, %s, %d, [%d]) => %s\n", hFile, log(buf, rdn), rdn, nrd[0], res);
 		return res;
 	}
 
 	// This can be used with synchronous as well as overlapped reads
 	static public boolean ReadFile(HANDLE hFile, Pointer buf, int rdn, int[] nrd, OVERLAPPED ovrlp) {
-		log = log & log(5, "call ReadFile, %s\n", lineno());
+		log = log && log(5, "> ReadFile(%s, %s, %d, [%d], %s)\n", hFile, log(buf.getByteArray(0, rdn), 5), rdn, nrd[0], ref(ovrlp));
 		boolean res = m_K32lib.ReadFile(hFile, buf, rdn, nrd, ovrlp);
-		log = log & log(4, "ReadFile(%s, %s, %d, [%d], %s) => %s\n", hFile, log(buf.getByteArray(0, rdn), 5), rdn, nrd[0], ref(ovrlp), res);
+		log = log && log(4, "< ReadFile(%s, %s, %d, [%d], %s) => %s\n", hFile, log(buf.getByteArray(0, rdn), 5), rdn, nrd[0], ref(ovrlp), res);
 		return res;
 	}
 
 	static public boolean FlushFileBuffers(HANDLE hFile) {
-		log = log & log(5, "call FlushFileBuffers, %s\n", lineno());
+		log = log && log(5, "> FlushFileBuffers(%s)\n", hFile);
 		boolean res = m_K32lib.FlushFileBuffers(hFile);
-		log = log & log(4, "FlushFileBuffers(%s) => %s\n", hFile, res);
+		log = log && log(4, "< FlushFileBuffers(%s) => %s\n", hFile, res);
 		return res;
 	}
 
 	static public boolean PurgeComm(HANDLE hFile, int qmask) {
-		log = log & log(5, "call PurgeComm, %s\n", lineno());
+		log = log && log(5, "> PurgeComm(%s,0x%08X)\n", hFile, qmask);
 		boolean res = m_K32lib.PurgeComm(hFile, qmask);
-		log = log & log(4, "PurgeComm(%s,0x%08X) => %s\n", hFile, qmask, res);
+		log = log && log(4, "< PurgeComm(%s,0x%08X) => %s\n", hFile, qmask, res);
 		return res;
 	}
 
 	static public boolean CloseHandle(HANDLE hFile) {
-		log = log & log(5, "call CloseHandle, %s\n", lineno());
+		log = log && log(5, "> CloseHandle(%s)\n", hFile);
 		boolean res = m_K32lib.CloseHandle(hFile);
-		log = log & log(4, "CloseHandle(%s) => %s\n", hFile, res);
+		log = log && log(4, "< CloseHandle(%s) => %s\n", hFile, res);
 		return res;
 	}
 
 	static public boolean ClearCommError(HANDLE hFile, int[] n, COMSTAT s) {
-		log = log & log(5, "call ClearCommError, %s\n", lineno());
+		log = log && log(5, "> ClearCommError(%s, [%d], %s)\n", hFile, n[0], ref(s));
 		boolean res = m_K32lib.ClearCommError(hFile, n, s);
-		log = log & log(4, "ClearCommError(%s, [%d], %s) => %s\n", hFile, n[0], ref(s), res);
+		log = log && log(4, "< ClearCommError(%s, [%d], %s) => %s\n", hFile, n[0], ref(s), res);
 		return res;
 	}
 
 	static public boolean SetCommMask(HANDLE hFile, int mask) {
-		log = log & log(5, "call SetCommMask, %s\n", lineno());
+		log = log && log(5, "> SetCommMask(%s, 0x%08X)\n", hFile, mask);
 		boolean res = m_K32lib.SetCommMask(hFile, mask);
-		log = log & log(4, "SetCommMask(%s, 0x%08X) => %s\n", hFile, mask, res);
+		log = log && log(4, "< SetCommMask(%s, 0x%08X) => %s\n", hFile, mask, res);
 		return res;
 	}
 
 	static public boolean GetCommMask(HANDLE hFile, int[] mask) {
-		log = log & log(5, "call GetCommMask, %s\n", lineno());
+		log = log && log(5, "> GetCommMask(%s, [0x%08X])\n", hFile, mask[0]);
 		boolean res = m_K32lib.GetCommMask(hFile, mask);
-		log = log & log(4, "GetCommMask(%s, [0x%08X]) => %s\n", hFile, mask[0], res);
+		log = log && log(4, "< GetCommMask(%s, [0x%08X]) => %s\n", hFile, mask[0], res);
 		return res;
 	}
 
 	static public boolean GetCommState(HANDLE hFile, DCB dcb) {
-		log = log & log(5, "call GetCommState, %s\n", lineno());
+		log = log && log(5, "> GetCommState(%s, %s)\n", hFile, ref(dcb));
 		boolean res = m_K32lib.GetCommState(hFile, dcb);
-		log = log & log(4, "GetCommState(%s, %s) => %s\n", hFile, ref(dcb), res);
+		log = log && log(4, "< GetCommState(%s, %s) => %s\n", hFile, ref(dcb), res);
 		return res;
 	}
 
 	static public boolean SetCommState(HANDLE hFile, DCB dcb) {
-		log = log & log(5, "call SetCommState, %s\n", lineno());
+		log = log && log(5, "> SetCommState(%s, %s)\n", hFile, ref(dcb));
 		boolean res = m_K32lib.SetCommState(hFile, dcb);
-		log = log & log(4, "SetCommState(%s, %s) => %s\n", hFile, ref(dcb), res);
+		log = log && log(4, "< SetCommState(%s, %s) => %s\n", hFile, ref(dcb), res);
 		return res;
 	}
 
 	static public boolean SetCommTimeouts(HANDLE hFile, COMMTIMEOUTS touts) {
-		log = log & log(5, "call SetCommTimeouts, %s\n", lineno());
+		log = log && log(5, "> SetCommTimeouts(%s, %s)\n", hFile, ref(touts));
 		boolean res = m_K32lib.SetCommTimeouts(hFile, touts);
-		log = log & log(4, "SetCommTimeouts(%s, %s) => %s\n", hFile, ref(touts), res);
+		log = log && log(4, "< SetCommTimeouts(%s, %s) => %s\n", hFile, ref(touts), res);
 		return res;
 	}
 
 	static public boolean SetupComm(HANDLE hFile, int inQueueSz, int outQueueSz) {
-		log = log & log(5, "call SetupComm, %s\n", lineno());
+		log = log && log(5, "> SetCommTimeouts(%s, %d, %d)\n", hFile, inQueueSz, outQueueSz);
 		boolean res = m_K32lib.SetupComm(hFile, inQueueSz, outQueueSz);
-		log = log & log(4, "SetCommTimeouts(%s, %d, %d) => %s\n", hFile, inQueueSz, outQueueSz, res);
+		log = log && log(4, "< SetCommTimeouts(%s, %d, %d) => %s\n", hFile, inQueueSz, outQueueSz, res);
 		return res;
 	}
 
 	static public boolean SetCommBreak(HANDLE hFile) {
-		log = log & log(5, "call SetCommBreak, %s\n", lineno());
+		log = log && log(5, "> CloseHandle(%s)\n", hFile);
 		boolean res = m_K32lib.CloseHandle(hFile);
-		log = log & log(4, "CloseHandle(%s) => %s\n", hFile, res);
+		log = log && log(4, "< CloseHandle(%s) => %s\n", hFile, res);
 		return res;
 	}
 
 	static public boolean ClearCommBreak(HANDLE hFile) {
-		log = log & log(5, "call ClearCommBreak, %s\n", lineno());
+		log = log && log(5, "> ClearCommBreak(%s)\n", hFile);
 		boolean res = m_K32lib.ClearCommBreak(hFile);
-		log = log & log(4, "ClearCommBreak(%s) => %s\n", hFile, res);
+		log = log && log(4, "< ClearCommBreak(%s) => %s\n", hFile, res);
 		return res;
 	}
 
 	static public boolean GetCommModemStatus(HANDLE hFile, int[] stat) {
-		log = log & log(5, "call GetCommModemStatus, %s\n", lineno());
+		log = log && log(5, "> GetCommModemStatus(%s,0x%08X)\n", hFile, stat[0]);
 		boolean res = m_K32lib.GetCommModemStatus(hFile, stat);
-		log = log & log(4, "GetCommModemStatus(%s,0x%08X) => %s\n", hFile, stat[0], res);
+		log = log && log(4, "< GetCommModemStatus(%s,0x%08X) => %s\n", hFile, stat[0], res);
 		return res;
 	}
 
 	static public boolean EscapeCommFunction(HANDLE hFile, int func) {
-		log = log & log(5, "call EscapeCommFunction, %s\n", lineno());
+		log = log && log(5, "> EscapeCommFunction(%s,0x%08X)\n", hFile, func);
 		boolean res = m_K32lib.EscapeCommFunction(hFile, func);
-		log = log & log(4, "EscapeCommFunction(%s,0x%08X) => %s\n", hFile, func, res);
+		log = log && log(4, "< EscapeCommFunction(%s,0x%08X) => %s\n", hFile, func, res);
 		return res;
 	}
 
 	static public HANDLE CreateEventW(SECURITY_ATTRIBUTES security, boolean manual, boolean initial, WString name) {
-		log = log & log(5, "call CreateEventW, %s\n", lineno());
+		log = log && log(5, "> CreateEventW(%s, %s, %s, %s)\n", ref(security), manual, initial, name);
 		HANDLE h = m_K32lib.CreateEventW(security, manual, initial, name);
-		log = log & log(4, "CreateEventW(%s, %s, %s, %s) => %s\n", ref(security), manual, initial, name, h);
+		log = log && log(4, "< CreateEventW(%s, %s, %s, %s) => %s\n", ref(security), manual, initial, name, h);
 		return h;
 	}
 
 	static public HANDLE CreateEventA(SECURITY_ATTRIBUTES security, boolean manual, boolean initial, String name) {
-		log = log & log(5, "call CreateEventA, %s\n", lineno());
+		log = log && log(5, "> CreateEventA(%s, %s, %s, %s)\n", ref(security), manual, initial, name);
 		HANDLE h = m_K32lib.CreateEventA(security, manual, initial, name);
-		log = log & log(4, "CreateEventA(%s, %s, %s, %s) => %s\n", ref(security), manual, initial, name, h);
+		log = log && log(4, "< CreateEventA(%s, %s, %s, %s) => %s\n", ref(security), manual, initial, name, h);
 		return h;
 	}
 
 	static public boolean ResetEvent(HANDLE hEvent) {
-		log = log & log(5, "call ResetEvent, %s\n", lineno());
+		log = log && log(5, "> ResetEvent(%s)\n", hEvent);
 		boolean res = m_K32lib.ResetEvent(hEvent);
-		log = log & log(4, "ResetEvent(%s) => %s\n", hEvent, res);
+		log = log && log(4, "< ResetEvent(%s) => %s\n", hEvent, res);
 		return res;
 	}
 
 	static public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, OVERLAPPED ovl) {
-		log = log & log(5, "call WaitCommEvent, %s\n", lineno());
+		log = log && log(5, "> WaitCommEvent(%s, [%d], %s)\n", hFile, lpEvtMask.getValue(), ref(ovl));
 		boolean res = m_K32lib.WaitCommEvent(hFile, lpEvtMask, ovl);
-		log = log & log(4, "WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask.getValue(), ref(ovl), res);
+		log = log && log(4, "< WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask.getValue(), ref(ovl), res);
 		return res;
 	}
 
 	static public boolean WaitCommEvent(HANDLE hFile, int[] lpEvtMask) {
-		log = log & log(5, "call WaitCommEvent, %s\n", lineno());
+		log = log && log(5, "> WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask[0], null);
 		boolean res = m_K32lib.WaitCommEvent(hFile, lpEvtMask, null);
-		log = log & log(4, "WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask[0], null, res);
+		log = log && log(4, "< WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask[0], null, res);
 		return res;
 	}
 
 	static public int WaitForSingleObject(HANDLE hHandle, int dwMilliseconds) {
-		log = log & log(5, "call WaitForSingleObject, %s\n", lineno());
+		log = log && log(5, "> WaitForSingleObject(%s, %d)\n", hHandle, dwMilliseconds);
 		int res = m_K32lib.WaitForSingleObject(hHandle, dwMilliseconds);
-		log = log & log(4, "WaitForSingleObject(%s, %d) => %s\n", hHandle, dwMilliseconds, res);
+		log = log && log(4, "< WaitForSingleObject(%s, %d) => %s\n", hHandle, dwMilliseconds, res);
 		return res;
 	}
 
 	static public int WaitForMultipleObjects(int nCount, HANDLE[] lpHandles, boolean bWaitAll, int dwMilliseconds) {
-		log = log & log(5, "call WaitForMultipleObjects, %s\n", lineno());
+		log = log && log(5, "> WaitForMultipleObjects(%d, %s, %s, %d)\n", nCount, log(lpHandles, 3), bWaitAll, dwMilliseconds);
 		int res = m_K32lib.WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
-		log = log & log(4, "WaitForMultipleObjects(%d, %s, %s, %d) => %s\n", nCount, log(lpHandles, 3), bWaitAll, dwMilliseconds, res);
+		log = log && log(4, "< WaitForMultipleObjects(%d, %s, %s, %d) => %s\n", nCount, log(lpHandles, 3), bWaitAll, dwMilliseconds, res);
 		return res;
 	}
 
 	static public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED ovl, int[] ntfrd, boolean wait) {
-		log = log & log(5, "call GetOverlappedResult, %s\n", lineno());
+		log = log && log(5, "> GetOverlappedResult(%s, %s, [%d], %s)\n", hFile, ref(ovl), ntfrd[0], wait);
 		boolean res = m_K32lib.GetOverlappedResult(hFile, ovl, ntfrd, wait);
-		log = log & log(4, "GetOverlappedResult(%s, %s, [%d], %s) => %s\n", hFile, ref(ovl), ntfrd[0], wait, res);
+		log = log && log(4, "< GetOverlappedResult(%s, %s, [%d], %s) => %s\n", hFile, ref(ovl), ntfrd[0], wait, res);
 		return res;
 	}
 
 	static public int GetLastError() {
-		log = log & log(5, "call GetLastError, %s\n", lineno());
+		log = log && log(5, "> GetLastError()\n");
 		int res = m_K32lib.GetLastError();
-		log = log & log(4, "GetLastError() => %d\n", res);
+		log = log && log(4, "< GetLastError() => %d\n", res);
 		return res;
 	}
 
 	static public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list) {
-		log = log & log(5, "call FormatMessageW, %s\n", lineno());
+		log = log && log(5, "> FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s)\n", flags, src, msgId, langId, dst, sze, va_list);
 		int res = m_K32lib.FormatMessageW(flags, src, msgId, langId, dst, sze, va_list);
-		log = log & log(4, "FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s  ) => %d\n", flags, src, msgId, langId, dst, sze, va_list, res);
+		log = log && log(4, "< FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s) => %d\n", flags, src, msgId, langId, dst, sze, va_list, res);
 		return res;
 	}
 
 	static public int QueryDosDeviceA(String name, byte[] buffer, int bsize) {
-		log = log & log(5, "call QueryDosDeviceA, %s\n", lineno());
+		log = log && log(5, "> QueryDosDeviceA(%s, %s, %d)\n", name, buffer, bsize);
 		int res = m_K32lib.QueryDosDeviceA(name, buffer, bsize);
-		log = log & log(4, "QueryDosDeviceA(%s, %s, %d) => %d\n", name, buffer, bsize, res);
+		log = log && log(4, "< QueryDosDeviceA(%s, %s, %d) => %d\n", name, buffer, bsize, res);
 		return res;
 	}
 
 	// FIXME investigate why defining this as QueryDosDeviceW(WString name, Memory buffer, int bsize)
 	// later crashes JVM
 	static public int QueryDosDeviceW(WString name, char[] buffer, int bsize) {
-		log = log & log(5, "call QueryDosDeviceW, %s\n", lineno());
+		log = log && log(5, "> QueryDosDeviceW(%s,%s,%d)\n", name, buffer, bsize);
 		int res = m_K32lib.QueryDosDeviceW(name, buffer, bsize);
-		log = log & log(4, "QueryDosDeviceW(%s,%s,%d) => %d\n", name, buffer, bsize, res);
+		log = log && log(4, "< QueryDosDeviceW(%s,%s,%d) => %d\n", name, buffer, bsize, res);
 		return res;
 	}
 
