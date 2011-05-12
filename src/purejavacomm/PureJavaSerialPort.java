@@ -730,20 +730,26 @@ public class PureJavaSerialPort extends SerialPort {
 	synchronized public void close() {
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags |= O_NONBLOCK;
-		checkReturnCode(fcntl(m_FD, F_SETFL, flags));
+		int fcres = fcntl(m_FD, F_SETFL, flags);
+		if (fcres != 0) // not much we can do if this fails, so just log it
+			log = log && log(1, "fcntl(%d,%d,%d) returned %d\n", m_FD, F_SETFL, flags, fcres);
 
 		m_Thread.interrupt();
 		// At least on Windows we get crash if an Overlapped IO is in progress
 		// so we need to wait for the thread to die to ensure that nothing is
 		// in progress
-		while (m_Thread.isAlive()) {
+		int cnt = 1000;
+		while (m_Thread.isAlive() && cnt >0) {
 			try {
 				log = log & log(1, "close() waiting for the thread to die\n");
 				Thread.sleep(5);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			cnt--;
 		}
+		if (cnt==0)
+			log = log && log(1, "internal thread refused to die, trying to close the port anyway\n");
 		int err = jtermios.JTermios.close(m_FD);
 		// No point in making much noise if close fails, as this is the last thing we do.
 		// So just log it at level 1 in case someone is logging this
@@ -871,13 +877,13 @@ public class PureJavaSerialPort extends SerialPort {
 				}
 			}
 		};
-		m_Thread = new Thread(runnable, "PureJavaSerialPort(" + getName() + ")");
+		m_Thread = new Thread(runnable, getName());
 		m_Thread.setDaemon(true);
 	}
 
 	synchronized private void updateControlLineState(int line) {
 		checkState();
-		
+
 		if (ioctl(m_FD, TIOCMGET, m_ioctl) == -1)
 			throw new IllegalStateException();
 
