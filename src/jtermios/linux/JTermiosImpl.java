@@ -292,12 +292,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		return m_Clib.tcdrain(fd);
 	}
 
-	public long cfgetispeed(Termios termios) {
-		return m_Clib.cfgetispeed(new Linux_C_lib.Termios(termios)).longValue();
+	public int cfgetispeed(Termios termios) {
+		return m_Clib.cfgetispeed(new Linux_C_lib.Termios(termios)).intValue();
 	}
 
-	public long cfgetospeed(Termios termios) {
-		return m_Clib.cfgetospeed(new Linux_C_lib.Termios(termios)).longValue();
+	public int cfgetospeed(Termios termios) {
+		return m_Clib.cfgetospeed(new Linux_C_lib.Termios(termios)).intValue();
 	}
 
 	public int cfsetispeed(Termios termios, int speed) {
