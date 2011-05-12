@@ -50,6 +50,7 @@ public class TestSuite {
 		Native.setProtected(true);
 		TestBase.init(args);
 		try {
+			jtermios.JTermios.JTermiosLogging.setLogLevel(0);
 			System.out.println("PureJavaComm Test Suite");
 			System.out.println("Using port: " + TestBase.getPortName());
 			Test1.run();
@@ -59,7 +60,7 @@ public class TestSuite {
 			Test5.run();
 			Test6.run();
 			Test7.run();
-			System.out.println("All tests passed OKs.");
+			System.out.println("All tests passed OK.");
 		} catch (TestBase.TestFailedException e) {
 			System.out.println("Test failure");
 		} catch (Exception e) {
