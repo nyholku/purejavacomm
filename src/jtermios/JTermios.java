@@ -38,9 +38,11 @@ import com.sun.jna.Platform;
 import com.sun.jna.Structure;
 
 /**
- * JTermios provides a limited cross platform unix termios type interface to serial ports.
+ * JTermios provides a limited cross platform unix termios type interface to
+ * serial ports.
+ * 
  * @author nyholku
- *
+ * 
  */
 public class JTermios {
 
@@ -199,9 +201,9 @@ public class JTermios {
 
 		int fcntl(int fd, int cmd, int arg);
 
-		long cfgetispeed(Termios termios);
+		int cfgetispeed(Termios termios);
 
-		long cfgetospeed(Termios termios);
+		int cfgetospeed(Termios termios);
 
 		int cfsetispeed(Termios termios, int speed);
 
@@ -259,7 +261,7 @@ public class JTermios {
 			m_Termios = new jtermios.macosx.JTermiosImpl();
 		} else if (Platform.isWindows()) {
 			m_Termios = new jtermios.windows.JTermiosImpl();
-		} else if (Platform.isLinux()){
+		} else if (Platform.isLinux()) {
 			m_Termios = new jtermios.linux.JTermiosImpl();
 		} else {
 			log(0, "JTermios has no support for OS %s\n", System.getProperty("os.name"));
@@ -275,63 +277,108 @@ public class JTermios {
 	}
 
 	static public int fcntl(int fd, int cmd, int arg) {
-		return m_Termios.fcntl(fd, cmd, arg);
+		log = log && log(5, "> fcntl(%d, %d, %d)\n", fd, cmd, arg);
+		int ret = m_Termios.fcntl(fd, cmd, arg);
+		log = log && log(3, "< fcntl(%d, %d, %d) => %d\n", fd, cmd, arg, ret);
+		return ret;
 	}
 
-	static public long cfgetispeed(Termios termios) {
-		return m_Termios.cfgetispeed(termios);
+	static public int cfgetispeed(Termios termios) {
+		log = log && log(5, "> cfgetispeed(%s)\n", termios);
+		int ret = m_Termios.cfgetispeed(termios);
+		log = log && log(3, "< cfgetispeed(%s) => %d\n", termios, ret);
+		return ret;
 	}
 
-	static public long cfgetospeed(Termios termios) {
-		return m_Termios.cfgetospeed(termios);
+	static public int cfgetospeed(Termios termios) {
+		log = log && log(5, "> cfgetospeed(%s)\n", termios);
+		int ret = m_Termios.cfgetospeed(termios);
+		log = log && log(3, "< cfgetospeed(%s) => %d\n", termios, ret);
+		return ret;
 	}
 
 	static public int cfsetispeed(Termios termios, int speed) {
-		return m_Termios.cfsetispeed(termios, speed);
+		log = log && log(5, "> cfgetospeed(%s,%d)\n", termios, speed);
+		int ret = m_Termios.cfsetispeed(termios, speed);
+		log = log && log(3, "< cfgetospeed(%s,%d) => %d\n", termios, speed, ret);
+		return ret;
 	}
 
 	static public int cfsetospeed(Termios termios, int speed) {
-		return m_Termios.cfsetospeed(termios, speed);
+		log = log && log(5, "> cfgetospeed(%s,%d)\n", termios, speed);
+		int ret = m_Termios.cfsetospeed(termios, speed);
+		log = log && log(3, "< cfgetospeed(%s,%d) => %d\n", termios, speed, ret);
+		return ret;
 	}
 
 	static public int tcflush(int a, int b) {
-		return m_Termios.tcflush(a, b);
+		log = log && log(5, "> tcflush(%d,%d)\n", a, b);
+		int ret = m_Termios.tcflush(a, b);
+		log = log && log(3, "< tcflush(%d,%d) => %d\n", a, b, ret);
+		return ret;
 	}
 
 	static public int tcdrain(int fd) {
-		return m_Termios.tcdrain(fd);
+		log = log && log(5, "> tcdrain(%d)\n", fd);
+		int ret = m_Termios.tcdrain(fd);
+		log = log && log(3, "< tcdrain(%d) => %d\n", fd, ret);
+		return ret;
 	}
 
 	static public int tcgetattr(int fd, Termios termios) {
-		return m_Termios.tcgetattr(fd, termios);
+		log = log && log(5, "> tcgetattr(%d,%s)\n", fd, termios);
+		int ret = m_Termios.tcgetattr(fd, termios);
+		log = log && log(3, "< tcgetattr(%d,%s) => %d\n", fd, termios, ret);
+		return ret;
 	}
 
 	static public int tcsetattr(int fd, int cmd, Termios termios) {
-		return m_Termios.tcsetattr(fd, cmd, termios);
+		log = log && log(5, "> tcsetattr(%d,%d,%s)\n", fd, cmd, termios);
+		int ret = m_Termios.tcsetattr(fd, cmd, termios);
+		log = log && log(3, "< tcsetattr(%d,%d,%s) => %d\n", fd, cmd, termios, ret);
+		return ret;
 	}
 
 	static public int tcsendbreak(int fd, int duration) {
-		return m_Termios.tcsendbreak(fd, duration);
+		log = log && log(5, "> tcsendbreak(%d,%d,%s)\n", fd, duration);
+		int ret = m_Termios.tcsendbreak(fd, duration);
+		log = log && log(3, "< tcsendbreak(%d,%d,%s) => %d\n", fd, duration, ret);
+		return ret;
 	}
 
 	static public int open(String s, int t) {
-		return m_Termios.open(s, t);
+		log = log && log(5, "> open('%s',%08X)\n", s, t);
+		int ret = m_Termios.open(s, t);
+		log = log && log(3, "< open('%s',%08X) => %d\n", s, t, ret);
+		return ret;
 	}
 
 	static public int close(int fd) {
-		return m_Termios.close(fd);
+		log = log && log(5, "> close(%d)\n", fd);
+		int ret = m_Termios.close(fd);
+		log = log && log(3, "< close(%d) => %d\n", fd, ret);
+		return ret;
 	}
 
 	static public int write(int fd, byte[] buffer, int len) {
-		return m_Termios.write(fd, buffer, len);
+		log = log && log(5, "> write(%d,%s,%d)\n", fd, log(buffer, 8), len);
+		int ret = m_Termios.write(fd, buffer, len);
+		log = log && log(3, "< write(%d,%s,%d) => %d\n", fd, log(buffer, 8), len, ret);
+		return ret;
 	}
 
 	static public int read(int fd, byte[] buffer, int len) {
-		return m_Termios.read(fd, buffer, len);
+		log = log && log(5, "> read(%d,%s,%d)\n", fd, log(buffer, 8), len);
+		int ret = m_Termios.read(fd, buffer, len);
+		log = log && log(3, "< read(%d,%s,%d) => %d\n", fd, log(buffer, 8), len, ret);
+		return ret;
 	}
 
 	static public int ioctl(int fd, int cmd, int[] data) {
-		return m_Termios.ioctl(fd, cmd, data);
+		log = log && log(5, "> ioctl(%d,%d,[%08X])\n", fd, cmd, data[0]);
+		int ret = m_Termios.ioctl(fd, cmd, data);
+		log = log && log(3, "< ioctl(%d,%d,[%08X]) => %d\n", fd, cmd, data[0], ret);
+		return ret;
 	}
 
 	/**
@@ -339,12 +386,17 @@ public class JTermios {
 	 * 
 	 */
 	static public int select(int n, FDSet read, FDSet write, FDSet error, TimeVal timeout) {
-		return m_Termios.select(n, read, write, error, timeout);
+		log = log && log(5, "> select(%d,%s,%s,%s,%s)\n", n, read, write, error, timeout);
+		int ret = m_Termios.select(n, read, write, error, timeout);
+		log = log && log(3, "< select(%d,%s,%s,%s,%s) => %d\n", n, read, write, error, timeout, ret);
+		return ret;
 	}
 
 	static public int poll(Pollfd[] fds, int nfds, int timeout) {
-
-		return m_Termios.poll(fds, nfds, timeout);
+		log = log && log(3, "> poll(%s,%d,%d)\n", log(fds, 8), nfds, timeout);
+		int ret = m_Termios.poll(fds, nfds, timeout);
+		log = log && log(3, "< poll(%s,%d,%d) => %d\n", log(fds, 8), nfds, timeout, ret);
+		return ret;
 	}
 
 	static public void perror(String msg) {
@@ -377,7 +429,7 @@ public class JTermios {
 	}
 
 	public static class JTermiosLogging {
-		public static int LOG_LEVEL;
+		private static int LOG_MASK;
 		public static boolean log;
 
 		public static String lineno() {
@@ -386,7 +438,7 @@ public class JTermios {
 
 		public static String lineno(int n) {
 			StackTraceElement e = Thread.currentThread().getStackTrace()[2 + n];
-			return String.format("class '%s', line% d", e.getClassName(), e.getLineNumber());
+			return String.format("class %s line% d", e.getClassName(), e.getLineNumber());
 		}
 
 		public static String ref(Structure struct) {
@@ -437,16 +489,37 @@ public class JTermios {
 			return b.toString();
 		}
 
+		static private StringBuffer buffer = new StringBuffer();
+
 		static public boolean log(int l, String format, Object... args) {
-			if (LOG_LEVEL >= l) {
-				System.out.printf("log: " + format, args);
+			if (LOG_MASK != 0) {
+				synchronized (buffer) {
+					buffer.setLength(0);
+					if ((LOG_MASK & (1 << (6 - 1))) != 0)
+						buffer.append(String.format(lineno(2) + ", "));
+					if ((LOG_MASK & (1 << (7 - 1))) != 0)
+						buffer.append(String.format(Thread.currentThread().getName() + ", "));
+					if ((LOG_MASK & (1 << (l - 1))) != 0)
+						buffer.append(String.format(format, args));
+					if (buffer.length() > 0) {
+						System.err.printf("log: " + buffer.toString());
+					}
+				}
 			}
 			return true;
 		}
 
 		public static void setLogLevel(int l) {
-			LOG_LEVEL = l;
-			log = l != 0;
+			LOG_MASK = 0;
+			for (int i = 0; i < l; i++) {
+				LOG_MASK = (LOG_MASK << 1) + 1;
+			}
+			log = LOG_MASK != 0;
+		}
+
+		public static void setLogMask(int mask) {
+			LOG_MASK = mask;
+			log = LOG_MASK != 0;
 		}
 	}
 
