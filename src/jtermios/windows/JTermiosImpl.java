@@ -308,13 +308,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	private static int min(int a, int b) {
-		return a<b?a:b;
+		return a < b ? a : b;
 	}
-	
+
 	private static int max(int a, int b) {
-		return a>b?a:b;
+		return a > b ? a : b;
 	}
-	
+
 	public int read(int fd, byte[] buffer, int length) {
 		Port port = getPort(fd);
 		if (port == null)
@@ -332,28 +332,28 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				if ((port.m_OpenFlags & O_NONBLOCK) != 0) {
 					if (!ClearCommError(port.m_Comm, port.m_RdErr, port.m_RdStat))
 						port.fail();
-					int available=port.m_RdStat.cbInQue;
-					if (available==0) {
-						m_ErrNo=EAGAIN;
+					int available = port.m_RdStat.cbInQue;
+					if (available == 0) {
+						m_ErrNo = EAGAIN;
 						return -1;
 					}
-					length= min(length,available);
+					length = min(length, available);
 				} else {
 					int vtime = port.m_Termios.c_cc[VTIME];
 					int vmin = port.m_Termios.c_cc[VMIN];
 
 					if (!ClearCommError(port.m_Comm, port.m_RdErr, port.m_RdStat))
 						port.fail();
-					int available=port.m_RdStat.cbInQue;
-					
+					int available = port.m_RdStat.cbInQue;
+
 					if (vmin == 0 && vtime == 0) {
-						if (available==0)
+						if (available == 0)
 							return 0;
-						length= min(length,available);
+						length = min(length, available);
 					}
-					if (vmin > 0) 
-						length=min(max(vmin,available),length);
-					}
+					if (vmin > 0)
+						length = min(max(vmin, available), length);
+				}
 
 				if (!ResetEvent(port.m_RdOVL.hEvent))
 					port.fail();
@@ -361,7 +361,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				if (!ReadFile(port.m_Comm, port.m_RdBuffer, length, port.m_RdN, port.m_RdOVL)) {
 					if (GetLastError() != ERROR_IO_PENDING)
 						port.fail();
-					if (WaitForSingleObject(port.m_RdOVL.hEvent, INFINITE)!= WAIT_OBJECT_0)
+					if (WaitForSingleObject(port.m_RdOVL.hEvent, INFINITE) != WAIT_OBJECT_0)
 						port.fail();
 					if (!GetOverlappedResult(port.m_Comm, port.m_RdOVL, port.m_RdN, true))
 						port.fail();
@@ -593,7 +593,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		dcb.EofChar = tios.c_cc[VEOF];
 
 		int vmin = port.m_Termios.c_cc[VMIN] & 0xFF;
-		int vtime = (port.m_Termios.c_cc[VTIME] & 0xFF)*100;
+		int vtime = (port.m_Termios.c_cc[VTIME] & 0xFF) * 100;
 		COMMTIMEOUTS touts = port.m_Timeouts;
 		// There are really no write timeouts in classic unix termios
 		// FIXME test that we can still interrupt the tread
@@ -654,112 +654,123 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int select(int n, FDSet readfds, FDSet writefds, FDSet exceptfds, TimeVal timeout) {
-		LinkedList<Port> locked = new LinkedList<Port>();
-		try {
+		int ready = 0;
+		while (ready == 0) {
+			LinkedList<Port> locked = new LinkedList<Port>();
 			try {
-				LinkedList<Port> waiting = new LinkedList<Port>();
-				int ready = 0;
-				for (int fd = 0; fd < n; fd++) {
-					boolean rd = FD_ISSET(fd, readfds);
-					boolean wr = FD_ISSET(fd, writefds);
-					FD_CLR(fd, readfds);
-					FD_CLR(fd, writefds);
-					if (rd || wr) {
-						Port port = getPort(fd);
-						if (port == null)
-							return -1;
-						try {
-							port.lock();
-							locked.add(port);
-							clearCommErrors(port);
+				try {
+					LinkedList<Port> waiting = new LinkedList<Port>();
+					for (int fd = 0; fd < n; fd++) {
+						boolean rd = FD_ISSET(fd, readfds);
+						boolean wr = FD_ISSET(fd, writefds);
+						FD_CLR(fd, readfds);
+						FD_CLR(fd, writefds);
+						if (rd || wr) {
+							Port port = getPort(fd);
+							if (port == null)
+								return -1;
+							try {
+								port.lock();
+								locked.add(port);
+								clearCommErrors(port);
 
-							if (!ResetEvent(port.m_SelOVL.hEvent))
-								port.fail();
-
-							int flags = 0;
-							if (rd)
-								flags |= EV_RXCHAR;
-							if (wr)
-								flags |= EV_TXEMPTY;
-							if (!SetCommMask(port.m_Comm, flags))
-								port.fail();
-							if (WaitCommEvent(port.m_Comm, port.m_EvenFlags, port.m_SelOVL)) {
-								maskToFDSets(port, readfds, writefds, exceptfds);
-								ready++;
-							} else {
-								// FIXME if the port dies on us what happens
-								if (GetLastError() != ERROR_IO_PENDING)
+								if (!ResetEvent(port.m_SelOVL.hEvent))
 									port.fail();
-								waiting.add(port);
+
+								int flags = 0;
+								if (rd)
+									flags |= EV_RXCHAR;
+								if (wr)
+									flags |= EV_TXEMPTY;
+								if (!SetCommMask(port.m_Comm, flags))
+									port.fail();
+								if (WaitCommEvent(port.m_Comm, port.m_EvenFlags, port.m_SelOVL)) {
+									// actually it seems that overlapped WaitCommEvent never returns true so we never get here
+									clearCommErrors(port);
+									if (!(((port.m_EvenFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
+										maskToFDSets(port, readfds, writefds, exceptfds);
+										ready++;
+									}
+								} else {
+									// FIXME if the port dies on us what happens
+									if (GetLastError() != ERROR_IO_PENDING)
+										port.fail();
+									waiting.add(port);
+								}
+							} catch (InterruptedException ie) {
+								m_ErrNo = 777; // FIXME figure out the proper unit
+												// error code
+								return -1;
 							}
-						} catch (InterruptedException ie) {
-							m_ErrNo = 777; // FIXME figure out the proper unit
-											// error code
+
+						}
+					}
+					int waitn = waiting.size();
+					if (ready == 0 && waitn > 0) {
+						HANDLE[] wobj = new HANDLE[waiting.size()];
+						int i = 0;
+						for (Port port : waiting)
+							wobj[i++] = port.m_SelOVL.hEvent;
+						int tout = timeout != null ? (int) (timeout.tv_sec * 1000 + timeout.tv_usec / 1000) : INFINITE;
+						//int res = WaitForSingleObject(wobj[0], tout);
+						int res = WaitForMultipleObjects(waitn, wobj, false, tout);
+
+						if (res == WAIT_TIMEOUT) {
+							// work around the fact that sometimes we miss events
+							for (Port port : waiting) {
+								clearCommErrors(port);
+								int[] mask = { 0 };
+
+								if (!GetCommMask(port.m_Comm, mask))
+									port.fail();
+								if (port.m_ClearStat.cbInQue > 0 && ((mask[0] & EV_RXCHAR) != 0)) {
+									FD_SET(port.m_FD, readfds);
+									log = log && log(1, "missed EV_RXCHAR event\n");
+									return 1;
+								}
+								if (port.m_ClearStat.cbOutQue == 0 && ((mask[0] & EV_TXEMPTY) != 0)) {
+									FD_SET(port.m_FD, writefds);
+									log = log && log(1, "missed EV_TXEMPTY event\n");
+									return 1;
+								}
+							}
+
+						}
+						if (res != WAIT_TIMEOUT) {
+							i = res - WAIT_OBJECT_0;
+							if (i < 0 || i >= waitn)
+								throw new Fail();
+
+							Port port = waiting.get(i);
+							if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
+								port.fail();
+
+							// following checking is needed because EV_RXCHAR can be set even if nothing is available for reading
+							clearCommErrors(port);
+							if (!(((port.m_EvenFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
+								maskToFDSets(port, readfds, writefds, exceptfds);
+								ready = 1;
+							}
+						}
+					} else {
+						if (timeout != null)
+							nanoSleep(timeout.tv_sec * 1000000000L + timeout.tv_usec * 1000);
+						else {
+							m_ErrNo = EINVAL;
 							return -1;
 						}
-
+						return 0;
 					}
+				} catch (Fail f) {
+					return -1;
 				}
-				int waitn = waiting.size();
-				if (ready == 0 && waitn > 0) {
-					HANDLE[] wobj = new HANDLE[waiting.size()];
-					int i = 0;
-					for (Port port : waiting)
-						wobj[i++] = port.m_SelOVL.hEvent;
-					int tout = timeout != null ? (int) (timeout.tv_sec * 1000 + timeout.tv_usec / 1000) : INFINITE;
-					//int res = WaitForSingleObject(wobj[0], tout);
-					int res = WaitForMultipleObjects(waitn, wobj, false, tout);
+			} finally {
+				for (Port port : locked)
+					port.unlock();
 
-					if (res == WAIT_TIMEOUT) {
-						// work around the fact that sometimes we miss events
-						for (Port port : waiting) {
-							clearCommErrors(port);
-							int[] mask = { 0 };
-
-							if (!GetCommMask(port.m_Comm, mask))
-								port.fail();
-							if (port.m_ClearStat.cbInQue > 0 && ((mask[0] & EV_RXCHAR) != 0)) {
-								FD_SET(port.m_FD, readfds);
-								log = log && log(1, "missed EV_RXCHAR event\n");
-								return 1;
-							}
-							if (port.m_ClearStat.cbOutQue == 0 && ((mask[0] & EV_TXEMPTY) != 0)) {
-								FD_SET(port.m_FD, writefds);
-								log = log && log(1, "missed EV_TXEMPTY event\n");
-								return 1;
-							}
-						}
-
-					}
-					if (res != WAIT_TIMEOUT) {
-
-						i = res - WAIT_OBJECT_0;
-						if (i < 0 || i >= waitn)
-							throw new Fail();
-						Port port = waiting.get(i);
-						if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
-							port.fail();
-
-						maskToFDSets(port, readfds, writefds, exceptfds);
-						ready = 1;
-					}
-				} else {
-					if (timeout != null)
-						nanoSleep(timeout.tv_sec * 1000000000L + timeout.tv_usec * 1000);
-					else {
-						m_ErrNo = EINVAL;
-						return -1;
-					}
-				}
-				return ready;
-			} catch (Fail f) {
-				return -1;
 			}
-		} finally {
-			for (Port port : locked)
-				port.unlock();
-
 		}
+		return ready;
 	}
 
 	public int poll(Pollfd fds[], int nfds, int timeout) {
@@ -947,7 +958,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				LinkedList<String> list = new LinkedList<String>();
 				int offset = 0;
 				String port;
-				while ((port = getString(buffer, offset)).length()>0) {
+				while ((port = getString(buffer, offset)).length() > 0) {
 					if (port.startsWith("COM"))
 						list.add(port);
 
