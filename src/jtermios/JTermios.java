@@ -268,7 +268,6 @@ public class JTermios {
 		}
 		if (m_Termios != null) {
 			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-
 				public void run() {
 					m_Termios.shutDown();
 				}
@@ -402,7 +401,7 @@ public class JTermios {
 	}
 
 	static public int poll(Pollfd[] fds, int nfds, int timeout) {
-		log = log && log(3, "> poll(%s,%d,%d)\n", log(fds, 8), nfds, timeout);
+		log = log && log(5, "> poll(%s,%d,%d)\n", log(fds, 8), nfds, timeout);
 		int ret = m_Termios.poll(fds, nfds, timeout);
 		log = log && log(3, "< poll(%s,%d,%d) => %d\n", log(fds, 8), nfds, timeout, ret);
 		return ret;
