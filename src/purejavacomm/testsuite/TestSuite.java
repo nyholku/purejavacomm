@@ -30,20 +30,7 @@
 
 package purejavacomm.testsuite;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Random;
-
 import com.sun.jna.Native;
-
-import purejavacomm.CommPortIdentifier;
-import purejavacomm.SerialPort;
-import purejavacomm.SerialPortEvent;
-import purejavacomm.SerialPortEventListener;
 
 public class TestSuite {
 	public static void main(String[] args) {
