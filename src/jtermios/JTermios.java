@@ -381,14 +381,23 @@ public class JTermios {
 		return ret;
 	}
 
+	private static String toString(int n, FDSet fdset) {
+		StringBuffer s = new StringBuffer("[");
+		for (int fd = 0; fd < n; fd++)
+			if (FD_ISSET(fd, fdset))
+				s.append(Integer.toString(fd));
+		s.append("]");
+		return s.toString();
+	}
+
 	/**
 	 * Unlike Linux select this does not modify 'timeout' so it can be re-used.
 	 * 
 	 */
 	static public int select(int n, FDSet read, FDSet write, FDSet error, TimeVal timeout) {
-		log = log && log(5, "> select(%d,%s,%s,%s,%s)\n", n, read, write, error, timeout);
+		log = log && log(5, "> select(%d,%s,%s,%s,%s)\n", n, toString(n, read), toString(n, write), toString(n, error), timeout);
 		int ret = m_Termios.select(n, read, write, error, timeout);
-		log = log && log(3, "< select(%d,%s,%s,%s,%s) => %d\n", n, read, write, error, timeout, ret);
+		log = log && log(3, "< select(%d,%s,%s,%s,%s) => %d\n", n, toString(n, read), toString(n, write), toString(n, error), timeout, ret);
 		return ret;
 	}
 
