@@ -177,20 +177,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		termios.c_cflag |= CS8;
 	}
 
-	public int fcntl(int fd, int cmd, int[] arg) {
-
-		Port port = getPort(fd);
-		if (port == null)
-			return -1;
-		if (F_GETFL == cmd)
-			arg[0] = port.m_OpenFlags;
-		else {
-			m_ErrNo = ENOTSUP;
-			return -1;
-		}
-		return 0;
-	}
-
 	public int fcntl(int fd, int cmd, int arg) {
 
 		Port port = getPort(fd);
@@ -198,6 +184,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			return -1;
 		if (F_SETFL == cmd)
 			port.m_OpenFlags = arg;
+		else if (F_GETFL == cmd)
+			return port.m_OpenFlags;
 		else {
 			m_ErrNo = ENOTSUP;
 			return -1;
