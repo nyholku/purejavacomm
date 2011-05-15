@@ -76,7 +76,7 @@ public class PureJavaSerialPort extends SerialPort {
 	private int[] m_ioctl = { 0 };
 	private int m_ControlLineStates;
 
-	synchronized private void sendDataEvents(boolean read, boolean write) {
+	private void sendDataEvents(boolean read, boolean write) {
 		if (read && m_NotifyOnDataAvailable && !m_DataAvailableNotified) {
 			m_DataAvailableNotified = true;
 			m_EventListener.serialEvent(new SerialPortEvent(this, SerialPortEvent.DATA_AVAILABLE, false, true));
@@ -87,7 +87,7 @@ public class PureJavaSerialPort extends SerialPort {
 		}
 	}
 
-	synchronized private void sendNonDataEvents() {
+	private void sendNonDataEvents() {
 		if (ioctl(m_FD, TIOCMGET, m_ioctl) < 0)
 			return; //FIXME decide what to with errors in the background thread
 		int oldstates = m_ControlLineStates;
