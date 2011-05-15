@@ -113,8 +113,8 @@ public class CommPortIdentifier {
 			CommPort port;
 			if (info != null)
 				port = info.m_Driver.getCommPort(m_PortName, info.m_PortType);
-			else 
-				port = new PureJavaSerialPort(m_PortName, timeout);  // FIXME timeout here is not used
+			else
+				port = new PureJavaSerialPort(m_PortName, timeout); // FIXME timeout here is not used
 			m_OpenPorts.put(port, this);
 			m_Owners.put(this, appname);
 			fireOwnershipEvent(CommPortOwnershipListener.PORT_OWNED);
@@ -154,9 +154,9 @@ public class CommPortIdentifier {
 						m_PortIDs.add(portid);
 					// and now add the PureSerialPorts
 					List<String> pureports = getPortList();
-					for (String name : pureports)
-						m_PortIDs.add(new CommPortIdentifier(name, PORT_SERIAL, null));
-					;
+					if (pureports != null)
+						for (String name : pureports)
+							m_PortIDs.add(new CommPortIdentifier(name, PORT_SERIAL, null));
 				}
 				Iterator<CommPortIdentifier> m_Iterator = m_PortIDs.iterator();
 
