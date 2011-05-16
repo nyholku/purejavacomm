@@ -939,14 +939,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public List<String> getPortList() {
 		char[] buffer;
-		int res=0;
-		int err=0;
-		int size=0;
-		for (size = 8 * 1024; size < 256 * 1024; size *= 2) {
+		int size = 0;
+		for (size = 16 * 1024; size < 256 * 1024; size *= 2) {
 			buffer = new char[size];
-			res = QueryDosDeviceW(null, buffer, buffer.length);
-			err = GetLastError();
-			if (res > 0 && (err != ERROR_INSUFFICIENT_BUFFER)) { //
+			int res = QueryDosDeviceW(null, buffer, buffer.length);
+			if (res > 0) { //
 				LinkedList<String> list = new LinkedList<String>();
 				int offset = 0;
 				String port;
@@ -957,9 +954,15 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 					offset += port.length() + 1;
 				}
 				return list;
+			} else {
+				int err = GetLastError();
+				if (err != ERROR_INSUFFICIENT_BUFFER) {
+					log = log && log(1, "QueryDosDeviceW() failed with GetLastError() ", err);
+					return null;
+				}
 			}
 		}
-		log = log && log(1, "QueryDosDeviceW() returned %d for size %d GetLastError() returned %d\n", res,size, err);
+		log = log && log(1, "Repeated QueryDosDeviceW() calls failed up to buffer size %d\n", size);
 		return null;
 	}
 
