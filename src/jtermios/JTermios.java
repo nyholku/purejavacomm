@@ -255,14 +255,18 @@ public class JTermios {
 	}
 
 	static { // INSTANTIATION 
-		JTermiosLogging.setLogLevel(0);
+		String loglevel = System.getProperty("purejavacomm.loglevel");
+		if (loglevel != null)
+			JTermiosLogging.setLogLevel(Integer.parseInt(loglevel));
+		else
+			JTermiosLogging.setLogLevel(0);
 		int path_max;
 		if (Platform.isMac()) {
 			m_Termios = new jtermios.macosx.JTermiosImpl();
 		} else if (Platform.isWindows()) {
 			m_Termios = new jtermios.windows.JTermiosImpl();
 		} else if (Platform.isLinux()) {
-			m_Termios = new jtermios.linux.JTermiosImpl();
+			m_Termios = Platform.is64Bit() ? new jtermios.linux.JTermiosImpl64b() : new jtermios.linux.JTermiosImpl();
 		} else {
 			log(0, "JTermios has no support for OS %s\n", System.getProperty("os.name"));
 		}
