@@ -170,8 +170,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 	
 	public int errno() {
-		return m_Clib.__error().getValue();
-	}
+		return Native.getLastError();
+		}
 
 	public void cfmakeraw(Termios termios) {
 		MacOSX_C_lib.Termios t = new MacOSX_C_lib.Termios(termios);
@@ -325,11 +325,5 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public void shutDown() {
 
-	}
-
-	public static void main(String[] args) {
-		JTermiosImpl termios= new jtermios.macosx.JTermiosImpl();
-		System.out.println(termios.open("XXX", O_RDWR));
-		System.out.println(termios.m_Clib.__error().getValue());
 	}
 }

@@ -278,8 +278,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 	
 	public int errno() {
-		return m_Clib.__error().getValue();
-	}
+		return Native.getLastError();
+		}
 
 	public void cfmakeraw(Termios termios) {
 		Linux_C_lib.Termios t = new Linux_C_lib.Termios(termios);
