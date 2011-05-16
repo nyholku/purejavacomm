@@ -64,8 +64,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public void cfmakeraw(Termios termios);
 
-		public int fcntl(int fd, int cmd, int[] arg);
-
 		public int fcntl(int fd, int cmd, int arg);
 
 		public int ioctl(int fd, int cmd, int[] arg);
@@ -171,10 +169,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public void cfmakeraw(Termios termios) {
 		MacOSX_C_lib.Termios t = new MacOSX_C_lib.Termios(termios);
 		m_Clib.cfmakeraw(t);
-	}
-
-	public int fcntl(int fd, int cmd, int[] arg) {
-		return m_Clib.fcntl(fd, cmd, arg);
 	}
 
 	public int fcntl(int fd, int cmd, int arg) {
