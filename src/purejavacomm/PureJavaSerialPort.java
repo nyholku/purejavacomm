@@ -739,16 +739,16 @@ public class PureJavaSerialPort extends SerialPort {
 		// so we need to wait for the thread to die to ensure that nothing is
 		// in progress
 		int cnt = 1000;
-		while (m_Thread.isAlive() && cnt >0) {
+		while (m_Thread.isAlive() && cnt > 0) {
 			try {
 				log = log & log(1, "close() waiting for the thread to die\n");
 				Thread.sleep(5);
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (InterruptedException e) {
+				break;
 			}
 			cnt--;
 		}
-		if (cnt==0)
+		if (cnt == 0)
 			log = log && log(1, "internal thread refused to die, trying to close the port anyway\n");
 		int err = jtermios.JTermios.close(m_FD);
 		// No point in making much noise if close fails, as this is the last thing we do.
