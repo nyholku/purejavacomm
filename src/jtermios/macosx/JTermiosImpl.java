@@ -49,6 +49,7 @@ import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Structure;
+import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.NativeLongByReference;
 
 import static jtermios.JTermios.*;
@@ -59,6 +60,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	static MacOSX_C_lib m_Clib = (MacOSX_C_lib) Native.loadLibrary("c", MacOSX_C_lib.class);
 
 	public interface MacOSX_C_lib extends com.sun.jna.Library {
+
+		public IntByReference __error();
 
 		public int tcdrain(int fd);
 
@@ -164,6 +167,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public JTermiosImpl() {
 		log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
+	}
+	
+	public int errno() {
+		return m_Clib.__error().getValue();
 	}
 
 	public void cfmakeraw(Termios termios) {
@@ -318,5 +325,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public void shutDown() {
 
+	}
+
+	public static void main(String[] args) {
+		JTermiosImpl termios= new jtermios.macosx.JTermiosImpl();
+		System.out.println(termios.open("XXX", O_RDWR));
+		System.out.println(termios.m_Clib.__error().getValue());
 	}
 }

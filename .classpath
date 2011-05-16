@@ -3,5 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/JVM 1.5"/>
 	<classpathentry kind="lib" path="lib/jna.jar"/>
+	<classpathentry kind="lib" path="/Users/nyholku/purejavacomm/lib/comm.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

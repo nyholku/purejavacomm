@@ -199,6 +199,8 @@ public class JTermios {
 	public interface JTermiosInterface {
 		void shutDown();
 
+		int errno();
+		
 		int fcntl(int fd, int cmd, int arg);
 
 		int cfgetispeed(Termios termios);

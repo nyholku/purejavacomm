@@ -49,6 +49,7 @@ import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Structure;
+import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.NativeLongByReference;
 
 import static jtermios.JTermios.*;
@@ -59,7 +60,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	static Linux_C_lib m_Clib = (Linux_C_lib) Native.loadLibrary("c", Linux_C_lib.class);
 
 	public interface Linux_C_lib extends com.sun.jna.Library {
-
+		public IntByReference __error();
+			
 		public int tcdrain(int fd);
 
 		public void cfmakeraw(Termios termios);
@@ -274,6 +276,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		//select.h stuff
 
 		}
+	
+	public int errno() {
+		return m_Clib.__error().getValue();
+	}
 
 	public void cfmakeraw(Termios termios) {
 		Linux_C_lib.Termios t = new Linux_C_lib.Termios(termios);

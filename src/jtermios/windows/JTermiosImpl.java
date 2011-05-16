@@ -169,6 +169,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
 	}
 
+	public int errno() {
+		return m_ErrNo;
+	}
+
 	public void cfmakeraw(Termios termios) {
 		termios.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
 		termios.c_oflag &= ~OPOST;
