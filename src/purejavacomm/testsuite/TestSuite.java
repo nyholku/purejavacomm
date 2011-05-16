@@ -37,7 +37,6 @@ public class TestSuite {
 		Native.setProtected(true);
 		TestBase.init(args);
 		try {
-			jtermios.JTermios.JTermiosLogging.setLogLevel(0);
 			System.out.println("PureJavaComm Test Suite");
 			System.out.println("Using port: " + TestBase.getPortName());
 			Test1.run();
