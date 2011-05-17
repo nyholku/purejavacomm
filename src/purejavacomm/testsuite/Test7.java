@@ -36,6 +36,7 @@ public class Test7 extends TestBase {
 	private static Exception m_Exception = null;
 	private static Thread receiver;
 	private static Thread transmitter;
+	private static volatile long m_T0;
 
 	static void run() throws Exception {
 		try {
@@ -48,14 +49,13 @@ public class Test7 extends TestBase {
 						sync(2);
 						m_Port.enableReceiveThreshold(7);
 						m_Port.disableReceiveTimeout();
-						long T0 = System.currentTimeMillis();
 						byte[] b = new byte[8];
 						int n = m_In.read(b);
-						long dT = System.currentTimeMillis() - T0;
+						long dT = System.currentTimeMillis() - m_T0;
 						if (n != 7)
 							fail("read did not get 7 bytes as expected, got %d", n);
 						if (dT < 10000)
-							fail("timed out early though we got 7 bytes");
+							fail("timed out in %d though we got 7 bytes",dT);
 
 					} catch (InterruptedException e) {
 					} catch (Exception e) {
@@ -72,6 +72,7 @@ public class Test7 extends TestBase {
 				public void run() {
 					try {
 						sync(2);
+						m_T0 = System.currentTimeMillis();
 						sleep(10000);
 						m_Out.write(new byte[7]);
 
