@@ -76,6 +76,7 @@ public class JTermios {
 	public static int O_NONBLOCK = 0x00000004;
 	public static int O_NOCTTY = 0x00020000;
 	public static int O_NDELAY = 0x00000004;
+	public static int O_CREAT = 0x00000200;
 	public static int F_GETFL = 0x00000003;
 	public static int F_SETFL = 0x00000004;
 	// errno.h stuff
@@ -99,6 +100,7 @@ public class JTermios {
 	public static int EOVERFLOW = 84;
 	public static int EROFS = 30;
 	public static int ENOTSUP = 45;
+	public static int EBUSY= 16;
 	// termios.h stuff
 	public static int TIOCM_RNG = 0x00000080;
 	public static int TIOCM_CAR = 0x00000040;
