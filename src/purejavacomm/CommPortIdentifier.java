@@ -69,11 +69,32 @@ public class CommPortIdentifier {
 
 	public static CommPortIdentifier getPortIdentifier(String portName) throws NoSuchPortException {
 		synchronized (m_Mutex) {
-			Enumeration e = CommPortIdentifier.getPortIdentifiers();
-			while (e.hasMoreElements()) {
-				CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
+			boolean ENUMERATE = false;
+			for (CommPortIdentifier portid : m_OpenPorts.values())
 				if (portid.getName().equals(portName))
 					return portid;
+			if (ENUMERATE) { // enumerating ports takes time, lets see if we can avoid it
+				Enumeration e = getPortIdentifiers();
+				while (e.hasMoreElements()) {
+					CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
+					if (portid.getName().equals(portName))
+						return portid;
+				}
+			} else {
+				CommPortIdentifier portid = m_PortIdentifiers.get(portName);
+				if (portid != null)
+					return portid;
+
+				// check if we can open a port with the given name
+				int fd = jtermios.JTermios.open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK);
+				if (fd != -1) { // yep, it exists, so close it and create a port id object for it
+					// FIXME this does not detect if the port name is invalid device name
+					// but is valid and existing filename
+					jtermios.JTermios.close(fd);
+					return new CommPortIdentifier(portName, PORT_SERIAL, null);
+				}
+				if (errno() == EBUSY) // exists but busy, cannot throw anything here, so return a port if for it
+					return new CommPortIdentifier(portName, PORT_SERIAL, null);
 			}
 			throw new NoSuchPortException();
 		}
@@ -127,7 +148,7 @@ public class CommPortIdentifier {
 		synchronized (m_Mutex) {
 			m_Owners.remove(port.name);
 			CommPortIdentifier portid = m_OpenPorts.remove(port);
-			if (portid!=null)
+			if (portid != null)
 				portid.fireOwnershipEvent(CommPortOwnershipListener.PORT_UNOWNED);
 		}
 	}
