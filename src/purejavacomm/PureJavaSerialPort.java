@@ -810,13 +810,13 @@ public class PureJavaSerialPort extends SerialPort {
 				Pollfd[] pollfd;
 
 				if (USE_SELECT) {
-					rset = USE_SELECT ? newFDSet() : null;
-					wset = USE_SELECT ? newFDSet() : null;
+					rset = newFDSet();
+					wset = newFDSet();
 					timeout = new TimeVal();
 					timeout.tv_sec = 0;
 					timeout.tv_usec = TIMEOUT * 1000; // 10 msec polling period
 				} else
-					pollfd = USE_SELECT ? null : new Pollfd[] { new Pollfd() };
+					pollfd = new Pollfd[] { new Pollfd() };
 
 				try {
 					while (m_FD >= 0) { // lets die if the file descriptor dies on us ie the port closes
@@ -848,9 +848,8 @@ public class PureJavaSerialPort extends SerialPort {
 								n = poll(pollfd, 1, TIMEOUT);
 								int re = pollfd[0].revents;
 								if ((re & POLLNVAL) != 0) {
-									log = log && log(1, "poll() returned POLLNVAL\n");
-									if (log)
-										perror("perror(): ");
+									log = log && log(1, "poll() returned POLLNVAL, errno %\n",errno());
+									break;
 								}
 								read = read && (re & POLLIN) != 0;
 								write = write && (re & POLLOUT) != 0;
@@ -858,9 +857,7 @@ public class PureJavaSerialPort extends SerialPort {
 							if (Thread.currentThread().isInterrupted())
 								break;
 							if (n < 0) {
-								log = log && log(1, "select() or poll() returned %d\n", n);
-								if (log)
-									perror("perror(): ");
+								log = log && log(1, "select() or poll() returned %d, errno %d\n", n,errno());
 								close();
 								break;
 							}
