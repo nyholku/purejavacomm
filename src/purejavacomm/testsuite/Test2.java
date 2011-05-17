@@ -75,7 +75,7 @@ public class Test2 extends TestBase {
 							if (!m_Done) {
 								m_TotalReceived += n;
 								processBuffer(buffer, n);
-								if (m_RxCount++ >= N) {
+								if (m_RxCount >= N) {
 									m_Done = true;
 								}
 							}
