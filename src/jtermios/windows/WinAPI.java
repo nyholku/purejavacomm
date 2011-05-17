@@ -248,6 +248,7 @@ public class WinAPI {
 	public static final int ERROR_IO_PENDING = 997;
 	public static final int ERROR_BROKEN_PIPE = 109;
 	public static final int ERROR_MORE_DATA = 234;
+	public static final int ERROR_FILE_NOT_FOUND = 2;
 	public static final byte NOPARITY = 0;
 	public static final byte ODDPARITY = 1;
 	public static final byte EVENPARITY = 2;
