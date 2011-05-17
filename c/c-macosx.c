@@ -22,6 +22,7 @@ main(){
 	printf("O_NONBLOCK= 0x%08X;\n",O_NONBLOCK);
 	printf("O_NOCTTY = 0x%08X;\n",O_NOCTTY);
 	printf("O_NDELAY = 0x%08X;\n",O_NDELAY);
+	printf("O_CREAT = 0x%08X;\n",O_CREAT);
 	printf("F_GETFL = 0x%08X;\n",F_GETFL);
 	printf("F_SETFL = 0x%08X;\n",F_SETFL);
 
@@ -46,6 +47,7 @@ main(){
 	printf("EOVERFLOW= %d;\n",EOVERFLOW);
 	printf("EROFS= %d;\n",EROFS);
 	printf("ENOTSUP= %d;\n",ENOTSUP);	
+	printf("EBUSY= %d;\n",EBUSY);	
 	
 	printf("// termios.h stuff\n");
 	printf("TIOCM_RNG = 0x%08X;\n",TIOCM_RNG);
