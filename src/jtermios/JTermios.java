@@ -100,7 +100,7 @@ public class JTermios {
 	public static int EOVERFLOW = 84;
 	public static int EROFS = 30;
 	public static int ENOTSUP = 45;
-	public static int EBUSY= 16;
+	public static int EBUSY = 16;
 	// termios.h stuff
 	public static int TIOCM_RNG = 0x00000080;
 	public static int TIOCM_CAR = 0x00000040;
@@ -202,7 +202,7 @@ public class JTermios {
 		void shutDown();
 
 		int errno();
-		
+
 		int fcntl(int fd, int cmd, int arg);
 
 		int cfgetispeed(Termios termios);
@@ -258,6 +258,11 @@ public class JTermios {
 		List<String> getPortList();
 	}
 
+	public void shutdown() {
+		if (m_Termios != null)
+			m_Termios.shutDown();
+	}
+
 	static { // INSTANTIATION 
 		String loglevel = System.getProperty("purejavacomm.loglevel");
 		if (loglevel != null)
@@ -274,19 +279,12 @@ public class JTermios {
 		} else {
 			log(0, "JTermios has no support for OS %s\n", System.getProperty("os.name"));
 		}
-		if (m_Termios != null) {
-			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-				public void run() {
-					m_Termios.shutDown();
-				}
-			}));
-		}
 	}
-	
+
 	static public int errno() {
 		log = log && log(5, "> errno()\n");
 		int ret = m_Termios.errno();
-		log = log && log(3, "< errno() => %d\n",ret);
+		log = log && log(3, "< errno() => %d\n", ret);
 		return ret;
 	}
 
