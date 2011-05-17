@@ -123,12 +123,16 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public void close() {
 			synchronized (JTermiosImpl.this) {
-
 				if (m_FD >= 0) {
 					m_OpenPorts.remove(m_FD);
 					m_PortFDs[m_FD] = false;
 					m_FD = -1;
 				}
+
+				if (m_Comm != null)
+					if (!PurgeComm(m_Comm, PURGE_TXABORT + PURGE_TXCLEAR + PURGE_RXABORT + PURGE_RXCLEAR))
+						log = log && log(1, "PurgeComm() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
+
 				HANDLE h; /// 'hEvent' might never have been 'read' so read it to this var first
 
 				h = (HANDLE) m_RdOVL.readField("hEvent");
@@ -239,8 +243,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 			port.m_Comm = CreateFileW(new WString(filename), GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
 
-			if (INVALID_HANDLE_VALUE == port.m_Comm)
+			if (INVALID_HANDLE_VALUE == port.m_Comm) {
+				if (GetLastError() == ERROR_FILE_NOT_FOUND)
+					m_ErrNo = ENOENT;
+				else
+					m_ErrNo = EBUSY;
 				port.fail();
+			}
 
 			if (!SetupComm(port.m_Comm, (int) port.m_RdBuffer.size(), (int) port.m_WrBuffer.size()))
 				port.fail(); // FIXME what would be appropriate error code here
