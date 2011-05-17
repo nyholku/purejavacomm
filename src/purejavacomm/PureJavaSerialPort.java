@@ -72,6 +72,7 @@ public class PureJavaSerialPort extends SerialPort {
 	private volatile boolean m_NotifyOnParityError;
 	private volatile boolean m_NotifyOnFramingError;
 	private volatile boolean m_NotifyOnBreakInterrupt;
+	private volatile boolean m_ThreadRunning;
 
 	private int[] m_ioctl = { 0 };
 	private int m_ControlLineStates;
@@ -572,7 +573,6 @@ public class PureJavaSerialPort extends SerialPort {
 				checkState();
 				byte[] buf = { (byte) b };
 				write(buf, 0, 1);
-				m_OutputEmptyNotified = false;
 			}
 
 			@Override
@@ -582,13 +582,16 @@ public class PureJavaSerialPort extends SerialPort {
 					int n = len;
 					if (n > m_Buffer.length)
 						n = m_Buffer.length;
-					if (n > b.length)
-						n = b.length;
+					if (n > b.length-off)
+						n = b.length-off;
 					System.arraycopy(b, off, m_Buffer, 0, n);
 
 					n = jtermios.JTermios.write(m_FD, b, len);
-					if (n < 0)
+					if (n < 0) {
 						PureJavaSerialPort.this.close();
+						throw new IOException();
+					}
+						
 					len -= n;
 					off += n;
 				}
@@ -654,10 +657,9 @@ public class PureJavaSerialPort extends SerialPort {
 							System.arraycopy(m_Buffer, 0, b, off, n);
 					} else
 						n = jtermios.JTermios.read(m_FD, b, left);
-					if (n < 0) {
-						jtermios.JTermios.perror("ERROR:");
-						break;
-					}
+					if (n < 0) 
+						throw new IOException();
+					
 					N += n;
 					//System.out.printf("n=%d off=%d left=%d N=%d th=%d to=%d dt=%d\n",n, off,left,N,m_ReceiveThresholdValue,m_ReceiveTimeOutValue,System.currentTimeMillis() - T0);
 					if (N >= len)
@@ -728,43 +730,47 @@ public class PureJavaSerialPort extends SerialPort {
 
 	@Override
 	synchronized public void close() {
-		int flags = fcntl(m_FD, F_GETFL, 0);
-		flags |= O_NONBLOCK;
-		int fcres = fcntl(m_FD, F_SETFL, flags);
-		if (fcres != 0) // not much we can do if this fails, so just log it
-			log = log && log(1, "fcntl(%d,%d,%d) returned %d\n", m_FD, F_SETFL, flags, fcres);
+		int fd = m_FD;
+		if (fd != -1) {
+			m_FD = -1;
+			int flags = fcntl(fd, F_GETFL, 0);
+			flags |= O_NONBLOCK;
+			int fcres = fcntl(fd, F_SETFL, flags);
+			if (fcres != 0) // not much we can do if this fails, so just log it
+				log = log && log(1, "fcntl(%d,%d,%d) returned %d\n", m_FD, F_SETFL, flags, fcres);
 
-		m_Thread.interrupt();
-		// At least on Windows we get crash if an Overlapped IO is in progress
-		// so we need to wait for the thread to die to ensure that nothing is
-		// in progress
-		int cnt = 1000;
-		while (m_Thread.isAlive() && cnt > 0) {
-			try {
-				log = log & log(1, "close() waiting for the thread to die\n");
+			m_Thread.interrupt();
+			int err = jtermios.JTermios.close(fd);
+			if (err < 0)
+				log = log && log(1, "JTermios.close returned %d, errno %d\n", err, errno());
+			long t0=System.currentTimeMillis();
+			while (m_ThreadRunning) {
+				try {
 				Thread.sleep(5);
-			} catch (InterruptedException e) {
-				break;
+				if (System.currentTimeMillis()-t0>2000)
+					break;
+				}
+				catch (InterruptedException e) {
+					break;
+				}
 			}
-			cnt--;
+			super.close();
 		}
-		if (cnt == 0)
-			log = log && log(1, "internal thread refused to die, trying to close the port anyway\n");
-		int err = jtermios.JTermios.close(m_FD);
-		// No point in making much noise if close fails, as this is the last thing we do.
-		// So just log it at level 1 in case someone is logging this
-		if (err < 0)
-			log = log && log(1, "JTermios.close returned %d\n", err);
-		super.close();
-		m_FD = -1;
 	}
 
 	public PureJavaSerialPort(String name, int timeout) throws PortInUseException {
 		super(name);
-		m_FD = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
-		if (m_FD < 0)
-			throw new PortInUseException();
-
+		// unbelievable, sometimes quickly closing and re-opening fails on Windows
+		// so try a few times
+		int tries=100;
+		while ((m_FD = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK))<0) {
+			try{ 
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+			}
+			if (tries-- <0)
+				throw new PortInUseException();
+		} while (m_FD < 0); 
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags &= ~O_NONBLOCK;
 		checkReturnCode(fcntl(m_FD, F_SETFL, flags));
@@ -801,6 +807,8 @@ public class PureJavaSerialPort extends SerialPort {
 
 		Runnable runnable = new Runnable() {
 			public void run() {
+				try {
+				m_ThreadRunning = true;
 				// see: http://daniel.haxx.se/docs/poll-vs-select.html
 				final boolean USE_SELECT = true;
 				final int TIMEOUT = 10; // msec
@@ -818,7 +826,6 @@ public class PureJavaSerialPort extends SerialPort {
 				} else
 					pollfd = new Pollfd[] { new Pollfd() };
 
-				try {
 					while (m_FD >= 0) { // lets die if the file descriptor dies on us ie the port closes
 						boolean read = (m_NotifyOnDataAvailable && !m_DataAvailableNotified);
 						boolean write = (m_NotifyOnOutputEmpty && !m_OutputEmptyNotified);
@@ -848,7 +855,7 @@ public class PureJavaSerialPort extends SerialPort {
 								n = poll(pollfd, 1, TIMEOUT);
 								int re = pollfd[0].revents;
 								if ((re & POLLNVAL) != 0) {
-									log = log && log(1, "poll() returned POLLNVAL, errno %\n",errno());
+									log = log && log(1, "poll() returned POLLNVAL, errno %\n", errno());
 									break;
 								}
 								read = read && (re & POLLIN) != 0;
@@ -857,7 +864,7 @@ public class PureJavaSerialPort extends SerialPort {
 							if (Thread.currentThread().isInterrupted())
 								break;
 							if (n < 0) {
-								log = log && log(1, "select() or poll() returned %d, errno %d\n", n,errno());
+								log = log && log(1, "select() or poll() returned %d, errno %d\n", n, errno());
 								close();
 								break;
 							}
@@ -872,7 +879,10 @@ public class PureJavaSerialPort extends SerialPort {
 					}
 				} catch (InterruptedException ie) {
 				}
-			}
+				finally {
+					m_ThreadRunning = false;
+				}
+		}
 		};
 		m_Thread = new Thread(runnable, getName());
 		m_Thread.setDaemon(true);
