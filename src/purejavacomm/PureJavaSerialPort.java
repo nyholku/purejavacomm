@@ -582,8 +582,8 @@ public class PureJavaSerialPort extends SerialPort {
 					int n = len;
 					if (n > m_Buffer.length)
 						n = m_Buffer.length;
-					if (n > b.length-off)
-						n = b.length-off;
+					if (n > b.length - off)
+						n = b.length - off;
 					System.arraycopy(b, off, m_Buffer, 0, n);
 
 					n = jtermios.JTermios.write(m_FD, b, len);
@@ -591,7 +591,7 @@ public class PureJavaSerialPort extends SerialPort {
 						PureJavaSerialPort.this.close();
 						throw new IOException();
 					}
-						
+
 					len -= n;
 					off += n;
 				}
@@ -657,9 +657,9 @@ public class PureJavaSerialPort extends SerialPort {
 							System.arraycopy(m_Buffer, 0, b, off, n);
 					} else
 						n = jtermios.JTermios.read(m_FD, b, left);
-					if (n < 0) 
+					if (n < 0)
 						throw new IOException();
-					
+
 					N += n;
 					//System.out.printf("n=%d off=%d left=%d N=%d th=%d to=%d dt=%d\n",n, off,left,N,m_ReceiveThresholdValue,m_ReceiveTimeOutValue,System.currentTimeMillis() - T0);
 					if (N >= len)
@@ -743,14 +743,13 @@ public class PureJavaSerialPort extends SerialPort {
 			int err = jtermios.JTermios.close(fd);
 			if (err < 0)
 				log = log && log(1, "JTermios.close returned %d, errno %d\n", err, errno());
-			long t0=System.currentTimeMillis();
+			long t0 = System.currentTimeMillis();
 			while (m_ThreadRunning) {
 				try {
-				Thread.sleep(5);
-				if (System.currentTimeMillis()-t0>2000)
-					break;
-				}
-				catch (InterruptedException e) {
+					Thread.sleep(5);
+					if (System.currentTimeMillis() - t0 > 2000)
+						break;
+				} catch (InterruptedException e) {
 					break;
 				}
 			}
@@ -762,15 +761,17 @@ public class PureJavaSerialPort extends SerialPort {
 		super(name);
 		// unbelievable, sometimes quickly closing and re-opening fails on Windows
 		// so try a few times
-		int tries=100;
-		while ((m_FD = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK))<0) {
-			try{ 
+		int tries = 100;
+		while ((m_FD = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
 			}
-			if (tries-- <0)
+			if (tries-- < 0)
 				throw new PortInUseException();
-		} while (m_FD < 0); 
+		}
+		while (m_FD < 0)
+			;
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags &= ~O_NONBLOCK;
 		checkReturnCode(fcntl(m_FD, F_SETFL, flags));
@@ -808,23 +809,23 @@ public class PureJavaSerialPort extends SerialPort {
 		Runnable runnable = new Runnable() {
 			public void run() {
 				try {
-				m_ThreadRunning = true;
-				// see: http://daniel.haxx.se/docs/poll-vs-select.html
-				final boolean USE_SELECT = true;
-				final int TIMEOUT = 10; // msec
-				TimeVal timeout;
-				FDSet rset;
-				FDSet wset;
-				Pollfd[] pollfd;
+					m_ThreadRunning = true;
+					// see: http://daniel.haxx.se/docs/poll-vs-select.html
+					final boolean USE_SELECT = true;
+					final int TIMEOUT = 10; // msec
+					TimeVal timeout;
+					FDSet rset;
+					FDSet wset;
+					Pollfd[] pollfd;
 
-				if (USE_SELECT) {
-					rset = newFDSet();
-					wset = newFDSet();
-					timeout = new TimeVal();
-					timeout.tv_sec = 0;
-					timeout.tv_usec = TIMEOUT * 1000; // 10 msec polling period
-				} else
-					pollfd = new Pollfd[] { new Pollfd() };
+					if (USE_SELECT) {
+						rset = newFDSet();
+						wset = newFDSet();
+						timeout = new TimeVal();
+						timeout.tv_sec = 0;
+						timeout.tv_usec = TIMEOUT * 1000; // 10 msec polling period
+					} else
+						pollfd = new Pollfd[] { new Pollfd() };
 
 					while (m_FD >= 0) { // lets die if the file descriptor dies on us ie the port closes
 						boolean read = (m_NotifyOnDataAvailable && !m_DataAvailableNotified);
@@ -878,11 +879,10 @@ public class PureJavaSerialPort extends SerialPort {
 						}
 					}
 				} catch (InterruptedException ie) {
-				}
-				finally {
+				} finally {
 					m_ThreadRunning = false;
 				}
-		}
+			}
 		};
 		m_Thread = new Thread(runnable, getName());
 		m_Thread.setDaemon(true);
