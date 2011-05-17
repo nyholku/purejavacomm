@@ -280,6 +280,13 @@ public class JTermios {
 			}));
 		}
 	}
+	
+	static public int errno() {
+		log = log && log(5, "> errno()\n");
+		int ret = m_Termios.errno();
+		log = log && log(3, "< errno() => %d\n",ret);
+		return ret;
+	}
 
 	static public int fcntl(int fd, int cmd, int arg) {
 		log = log && log(5, "> fcntl(%d, %d, %d)\n", fd, cmd, arg);
