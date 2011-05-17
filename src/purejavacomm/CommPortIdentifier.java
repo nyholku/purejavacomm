@@ -127,7 +127,8 @@ public class CommPortIdentifier {
 		synchronized (m_Mutex) {
 			m_Owners.remove(port.name);
 			CommPortIdentifier portid = m_OpenPorts.remove(port);
-			portid.fireOwnershipEvent(CommPortOwnershipListener.PORT_UNOWNED);
+			if (portid!=null)
+				portid.fireOwnershipEvent(CommPortOwnershipListener.PORT_UNOWNED);
 		}
 	}
 
