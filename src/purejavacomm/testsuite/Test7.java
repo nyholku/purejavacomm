@@ -34,8 +34,8 @@ import purejavacomm.SerialPortEventListener;
 
 public class Test7 extends TestBase {
 	private static Exception m_Exception = null;
-	private static Thread receiver;
-	private static Thread transmitter;
+	private static Thread m_Receiver;
+	private static Thread m_Transmitter;
 	private static volatile long m_T0;
 
 	static void run() throws Exception {
@@ -43,7 +43,7 @@ public class Test7 extends TestBase {
 			begin("Test7 - threshold");
 			openPort();
 			// receiving thread
-			receiver = new Thread(new Runnable() {
+			m_Receiver = new Thread(new Runnable() {
 				public void run() {
 					try {
 						sync(2);
@@ -61,14 +61,14 @@ public class Test7 extends TestBase {
 					} catch (Exception e) {
 						if (m_Exception == null)
 							m_Exception = e;
-						receiver.interrupt();
-						transmitter.interrupt();
+						m_Receiver.interrupt();
+						m_Transmitter.interrupt();
 					}
 				};
 			});
 
 			// sending thread
-			transmitter = new Thread(new Runnable() {
+			m_Transmitter = new Thread(new Runnable() {
 				public void run() {
 					try {
 						sync(2);
@@ -81,16 +81,16 @@ public class Test7 extends TestBase {
 						e.printStackTrace();
 						if (m_Exception == null)
 							m_Exception = e;
-						receiver.interrupt();
-						transmitter.interrupt();
+						m_Receiver.interrupt();
+						m_Transmitter.interrupt();
 					}
 				};
 			});
 
-			receiver.start();
-			transmitter.start();
+			m_Receiver.start();
+			m_Transmitter.start();
 
-			while (receiver.isAlive() || transmitter.isAlive()) {
+			while (m_Receiver.isAlive() || m_Transmitter.isAlive()) {
 				sleep(100);
 			}
 
