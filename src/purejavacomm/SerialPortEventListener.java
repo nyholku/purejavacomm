@@ -33,5 +33,5 @@ package purejavacomm;
 import java.util.EventListener;
 
 public interface SerialPortEventListener extends EventListener {
-    public abstract void serialEvent(SerialPortEvent event);
+    public void serialEvent(SerialPortEvent event);
 }
