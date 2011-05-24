@@ -30,6 +30,69 @@
 
 package purejavacomm;
 
-abstract public class ParallelPort extends CommPort {
+import gnu.io.UnsupportedCommOperationException;
 
+public class ParallelPort {
+	public static final int LPT_MODE_ANY = 0;
+	public static final int LPT_MODE_SPP = 1;
+	public static final int LPT_MODE_PS2 = 2;
+	public static final int LPT_MODE_EPP = 3;
+	public static final int LPT_MODE_ECP = 4;
+	public static final int LPT_MODE_NIBBLE = 5;
+
+	void addEventListener(ParallelPortEventListener lsnr) {
+
+	}
+
+	int getMode() {
+		return LPT_MODE_ANY;
+	}
+
+	int getOutputBufferFree() {
+		return 0;
+	}
+
+	boolean isPaperOut() {
+		return false;
+	}
+
+	boolean isPrinterBusy() {
+		return false;
+	}
+
+	boolean isPrinterError() {
+		return false;
+	}
+
+	boolean isPrinterSelected() {
+		return false;
+	}
+
+	boolean isPrinterTimedOut() {
+		return false;
+	}
+
+	void notifyOnBuffer(boolean notify) {
+
+	}
+
+	void notifyOnError(boolean notify) {
+
+	}
+
+	void removeEventListener() {
+
+	}
+
+	void restart() {
+
+	}
+
+	int setMode(int mode) throws UnsupportedCommOperationException {
+		return getMode();
+	}
+
+	void suspend() {
+
+	}
 }
