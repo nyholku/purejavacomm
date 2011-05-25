@@ -355,13 +355,13 @@ public class PureJavaSerialPort extends SerialPort {
 	synchronized public void setFlowControlMode(int mode) throws UnsupportedCommOperationException {
 		checkState();
 
-		boolean hwin = (mode & FLOWCONTROL_RTSCTS_IN) != 0;
-		boolean hwout = (mode & FLOWCONTROL_RTSCTS_OUT) != 0;
-		boolean hw = hwin || hwout;
+		//boolean hwin = (mode & FLOWCONTROL_RTSCTS_IN) != 0;
+		//boolean hwout = (mode & FLOWCONTROL_RTSCTS_OUT) != 0;
+		//boolean hw = hwin || hwout;
 
-		boolean swin = (mode & FLOWCONTROL_XONXOFF_IN) != 0;
-		boolean swout = (mode & FLOWCONTROL_XONXOFF_IN) != 0;
-		boolean sw = swin || swout;
+		//boolean swin = (mode & FLOWCONTROL_XONXOFF_IN) != 0;
+		//boolean swout = (mode & FLOWCONTROL_XONXOFF_IN) != 0;
+		//boolean sw = swin || swout;
 		Termios options = new Termios();
 		checkReturnCode(tcgetattr(m_FD, options));
 
