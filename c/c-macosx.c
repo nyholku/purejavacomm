@@ -170,4 +170,25 @@ main(){
 	int i;
 	for (i=0; i<8; i++)
 		printf("%08X ",fs.fds_bits[i]);
+		
+	printf("\n");
+		
+	int com;
+	printf("open    %d\n",com =  open("/dev/tty.usbserial-FTOXM3NX", O_RDWR | O_NOCTTY | O_NDELAY));
+
+	struct termios opts;
+
+	printf("get     %d\n",tcgetattr(com, &opts));
+	printf("c_cflag %08X\n",opts.c_cflag);
+	
+	opts.c_cflag |= CRTSCTS;
+	printf("c_cflag %08X\n",opts.c_cflag);
+	printf("set     %d\n",tcsetattr(com,TCSANOW, &opts));
+
+	opts.c_cflag = 0;
+	printf("get     %d\n",tcgetattr(com, &opts));
+	printf("c_cflag %08X\n",opts.c_cflag);
+	
+		
+		
   }
