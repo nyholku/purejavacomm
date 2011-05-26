@@ -30,8 +30,6 @@
 
 package purejavacomm;
 
-import gnu.io.UnsupportedCommOperationException;
-
 public class ParallelPort {
 	public static final int LPT_MODE_ANY = 0;
 	public static final int LPT_MODE_SPP = 1;
