@@ -76,6 +76,9 @@ public class PureJavaSerialPort extends SerialPort {
 
 	private int[] m_ioctl = { 0 };
 	private int m_ControlLineStates;
+	// we cache termios in m_Termios because we don't rely on reading it back with tcgetattr()
+	// which for Mac OS X / CRTSCTS does not work, it is also more efficient 
+	private Termios m_Termios = new Termios(); 
 
 	private void sendDataEvents(boolean read, boolean write) {
 		if (read && m_NotifyOnDataAvailable && !m_DataAvailableNotified) {
@@ -354,27 +357,24 @@ public class PureJavaSerialPort extends SerialPort {
 	@Override
 	synchronized public void setFlowControlMode(int mode) throws UnsupportedCommOperationException {
 		checkState();
-		Termios options = new Termios();
-		checkReturnCode(tcgetattr(m_FD, options));
-
-		options.c_iflag &= ~IXANY;
+		m_Termios.c_iflag &= ~IXANY;
 
 		if ((mode & (FLOWCONTROL_RTSCTS_IN | FLOWCONTROL_RTSCTS_OUT)) != 0)
-			options.c_cflag |= CRTSCTS;
+			m_Termios.c_cflag |= CRTSCTS;
 		else
-			options.c_cflag &= ~CRTSCTS;
+			m_Termios.c_cflag &= ~CRTSCTS;
 
 		if ((mode & FLOWCONTROL_XONXOFF_IN) != 0)
-			options.c_iflag |= IXOFF;
+			m_Termios.c_iflag |= IXOFF;
 		else
-			options.c_iflag &= ~IXOFF;
+			m_Termios.c_iflag &= ~IXOFF;
 
 		if ((mode & FLOWCONTROL_XONXOFF_OUT) != 0)
-			options.c_iflag |= IXON;
+			m_Termios.c_iflag |= IXON;
 		else
-			options.c_iflag &= ~IXON;
+			m_Termios.c_iflag &= ~IXON;
 
-		checkReturnCode(tcsetattr(m_FD, TCSANOW, options));
+		checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 
 		m_FlowControlMode = mode;
 	}
@@ -382,14 +382,10 @@ public class PureJavaSerialPort extends SerialPort {
 	@Override
 	synchronized public void setSerialPortParams(int baudRate, int dataBits, int stopBits, int parity) throws UnsupportedCommOperationException {
 		checkState();
-		// get current attributes
-		Termios termios = new Termios();
 		Termios prev = new Termios();// (termios);
 
-		checkReturnCode(tcgetattr(m_FD, termios));
-
 		// save a copy in case we need to restore it
-		prev.set(termios);
+		prev.set(m_Termios);
 
 		try {
 			int br = baudRate;
@@ -464,9 +460,8 @@ public class PureJavaSerialPort extends SerialPort {
 			// try to set the baud rate before anything else
 			// as it may fail at 'tcsetattr' stage and in that
 			// case we do not want to change anything
-			checkReturnCode(cfsetispeed(termios, br));
-			checkReturnCode(cfsetospeed(termios, br));
-			checkReturnCode(tcsetattr(m_FD, TCSANOW, termios));
+			checkReturnCode(cfsetispeed(m_Termios, br));
+			checkReturnCode(cfsetospeed(m_Termios, br));
 
 			int db;
 			switch (dataBits) {
@@ -501,8 +496,8 @@ public class PureJavaSerialPort extends SerialPort {
 					throw new UnsupportedCommOperationException("stopBits = " + stopBits);
 			}
 
-			int fi = termios.c_iflag;
-			int fc = termios.c_cflag;
+			int fi = m_Termios.c_iflag;
+			int fc = m_Termios.c_cflag;
 			switch (parity) {
 				case SerialPort.PARITY_NONE:
 					fc &= ~PARENB;
@@ -528,13 +523,13 @@ public class PureJavaSerialPort extends SerialPort {
 
 			// update the hardware 
 
-			termios.c_cflag = fc;
-			termios.c_iflag = fi;
+			m_Termios.c_cflag = fc;
+			m_Termios.c_iflag = fi;
 
-			termios.c_cflag &= ~CSIZE; /* Mask the character size bits */
-			termios.c_cflag |= db; /* Select 8 data bits */
+			m_Termios.c_cflag &= ~CSIZE; /* Mask the character size bits */
+			m_Termios.c_cflag |= db; /* Select 8 data bits */
 
-			checkReturnCode(tcsetattr(m_FD, TCSANOW, termios));
+			checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 			checkReturnCode(tcflush(m_FD, TCIOFLUSH));
 
 			// finally everything went ok, so we can update our settings
@@ -543,10 +538,12 @@ public class PureJavaSerialPort extends SerialPort {
 			m_DataBits = dataBits;
 			m_StopBits = stopBits;
 		} catch (UnsupportedCommOperationException e) {
-			checkReturnCode(tcsetattr(m_FD, TCSANOW, prev));
+			m_Termios.set(prev);
+			checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 			throw e;
 		} catch (IllegalStateException e) {
-			checkReturnCode(tcsetattr(m_FD, TCSANOW, prev));
+			m_Termios.set(prev);
+			checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 			throw e;
 		}
 	}
@@ -771,17 +768,16 @@ public class PureJavaSerialPort extends SerialPort {
 		m_Parity = SerialPort.PARITY_NONE;
 		m_StopBits = SerialPort.STOPBITS_1;
 
-		Termios termios = new Termios();
-		checkReturnCode(tcgetattr(m_FD, termios));
-		termios.c_cflag |= CLOCAL | CREAD;
-		termios.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-		termios.c_oflag &= ~OPOST;
+		checkReturnCode(tcgetattr(m_FD, m_Termios));
+		m_Termios.c_cflag |= CLOCAL | CREAD;
+		m_Termios.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+		m_Termios.c_oflag &= ~OPOST;
 
-		termios.c_cc[VSTART] = (byte) DC1;
-		termios.c_cc[VSTOP] = (byte) DC3;
-		termios.c_cc[VMIN] = 0;
-		termios.c_cc[VTIME] = 0;
-		checkReturnCode(tcsetattr(m_FD, TCSANOW, termios));
+		m_Termios.c_cc[VSTART] = (byte) DC1;
+		m_Termios.c_cc[VSTOP] = (byte) DC3;
+		m_Termios.c_cc[VMIN] = 0;
+		m_Termios.c_cc[VTIME] = 0;
+		checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 
 		try {
 			setSerialPortParams(m_BaudRate, m_DataBits, m_StopBits, m_Parity);
@@ -907,11 +903,6 @@ public class PureJavaSerialPort extends SerialPort {
 	}
 
 	private void setReceiveTimeout() {
-
-		Termios termios = new Termios();
-
-		checkReturnCode(tcgetattr(m_FD, termios));
-
 		// Javadoc for javacomm says:
 		// Enabling the Timeout OR Threshold with a value a zero is a special case. 
 		// This causes the underlying driver to poll for incoming data instead being 
@@ -957,9 +948,9 @@ public class PureJavaSerialPort extends SerialPort {
 			}
 		}
 
-		termios.c_cc[VMIN] = vmin;
-		termios.c_cc[VTIME] = vtime;
-		checkReturnCode(tcsetattr(m_FD, TCSANOW, termios));
+		m_Termios.c_cc[VMIN] = vmin;
+		m_Termios.c_cc[VTIME] = vtime;
+		checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 	}
 
 	private void checkState() {
