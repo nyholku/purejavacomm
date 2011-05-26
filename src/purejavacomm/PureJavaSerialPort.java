@@ -362,9 +362,9 @@ public class PureJavaSerialPort extends SerialPort {
 		c_iflag &= ~IXANY;
 
 		if ((mode & (FLOWCONTROL_RTSCTS_IN | FLOWCONTROL_RTSCTS_OUT)) != 0)
-			c_iflag |= CRTSCTS;
+			options.c_cflag |= CRTSCTS;
 		else
-			c_iflag &= ~CRTSCTS;
+			options.c_cflag &= ~CRTSCTS;
 
 		if ((mode & FLOWCONTROL_XONXOFF_IN) != 0)
 			c_iflag |= IXOFF;
