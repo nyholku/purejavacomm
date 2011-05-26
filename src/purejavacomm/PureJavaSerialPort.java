@@ -357,9 +357,7 @@ public class PureJavaSerialPort extends SerialPort {
 		Termios options = new Termios();
 		checkReturnCode(tcgetattr(m_FD, options));
 
-		int c_iflag = options.c_iflag;
-
-		c_iflag &= ~IXANY;
+		options.c_iflag &= ~IXANY;
 
 		if ((mode & (FLOWCONTROL_RTSCTS_IN | FLOWCONTROL_RTSCTS_OUT)) != 0)
 			options.c_cflag |= CRTSCTS;
@@ -367,15 +365,14 @@ public class PureJavaSerialPort extends SerialPort {
 			options.c_cflag &= ~CRTSCTS;
 
 		if ((mode & FLOWCONTROL_XONXOFF_IN) != 0)
-			c_iflag |= IXOFF;
+			options.c_iflag |= IXOFF;
 		else
-			c_iflag &= ~IXOFF;
+			options.c_iflag &= ~IXOFF;
 
 		if ((mode & FLOWCONTROL_XONXOFF_OUT) != 0)
-			c_iflag |= IXON;
+			options.c_iflag |= IXON;
 		else
-			c_iflag &= ~IXON;
-		options.c_iflag = c_iflag;
+			options.c_iflag &= ~IXON;
 
 		checkReturnCode(tcsetattr(m_FD, TCSANOW, options));
 
