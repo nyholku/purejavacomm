@@ -756,8 +756,8 @@ public class PureJavaSerialPort extends SerialPort {
 			if (tries-- < 0)
 				throw new PortInUseException();
 		}
-		while (m_FD < 0)
-			;
+		while (m_FD < 0);
+		
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags &= ~O_NONBLOCK;
 		checkReturnCode(fcntl(m_FD, F_SETFL, flags));
