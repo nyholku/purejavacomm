@@ -166,7 +166,7 @@ public class JTermios {
 	public static int B200 = 200;
 	public static int B300 = 300;
 	public static int B600 = 600;
-	public static int B1200 = 600;
+	public static int B1200 = 1200;
 	public static int B1800 = 1800;
 	public static int B2400 = 2400;
 	public static int B4800 = 4800;
