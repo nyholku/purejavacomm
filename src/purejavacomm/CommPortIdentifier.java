@@ -146,10 +146,11 @@ public class CommPortIdentifier {
 	/* package */
 	static void close(CommPort port) {
 		synchronized (m_Mutex) {
-			m_Owners.remove(port.name);
 			CommPortIdentifier portid = m_OpenPorts.remove(port);
-			if (portid != null)
+			if (portid != null) {
 				portid.fireOwnershipEvent(CommPortOwnershipListener.PORT_UNOWNED);
+            	m_Owners.remove(portid);
+			}
 		}
 	}
 
