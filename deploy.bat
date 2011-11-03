@@ -1,0 +1,1 @@
+mvn deploy -Duser.name=<user name>
