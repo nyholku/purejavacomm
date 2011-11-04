@@ -78,7 +78,7 @@ public class PureJavaSerialPort extends SerialPort {
 	private int m_ControlLineStates;
 	// we cache termios in m_Termios because we don't rely on reading it back with tcgetattr()
 	// which for Mac OS X / CRTSCTS does not work, it is also more efficient 
-	private Termios m_Termios = new Termios(); 
+	private Termios m_Termios = new Termios();
 
 	private void sendDataEvents(boolean read, boolean write) {
 		if (read && m_NotifyOnDataAvailable && !m_DataAvailableNotified) {
@@ -124,7 +124,6 @@ public class PureJavaSerialPort extends SerialPort {
 		if (m_EventListener != null)
 			throw new TooManyListenersException();
 		m_EventListener = eventListener;
-		m_Thread.start();
 	}
 
 	@Override
@@ -548,6 +547,10 @@ public class PureJavaSerialPort extends SerialPort {
 		}
 	}
 
+	private static int min(int a, int b) {
+		return a < b ? a : b;
+	}
+
 	@Override
 	synchronized public OutputStream getOutputStream() throws IOException {
 		checkState();
@@ -565,14 +568,13 @@ public class PureJavaSerialPort extends SerialPort {
 			public void write(byte[] b, int off, int len) throws IOException {
 				checkState();
 				while (len > 0) {
-					int n = len;
-					if (n > m_Buffer.length)
-						n = m_Buffer.length;
-					if (n > b.length - off)
-						n = b.length - off;
-					System.arraycopy(b, off, m_Buffer, 0, n);
+					int n = min(len, min(m_Buffer.length, b.length - off));
+					if (off > 0) {
+						System.arraycopy(b, off, m_Buffer, 0, n);
+						n = jtermios.JTermios.write(m_FD, m_Buffer, n);
+					} else
+						n = jtermios.JTermios.write(m_FD, b, n);
 
-					n = jtermios.JTermios.write(m_FD, b, len);
 					if (n < 0) {
 						PureJavaSerialPort.this.close();
 						throw new IOException();
@@ -633,22 +635,20 @@ public class PureJavaSerialPort extends SerialPort {
 				long T0 = m_ReceiveTimeOutEnabled ? System.currentTimeMillis() : 0;
 				int N = 0;
 				while (true) {
-					int n;
-					int left = len - N;
+					int n = len - N;
 					if (off > 0) {
-						if (left > m_Buffer.length)
-							left = m_Buffer.length;
-						n = jtermios.JTermios.read(m_FD, m_Buffer, left);
+						n = min(n, min(m_Buffer.length, b.length - off));
+						n = jtermios.JTermios.read(m_FD, m_Buffer, n);
 						if (n > 0)
 							System.arraycopy(m_Buffer, 0, b, off, n);
 					} else
-						n = jtermios.JTermios.read(m_FD, b, left);
+						n = jtermios.JTermios.read(m_FD, b, n);
 					if (n < 0)
 						throw new IOException();
 
 					N += n;
 					//System.out.printf("n=%d off=%d left=%d N=%d th=%d to=%d dt=%d\n",n, off,left,N,m_ReceiveThresholdValue,m_ReceiveTimeOutValue,System.currentTimeMillis() - T0);
-					if (!m_ReceiveThresholdEnabled && N>0)
+					if (!m_ReceiveThresholdEnabled && N > 0)
 						break;
 					if (m_ReceiveThresholdEnabled && N >= m_ReceiveThresholdValue)
 						break;
@@ -756,8 +756,9 @@ public class PureJavaSerialPort extends SerialPort {
 			if (tries-- < 0)
 				throw new PortInUseException();
 		}
-		while (m_FD < 0);
-		
+		while (m_FD < 0)
+			;
+
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags &= ~O_NONBLOCK;
 		checkReturnCode(fcntl(m_FD, F_SETFL, flags));
