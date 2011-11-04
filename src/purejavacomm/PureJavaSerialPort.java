@@ -657,7 +657,7 @@ public class PureJavaSerialPort extends SerialPort {
 						break;
 					if (m_ReceiveThresholdEnabled && N >= m_ReceiveThresholdValue)
 						break;
-					if (m_ReceiveTimeOutEnabled && System.currentTimeMillis() - T0 > m_ReceiveTimeOutValue)
+					if (m_ReceiveTimeOutEnabled && System.currentTimeMillis() - T0 >= m_ReceiveTimeOutValue)
 						break;
 					off += n;
 				}
