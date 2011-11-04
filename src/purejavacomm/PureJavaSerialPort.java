@@ -73,6 +73,7 @@ public class PureJavaSerialPort extends SerialPort {
 	private volatile boolean m_NotifyOnFramingError;
 	private volatile boolean m_NotifyOnBreakInterrupt;
 	private volatile boolean m_ThreadRunning;
+	private volatile boolean m_ThreadStarted;
 
 	private int[] m_ioctl = { 0 };
 	private int m_ControlLineStates;
@@ -124,6 +125,10 @@ public class PureJavaSerialPort extends SerialPort {
 		if (m_EventListener != null)
 			throw new TooManyListenersException();
 		m_EventListener = eventListener;
+		if (!m_ThreadStarted) {
+			m_ThreadStarted = true;
+			m_Thread.start();
+		}
 	}
 
 	@Override
