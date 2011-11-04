@@ -113,7 +113,7 @@ public class CommPortIdentifier {
 		synchronized (m_Mutex) {
 			long t0 = System.currentTimeMillis();
 
-			String owner = m_Owners.get(m_PortName);
+			String owner = m_Owners.get(this);
 			if (owner != null) {
 				fireOwnershipEvent(CommPortOwnershipListener.PORT_OWNERSHIP_REQUESTED);
 				try {
@@ -222,7 +222,7 @@ public class CommPortIdentifier {
 				return;
 			list.remove(listener);
 			if (list.isEmpty())
-				m_OwnerShipListeners.remove(list);
+				m_OwnerShipListeners.remove(this);
 
 		}
 	}
