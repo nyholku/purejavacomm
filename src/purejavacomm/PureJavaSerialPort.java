@@ -753,16 +753,16 @@ public class PureJavaSerialPort extends SerialPort {
 		// unbelievable, sometimes quickly closing and re-opening fails on Windows
 		// so try a few times
 		int tries = 100;
+		long T0 = System.currentTimeMillis();
 		while ((m_FD = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
 			}
-			if (tries-- < 0)
+			if (tries-- < 0 || System.currentTimeMillis()-T0 >= timeout)
 				throw new PortInUseException();
 		}
-		while (m_FD < 0)
-			;
+		while (m_FD < 0);
 
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags &= ~O_NONBLOCK;
