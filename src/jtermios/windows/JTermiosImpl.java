@@ -104,6 +104,17 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			if (!m_Locked)
 				throw new IllegalArgumentException("Port was not locked");
 			m_Locked = false;
+			notifyAll();
+		}
+
+		synchronized public void waitUnlock() {
+			while (m_Locked) {
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					// interruption cannot cancel wait
+				}
+			}
 		}
 
 		public Port() {
@@ -135,25 +146,33 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 				HANDLE h; /// 'hEvent' might never have been 'read' so read it to this var first
 
-				h = (HANDLE) m_RdOVL.readField("hEvent");
-				m_RdOVL = null;
-				if (h != null && !h.equals(NULL) && !h.equals(INVALID_HANDLE_VALUE))
-					CloseHandle(h);
+				synchronized (m_RdBuffer) {
+					h = (HANDLE) m_RdOVL.readField("hEvent");
+					m_RdOVL = null;
+					if (h != null && !h.equals(NULL) && !h.equals(INVALID_HANDLE_VALUE))
+						CloseHandle(h);
+				}
 
-				h = (HANDLE) m_WrOVL.readField("hEvent");
-				m_WrOVL = null;
+				synchronized (m_WrBuffer) {
+					h = (HANDLE) m_WrOVL.readField("hEvent");
+					m_WrOVL = null;
 
-				if (h != null && !h.equals(NULL) && !h.equals(INVALID_HANDLE_VALUE))
-					CloseHandle(h);
+					if (h != null && !h.equals(NULL) && !h.equals(INVALID_HANDLE_VALUE))
+						CloseHandle(h);
+				}
+
+				// Ensure that select() is through before releasing the m_SelOVL 
+				waitUnlock();
 
 				h = (HANDLE) m_SelOVL.readField("hEvent");
-				m_WrOVL = m_SelOVL;
+				m_SelOVL = null;
 				if (h != null && !h.equals(NULL) && !h.equals(INVALID_HANDLE_VALUE))
 					CloseHandle(h);
 
 				if (m_Comm != null && m_Comm != NULL && m_Comm != INVALID_HANDLE_VALUE)
 					CloseHandle(m_Comm);
 				m_Comm = null;
+
 			}
 		}
 
