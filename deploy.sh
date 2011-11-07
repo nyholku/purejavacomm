@@ -1,2 +1,2 @@
 #!/bin/bash
-mvn deploy -Duser.name=<user name>
+mvn deploy -Duser.name=nyholku
