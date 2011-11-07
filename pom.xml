@@ -1,16 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
-	<!-- TODO: fix me group id -->
-	<!-- some explantion on web : http://docs.codehaus.org/display/MAVENUSER/Choosing+a+Group+ID -->
-	<!-- notice it is an identifier "owned" by the project provider, usually 
-		a reserved domain name -->
-	<!-- arbitrarily I choose "com.sparetimelabs" -->
 	<groupId>com.sparetimelabs</groupId>
-	<!-- artifact id, a name -->
-	<!-- the jar artifact is uniquely identified by com.sparetimelabs.purejavacomm-0.0.1.jar -->
-	<!-- maven will create sources artifact com.sparetimelabs.purejavacomm-0.0.1-sources.jar -->
 	<artifactId>purejavacomm</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
@@ -18,12 +9,11 @@
 
 	<licenses>
 		<license>
-			<name>GNU Library or Lesser General Public License (LGPL)</name>
-			<url>http://www.gnu.org/licenses/lgpl.html</url>
+			<name>Simplified BSD License</name>
+			<url>http://www.opensource.org/licenses/BSD-3-Clause</url>
 		</license>
 	</licenses>
 
-	<!-- TODO validate this -->
 	<developers>
 		<developer>
 			<name>Kustaa Nyholm</name>
@@ -47,22 +37,26 @@
 		<maven.test-compile.skip>true</maven.test-compile.skip>
 		<maven.process-test-classes.skip>true</maven.process-test-classes.skip>
 		<maven.test.skip>true</maven.test.skip>
-		<maven.jar.skip>true</maven.jar.skip>
 	</properties>
 
 	<distributionManagement>
 		<repository>
 			<uniqueVersion>false</uniqueVersion>
 			<id>repository.com.sparetimelabs</id>
-			<name>PUREJAVACOMM Repository</name>
-			<!-- XXXXX/maven2 url for ftp upload -->
-			<url>sftp://XXXXXX/maven2</url>
+			<name>PureJavaComm Repository</name>
+			<url>ftp://sparetimelabs.com/www/maven2</url>
 			<layout>default</layout>
 		</repository>
 	</distributionManagement>
 
 	<build>
-		<directory>${basedir}</directory>
+		<!-- target directory : where *.class are -->
+		<directory>${basedir}/bin</directory>
+		<!-- java sources directory -->
+		<sourceDirectory>${basedir}/src</sourceDirectory>
+		<!-- java test sources directory -->
+		<!-- not needed -->
+		<!-- <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>  -->
 
 		<outputDirectory>${basedir}/classes</outputDirectory>
 		<!-- not needed -->
@@ -72,8 +66,15 @@
 			<extension>
 				<groupId>org.apache.maven.wagon</groupId>
 				<artifactId>wagon-ssh</artifactId>
-				<version>1.0-beta-7</version>
+				<version>2.0</version>
 			</extension>
+
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ftp</artifactId>
+				<version>2.0</version>
+			</extension>
+
 		</extensions>
 
 		<plugins>
@@ -81,35 +82,12 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-install-plugin</artifactId>
 				<version>2.3.1</version>
-				<configuration>
-					<groupId>com.sparetimelabs</groupId>
-					<artifactId>purejavacomm</artifactId>
-					<version>0.0.1</version>
-					<packaging>jar</packaging>
-					<file>bin/purejavacomm.jar</file>
-					<sources>bin/purejavacomm-src.jar</sources>
-					<createChecksum>true</createChecksum>
-					<generatePom>false</generatePom>
-					<pomFile>purejavacomm_pom.xml</pomFile>
-				</configuration>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
 				<version>2.6</version>
-				<configuration>
-					<groupId>com.sparetimelabs</groupId>
-					<artifactId>purejavacomm</artifactId>
-					<version>0.0.1</version>
-					<packaging>jar</packaging>
-					<file>bin/purejavacomm.jar</file>
-					<sources>bin/purejavacomm-src.jar</sources>
-					<createChecksum>true</createChecksum>
-					<generatePom>true</generatePom>
-					<!-- XXXXX/maven2 url for ftp upload -->
-					<url>sftp://XXXXXXXXXXXX/maven2</url>
-				</configuration>
 			</plugin>
 
 		</plugins>
