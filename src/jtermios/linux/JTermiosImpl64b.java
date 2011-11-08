@@ -422,7 +422,7 @@ public class JTermiosImpl64b implements jtermios.JTermios.JTermiosInterface {
 			for (int i = 0; i < devs.length; i++) {
 				String s = devs[i];
 				if (s.startsWith("tty"))
-					list.add(s);
+					list.add(DEVICE_DIR_PATH + s);
 			}
 
 		}
