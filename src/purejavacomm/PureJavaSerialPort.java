@@ -748,7 +748,7 @@ public class PureJavaSerialPort extends SerialPort {
 		}
 	}
 
-	public PureJavaSerialPort(String name, int timeout) throws PortInUseException {
+	/*package*/ PureJavaSerialPort(String name, int timeout) throws PortInUseException {
 		super();
 		this.name = name;
 
