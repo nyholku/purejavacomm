@@ -20,6 +20,13 @@
 			<id>nyholku</id>
 		</developer>
 	</developers>
+	
+    <scm>
+        <developerConnection>scm:git:https://github.com/nyholku/purejavacomm.git</developerConnection>
+        <connection>scm:git:http://github.com/nyholku/purejavacomm.git</connection>
+        <url>https://github.com/nyholku/purejavacomm</url>
+    </scm>
+
 
 	<properties>
 		<maven.validate.skip>true</maven.validate.skip>
