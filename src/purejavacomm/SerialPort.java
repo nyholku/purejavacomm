@@ -336,7 +336,6 @@ abstract public class SerialPort extends CommPort {
 	 */
 	public abstract void setSerialPortParams(int baudRate, int dataBits, int stopBits, int parity) throws UnsupportedCommOperationException;
 
-	public SerialPort(String name) {
-		this.name = name;
+	public SerialPort() {
 	}
 }

@@ -749,7 +749,9 @@ public class PureJavaSerialPort extends SerialPort {
 	}
 
 	public PureJavaSerialPort(String name, int timeout) throws PortInUseException {
-		super(name);
+		super();
+		this.name = name;
+
 		// unbelievable, sometimes quickly closing and re-opening fails on Windows
 		// so try a few times
 		int tries = 100;
