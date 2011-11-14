@@ -522,7 +522,7 @@ public class PureJavaSerialPort extends SerialPort {
 					fi |= (INPCK | ISTRIP);
 					break;
 				default:
-					throw new UnsupportedCommOperationException("parity = " + stopBits);
+					throw new UnsupportedCommOperationException("parity = " + parity);
 			}
 
 			// update the hardware 
@@ -531,7 +531,7 @@ public class PureJavaSerialPort extends SerialPort {
 			m_Termios.c_iflag = fi;
 
 			m_Termios.c_cflag &= ~CSIZE; /* Mask the character size bits */
-			m_Termios.c_cflag |= db; /* Select 8 data bits */
+			m_Termios.c_cflag |= db; /* Select data bits */
 
 			checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 			checkReturnCode(tcflush(m_FD, TCIOFLUSH));
