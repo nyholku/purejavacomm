@@ -488,13 +488,10 @@ public class PureJavaSerialPort extends SerialPort {
 			int sb;
 			switch (stopBits) {
 				case SerialPort.STOPBITS_1:
-					sb = CS5;
-					break;
-				case SerialPort.STOPBITS_1_5:
-					sb = CS6;
+					sb = 1;
 					break;
 				case SerialPort.STOPBITS_2:
-					sb = CS7;
+					sb = 2;
 					break;
 				default:
 					throw new UnsupportedCommOperationException("stopBits = " + stopBits);
@@ -505,21 +502,17 @@ public class PureJavaSerialPort extends SerialPort {
 			switch (parity) {
 				case SerialPort.PARITY_NONE:
 					fc &= ~PARENB;
-					fc &= ~CSTOPB;
 					fi &= ~(INPCK | ISTRIP);
 					break;
 				case SerialPort.PARITY_EVEN:
 					fc |= PARENB;
 					fc &= ~PARODD;
-					fc &= ~CSTOPB;
-					fi |= (INPCK | ISTRIP);
-
+					fi &= ~(INPCK | ISTRIP);
 					break;
 				case SerialPort.PARITY_ODD:
 					fc |= PARENB;
 					fc |= PARODD;
-					fc &= ~CSTOPB;
-					fi |= (INPCK | ISTRIP);
+					fi &= ~(INPCK | ISTRIP);
 					break;
 				default:
 					throw new UnsupportedCommOperationException("parity = " + parity);
@@ -527,11 +520,16 @@ public class PureJavaSerialPort extends SerialPort {
 
 			// update the hardware 
 
+			fc &= ~CSIZE; /* Mask the character size bits */
+			fc |= db; /* Set data bits */
+
+			if (sb == 2)
+				fc |= CSTOPB;
+			else
+				fc &= ~CSTOPB;
+
 			m_Termios.c_cflag = fc;
 			m_Termios.c_iflag = fi;
-
-			m_Termios.c_cflag &= ~CSIZE; /* Mask the character size bits */
-			m_Termios.c_cflag |= db; /* Select data bits */
 
 			checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 			checkReturnCode(tcflush(m_FD, TCIOFLUSH));
@@ -748,7 +746,7 @@ public class PureJavaSerialPort extends SerialPort {
 		}
 	}
 
-	/*package*/ PureJavaSerialPort(String name, int timeout) throws PortInUseException {
+	/* package */PureJavaSerialPort(String name, int timeout) throws PortInUseException {
 		super();
 		this.name = name;
 
@@ -761,10 +759,11 @@ public class PureJavaSerialPort extends SerialPort {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
 			}
-			if (tries-- < 0 || System.currentTimeMillis()-T0 >= timeout)
+			if (tries-- < 0 || System.currentTimeMillis() - T0 >= timeout)
 				throw new PortInUseException();
 		}
-		while (m_FD < 0);
+		while (m_FD < 0)
+			;
 
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags &= ~O_NONBLOCK;
