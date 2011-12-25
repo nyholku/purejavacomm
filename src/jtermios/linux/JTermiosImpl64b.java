@@ -98,6 +98,8 @@ public class JTermiosImpl64b implements jtermios.JTermios.JTermiosInterface {
 
 		public void perror(String msg);
 
+		public int tcsendbreak(int fd, int duration);
+
 		static public class TimeVal extends Structure {
 			public NativeLong tv_sec;
 			public NativeLong tv_usec;
@@ -278,7 +280,7 @@ public class JTermiosImpl64b implements jtermios.JTermios.JTermiosInterface {
 
 	public int errno() {
 		return Native.getLastError();
-		}
+	}
 
 	public void cfmakeraw(Termios termios) {
 		Linux_C_lib.Termios t = new Linux_C_lib.Termios(termios);
@@ -349,7 +351,9 @@ public class JTermiosImpl64b implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int tcsendbreak(int fd, int duration) {
-		throw new IllegalArgumentException("Unimplemented function");
+		// If duration is not zero, it sends zero-valued bits for duration*N seconds,
+		// where N is at least 0.25, and not more than 0.5.
+		return m_Clib.tcsendbreak(fd, duration / 250);
 	}
 
 	public int tcsetattr(int fd, int cmd, Termios termios) {

@@ -61,7 +61,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public interface Linux_C_lib extends com.sun.jna.Library {
 		public IntByReference __error();
-			
+
 		public int tcdrain(int fd);
 
 		public void cfmakeraw(Termios termios);
@@ -100,6 +100,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public void perror(String msg);
 
+		public int tcsendbreak(int fd, int duration);
+
 		static public class TimeVal extends Structure {
 			public NativeLong tv_sec;
 			public NativeLong tv_usec;
@@ -135,13 +137,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			}
 
 			public Termios(jtermios.Termios t) {
-				c_iflag=t.c_iflag;
-				c_oflag=t.c_oflag;
-				c_cflag=t.c_cflag;
-				c_lflag=t.c_lflag;
+				c_iflag = t.c_iflag;
+				c_oflag = t.c_oflag;
+				c_cflag = t.c_cflag;
+				c_lflag = t.c_lflag;
 				System.arraycopy(t.c_cc, 0, c_cc, 0, t.c_cc.length);
-				c_ispeed=t.c_ispeed;
-				c_ospeed=t.c_ospeed;
+				c_ispeed = t.c_ispeed;
+				c_ospeed = t.c_ospeed;
 			}
 
 			public void update(jtermios.Termios t) {
@@ -152,7 +154,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				System.arraycopy(c_cc, 0, t.c_cc, 0, t.c_cc.length);
 				t.c_ispeed = c_ispeed;
 				t.c_ospeed = c_ospeed;
-			}		
+			}
 		}
 	}
 
@@ -170,34 +172,34 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
 
 		//linux/serial.h stuff
-		FIONREAD  =      0x541B; // Looked up manually
+		FIONREAD = 0x541B; // Looked up manually
 		//fcntl.h stuff
 		O_RDWR = 0x00000002;
-		O_NONBLOCK= 0x00000800;
+		O_NONBLOCK = 0x00000800;
 		O_NOCTTY = 0x00000100;
 		O_NDELAY = 0x00000800;
 		F_GETFL = 0x00000003;
 		F_SETFL = 0x00000004;
 		//errno.h stuff
 		EAGAIN = 35;
-		EACCES= 22;
-		EEXIST= 17;
-		EINTR= 4;
-		EINVAL= 22;
-		EIO= 5;
-		EISDIR= 21;
-		ELOOP= 40;
-		EMFILE= 24;
-		ENAMETOOLONG= 36;
-		ENFILE= 23;
-		ENOENT= 2;
-		ENOSR= 63;
-		ENOSPC= 28;
-		ENOTDIR= 20;
-		ENXIO= 6;
-		EOVERFLOW= 75;
-		EROFS= 30;
-		ENOTSUP= 95;
+		EACCES = 22;
+		EEXIST = 17;
+		EINTR = 4;
+		EINVAL = 22;
+		EIO = 5;
+		EISDIR = 21;
+		ELOOP = 40;
+		EMFILE = 24;
+		ENAMETOOLONG = 36;
+		ENFILE = 23;
+		ENOENT = 2;
+		ENOSR = 63;
+		ENOSPC = 28;
+		ENOTDIR = 20;
+		ENXIO = 6;
+		EOVERFLOW = 75;
+		EROFS = 30;
+		ENOTSUP = 95;
 		//termios.h stuff
 		TIOCM_RNG = 0x00000080;
 		TIOCM_CAR = 0x00000040;
@@ -228,7 +230,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		ECHO = 0x00000008;
 		ECHOE = 0x00000010;
 		ISIG = 0x00000001;
-		TIOCMSET= 0x00005418;
+		TIOCMSET = 0x00005418;
 		IXON = 0x00000400;
 		IXOFF = 0x00001000;
 		IXANY = 0x00000800;
@@ -275,11 +277,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		POLLNVAL = 0x0020;
 		//select.h stuff
 
-		}
-	
+	}
+
 	public int errno() {
 		return Native.getLastError();
-		}
+	}
 
 	public void cfmakeraw(Termios termios) {
 		Linux_C_lib.Termios t = new Linux_C_lib.Termios(termios);
@@ -354,7 +356,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int tcsendbreak(int fd, int duration) {
-		throw new IllegalArgumentException("Unimplemented function");
+		// If duration is not zero, it sends zero-valued bits for duration*N seconds,
+		// where N is at least 0.25, and not more than 0.5.
+		return m_Clib.tcsendbreak(fd, duration / 250);
 	}
 
 	public int tcsetattr(int fd, int cmd, Termios termios) {
@@ -439,4 +443,3 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	}
 }
-
