@@ -550,9 +550,9 @@ public class WinAPI {
 	}
 
 	static public boolean SetCommBreak(HANDLE hFile) {
-		log = log && log(5, "> CloseHandle(%s)\n", hFile);
+		log = log && log(5, "> SetCommBreak(%s)\n", hFile);
 		boolean res = m_K32lib.CloseHandle(hFile);
-		log = log && log(4, "< CloseHandle(%s) => %s\n", hFile, res);
+		log = log && log(4, "< SetCommBreak(%s) => %s\n", hFile, res);
 		return res;
 	}
 
