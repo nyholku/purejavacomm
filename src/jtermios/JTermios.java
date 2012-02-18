@@ -276,6 +276,8 @@ public class JTermios {
 			m_Termios = new jtermios.windows.JTermiosImpl();
 		} else if (Platform.isLinux()) {
 			m_Termios = Platform.is64Bit() ? new jtermios.linux.JTermiosImpl64b() : new jtermios.linux.JTermiosImpl();
+		} else if (Platform.isSolaris()) {
+			m_Termios = new jtermios.solaris.JTermiosImpl();
 		} else {
 			log(0, "JTermios has no support for OS %s\n", System.getProperty("os.name"));
 		}
