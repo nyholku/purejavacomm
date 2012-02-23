@@ -101,11 +101,10 @@
 	</build>
 
 	<dependencies>
-
 		<dependency>
-			<groupId>com.sun.jna</groupId>
+			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna</artifactId>
-			<version>3.0.9</version>
+			<version>3.4.0</version>
 		</dependency>
 
 	</dependencies>
