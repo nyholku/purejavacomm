@@ -40,6 +40,7 @@ import jtermios.*;
 import static jtermios.JTermios.JTermiosLogging.*;
 
 import static jtermios.JTermios.*;
+import com.sun.jna.Platform;
 
 public class PureJavaSerialPort extends SerialPort {
 
