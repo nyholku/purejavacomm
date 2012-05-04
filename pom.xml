@@ -51,7 +51,7 @@
 			<uniqueVersion>false</uniqueVersion>
 			<id>repository.com.sparetimelabs</id>
 			<name>PureJavaComm Repository</name>
-			<url>ftp://sparetimelabs.com/www/maven2</url>
+			<url>ftp://ftp.sparetimelabs.com/maven2</url>
 			<layout>default</layout>
 		</repository>
 	</distributionManagement>
