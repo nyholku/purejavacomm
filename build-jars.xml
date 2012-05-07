@@ -5,15 +5,29 @@
 	</target>
 	<!-- create .jar -->
 	<target name="buildjar" depends="init">
-	    <delete file="./bin/purejavacomm.jar"/>
+		<antcall target="-build-plain-jar" inheritAll="true" />
+		<antcall target="-build-source-jar" inheritAll="true" />
+		<antcall target="-build-osgi-jar" inheritAll="true" />
+	</target>
+
+	<target name="-build-plain-jar">
+		<delete file="./bin/purejavacomm.jar"/>
 		<jar jarfile="./bin/purejavacomm.jar" basedir="./classes">
 			<exclude name="**/testsuite/**" />
 		</jar>
-	    <delete file="./bin/purejavacomm-src.jar"/>
+	</target>
+
+	<target name="-build-source-jar">
+		<delete file="./bin/purejavacomm-src.jar"/>
 		<jar jarfile="./bin/purejavacomm-src.jar" basedir="./src">
 		</jar>
 	</target>
 
+	<target name="-build-osgi-jar" if="bnd">
+		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="${bnd}" />
+
+		<bnd eclipse="false" files="bnd.bnd" sourcepath="src" classpath="classes,lib/jna.jar" output="./bin/purejavacomm-osgi.jar" />
+	</target>
 </project>
 
 <!-- end file build.xml -->
