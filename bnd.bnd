@@ -1,0 +1,30 @@
+main-version: 0.0.5
+jna-version: 3.2.7
+Bundle-Name: PureJavacomm Library
+Bundle-SymbolicName: purejavacomm
+Bundle-Description: PureJavacomm serial I/O library
+Bundle-Copyright: Kustaa "Kusti" Nyholm
+Bundle-License: "Simplified BSD License";http://www.sparetimelabs.com/purejavacomm/index.html
+Bundle-Version: ${main-version}
+Private-Package: com.sun.jna;version=${jna-version},\
+	com.sun.jna.darwin;version=${jna-version},\
+	com.sun.jna.freebsd-amd64;version=${jna-version},\
+	com.sun.jna.freebsd-i386;version=${jna-version},\
+	com.sun.jna.linux-amd64;version=${jna-version},\
+	com.sun.jna.linux-i386;version=${jna-version},\
+	com.sun.jna.linux-ia64;version=${jna-version},\
+	com.sun.jna.ptr;version=${jna-version},\
+	com.sun.jna.sunos-amd64;version=${jna-version},\
+	com.sun.jna.sunos-sparc;version=${jna-version},\
+	com.sun.jna.sunos-sparcv9;version=${jna-version},\
+	com.sun.jna.sunos-x86;version=${jna-version},\
+	com.sun.jna.win32;version=${jna-version},\
+	com.sun.jna.win32-amd64;version=${jna-version},\
+	com.sun.jna.win32-x86;version=${jna-version}
+Export-Package: jtermios;version=${Bundle-Version},\
+	jtermios.linux;version=${Bundle-Version},\
+	jtermios.macosx;version=${Bundle-Version},\
+	jtermios.solaris;version=${Bundle-Version},\
+	jtermios.windows;version=${Bundle-Version},\
+	purejavacomm;version=${Bundle-Version}
+-classpath: lib/jna.jar

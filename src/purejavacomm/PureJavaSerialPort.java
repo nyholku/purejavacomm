@@ -397,7 +397,7 @@ public class PureJavaSerialPort extends SerialPort {
 		try {
 			if (Platform.isMac()) {
 				int[] data = new int[] {baudRate};
-				checkReturnCode(ioctl(m_FD, 0x80045402, data));
+				checkReturnCode(ioctl(m_FD, IOSSIOSPEED, data));
 			} else {
 				int br = baudRate;
 				switch (baudRate) {
@@ -437,23 +437,23 @@ public class PureJavaSerialPort extends SerialPort {
 					case 4800:
 						br = B4800;
 						break;
-					case 9600:
-						br = B9600;
-						break;
-					case 19200:
-						br = B19200;
-						break;
-					case 38400:
-						br = B38400;
-						break;
 					case 7200:
 						br = B7200;
+						break;
+					case 9600:
+						br = B9600;
 						break;
 					case 14400:
 						br = B14400;
 						break;
+					case 19200:
+						br = B19200;
+						break;
 					case 28800:
 						br = B28800;
+						break;
+					case 38400:
+						br = B38400;
 						break;
 					case 57600:
 						br = B57600;
@@ -466,6 +466,12 @@ public class PureJavaSerialPort extends SerialPort {
 						break;
 					case 230400:
 						br = B230400;
+						break;
+			                case 460800:
+	        			        br = B460800;
+						break;
+					case 921600:
+						br = B921600;
 						break;
 				}
 				// try to set the baud rate before anything else
