@@ -170,16 +170,18 @@ public class JTermios {
 	public static int B1800 = 1800;
 	public static int B2400 = 2400;
 	public static int B4800 = 4800;
-	public static int B9600 = 9600;
-	public static int B19200 = 19200;
-	public static int B38400 = 38400;
 	public static int B7200 = 7200; // Not Linux
+	public static int B9600 = 9600;
 	public static int B14400 = 14400;// Not Linux
+	public static int B19200 = 19200;
 	public static int B28800 = 28800;// Not Linux
+	public static int B38400 = 38400;
 	public static int B57600 = 57600;
 	public static int B76800 = 76800; // Not Linux
 	public static int B115200 = 115200;
 	public static int B230400 = 230400;
+	public static int B460800 = 460800;
+	public static int B921600 = 921600;
 	// poll.h stuff
 	public static short POLLIN = 0x0001;
 	//public static short POLLRDNORM = 0x0040; // Not Linux
@@ -194,6 +196,9 @@ public class JTermios {
 	// misc stuff
 	public static int DC1 = 0x11; // Ctrl-Q;
 	public static int DC3 = 0x13; // Ctrl-S;
+
+	// OSX ioctl specifics
+	public static int IOSSIOSPEED = 0x80045402; // OSX only
 
 	// reference to single arc/os specific implementation
 	private static JTermiosInterface m_Termios;
