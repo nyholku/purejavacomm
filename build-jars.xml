@@ -7,6 +7,7 @@
 	<target name="buildjar" depends="init">
 	    <delete file="./bin/purejavacomm.jar"/>
 		<jar jarfile="./bin/purejavacomm.jar" basedir="./classes">
+			<exclude name="**/testsuite/**" />
 		</jar>
 	    <delete file="./bin/purejavacomm-src.jar"/>
 		<jar jarfile="./bin/purejavacomm-src.jar" basedir="./src">
