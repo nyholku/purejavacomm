@@ -55,9 +55,9 @@ public class JTermios {
 	// or somewhere else. Handling the offset requires a buffer to hold 
 	// temporarily the bytes. I deemed that it is better to pass the buck ie burden 
 	// to the clients of JTermios as they know better what size of buffer (if any) 
-	// is best and because then the implementation that buffer is in one place, 
+	// is best and because then the implementation of that buffer is in one place, 
 	// not in each of the JTermiosImpl classes. In this way Mac OS X (and presumably
-	// Linux/Unix) does not a buffer at all in JTermiosImpl. Windows needs a
+	// Linux/Unix) does need not a buffer at all in JTermiosImpl. Windows needs a
 	// JNA Memory buffer anyway because of the limitations inherent in using 
 	// Overlapped I/O with JNA.
 
@@ -209,6 +209,8 @@ public class JTermios {
 
 		int cfgetospeed(Termios termios);
 
+		int setspeed(int fd, int speed);
+		
 		int cfsetispeed(Termios termios, int speed);
 
 		int cfsetospeed(Termios termios, int speed);
