@@ -396,7 +396,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 		try {
 			if (Platform.isMac()) {
-				int[] data = new int[] {baudRate};
+				int[] data = new int[] { baudRate };
 				checkReturnCode(ioctl(m_FD, 0x80045402, data));
 			} else {
 				int br = baudRate;
@@ -784,6 +784,9 @@ public class PureJavaSerialPort extends SerialPort {
 		m_StopBits = SerialPort.STOPBITS_1;
 
 		checkReturnCode(tcgetattr(m_FD, m_Termios));
+
+		cfmakeraw(m_FD, m_Termios);
+
 		m_Termios.c_cflag |= CLOCAL | CREAD;
 		m_Termios.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 		m_Termios.c_oflag &= ~OPOST;
