@@ -286,6 +286,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public void cfmakeraw(Termios termios) {
 		Linux_C_lib.Termios t = new Linux_C_lib.Termios(termios);
 		m_Clib.cfmakeraw(t);
+		t.update(termios);
 	}
 
 	public int fcntl(int fd, int cmd, int[] arg) {
