@@ -209,8 +209,6 @@ public class JTermios {
 
 		int cfgetospeed(Termios termios);
 
-		int setspeed(int fd, int speed);
-		
 		int cfsetispeed(Termios termios, int speed);
 
 		int cfsetospeed(Termios termios, int speed);
@@ -340,6 +338,13 @@ public class JTermios {
 		log = log && log(3, "< tcdrain(%d) => %d\n", fd, ret);
 		return ret;
 	}
+	
+	static public void cfmakeraw(int fd, Termios termios) {
+		log = log && log(5, "> cfmakeraw(%d,%s)\n", fd, termios);
+		m_Termios.cfmakeraw(termios);
+		log = log && log(3, "< cfmakeraw(%d,%s)\n", fd, termios);
+	}
+
 
 	static public int tcgetattr(int fd, Termios termios) {
 		log = log && log(5, "> tcgetattr(%d,%s)\n", fd, termios);
