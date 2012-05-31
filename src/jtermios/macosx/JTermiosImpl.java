@@ -168,14 +168,15 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public JTermiosImpl() {
 		log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
 	}
-	
+
 	public int errno() {
 		return Native.getLastError();
-		}
+	}
 
 	public void cfmakeraw(Termios termios) {
 		MacOSX_C_lib.Termios t = new MacOSX_C_lib.Termios(termios);
 		m_Clib.cfmakeraw(t);
+		t.update(termios);
 	}
 
 	public int fcntl(int fd, int cmd, int arg) {
