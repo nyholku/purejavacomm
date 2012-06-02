@@ -770,8 +770,6 @@ public class PureJavaSerialPort extends SerialPort {
 			if (tries-- < 0 || System.currentTimeMillis() - T0 >= timeout)
 				throw new PortInUseException();
 		}
-		while (m_FD < 0)
-			;
 
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags &= ~O_NONBLOCK;

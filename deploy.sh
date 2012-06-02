@@ -1,2 +1,2 @@
 #!/bin/bash
-mvn deploy -Duser.name=nyholku
+mvn deploy -Duser.name=sparetimelabs.com

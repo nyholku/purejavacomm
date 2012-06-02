@@ -189,6 +189,7 @@ main(){
 	printf("get     %d\n",tcgetattr(com, &opts));
 	printf("c_cflag %08X\n",opts.c_cflag);
 	
-		
+	printf(" sizeof(speed_t) %d\n", sizeof(speed_t));
+   
 		
   }
