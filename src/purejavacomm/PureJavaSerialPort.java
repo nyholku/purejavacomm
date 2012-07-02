@@ -95,7 +95,7 @@ public class PureJavaSerialPort extends SerialPort {
 		}
 	}
 
-	private void sendNonDataEvents() {
+	private synchronized void sendNonDataEvents() {
 		if (ioctl(m_FD, TIOCMGET, m_ioctl) < 0)
 			return; //FIXME decide what to with errors in the background thread
 		int oldstates = m_ControlLineStates;
