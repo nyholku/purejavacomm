@@ -44,7 +44,7 @@ import com.sun.jna.Platform;
 
 public class PureJavaSerialPort extends SerialPort {
 
-	private static Thread m_Thread;
+	private Thread m_Thread;
 
 	private volatile SerialPortEventListener m_EventListener;
 
