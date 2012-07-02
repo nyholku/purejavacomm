@@ -323,7 +323,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		if (devs != null) {
 			for (int i = 0; i < devs.length; i++) {
 				String s = devs[i];
-				if (s.startsWith("cu."))
+				if (s.startsWith("tty."))
 					list.add(s);
 			}
 
