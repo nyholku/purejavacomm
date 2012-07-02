@@ -56,6 +56,7 @@ import static jtermios.JTermios.*;
 import static jtermios.JTermios.JTermiosLogging.log;
 
 public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
+	private static int IOSSIOSPEED = 0x80045402;
 	private static String DEVICE_DIR_PATH = "/dev/";
 	static MacOSX_C_lib m_Clib = (MacOSX_C_lib) Native.loadLibrary("c", MacOSX_C_lib.class);
 
@@ -70,6 +71,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		public int fcntl(int fd, int cmd, int arg);
 
 		public int ioctl(int fd, int cmd, int[] arg);
+		
+		public int ioctl(int fd, int cmd, NativeLong[] arg);
 
 		public int open(String path, int flags);
 
@@ -303,6 +306,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public int ioctl(int fd, int cmd, int[] data) {
 		return m_Clib.ioctl(fd, cmd, data);
 	}
+	
+	public int ioctl(int fd, int cmd, NativeLong[] data) {
+		return m_Clib.ioctl(fd, cmd, data);
+	}
+
 
 	public List<String> getPortList() {
 		File dir = new File(DEVICE_DIR_PATH);
@@ -326,5 +334,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public void shutDown() {
 
+	}
+
+	public int setspeed(int fd, Termios termios, int speed) {
+		int r;
+		r = cfsetispeed(termios, speed);
+		if (r == 0)
+			r = cfsetospeed(termios, speed);
+		if (r == 0)
+			r = tcsetattr(fd, TCSANOW, termios);
+		if (r != 0) {
+			NativeLong[] data = new NativeLong[] { new NativeLong(speed) };
+			r = ioctl(fd, IOSSIOSPEED, data);
+		}
+		return r;
 	}
 }
