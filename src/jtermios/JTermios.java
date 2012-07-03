@@ -33,6 +33,7 @@ package jtermios;
 import static jtermios.JTermios.JTermiosLogging.*;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import com.sun.jna.Platform;
 import com.sun.jna.Structure;
@@ -199,6 +200,7 @@ public class JTermios {
 	private static JTermiosInterface m_Termios;
 
 	public interface JTermiosInterface {
+
 		void shutDown();
 
 		int errno();
@@ -258,6 +260,8 @@ public class JTermios {
 		void FD_ZERO(FDSet set);
 
 		List<String> getPortList();
+
+		public String getPortNamePattern();
 	}
 
 	public void shutdown() {
@@ -277,7 +281,7 @@ public class JTermios {
 		} else if (Platform.isWindows()) {
 			m_Termios = new jtermios.windows.JTermiosImpl();
 		} else if (Platform.isLinux()) {
-			m_Termios = Platform.is64Bit() ? new jtermios.linux.JTermiosImpl64b() : new jtermios.linux.JTermiosImpl();
+			m_Termios = new jtermios.linux.JTermiosImpl();
 		} else if (Platform.isSolaris()) {
 			m_Termios = new jtermios.solaris.JTermiosImpl();
 		} else {
@@ -464,6 +468,15 @@ public class JTermios {
 	static public List<String> getPortList() {
 		return m_Termios.getPortList();
 
+	}
+
+	static public Pattern getPortNamePattern(jtermios.JTermios.JTermiosInterface jtermios) {
+		String ps = System.getProperty("purejavacomm.portnamepattern." + jtermios.getClass().getName());
+		if (ps == null)
+			ps = System.getProperty("purejavacomm.portnamepattern");
+		if (ps == null)
+			ps = jtermios.getPortNamePattern();
+		return Pattern.compile(ps);
 	}
 
 	public static class JTermiosLogging {
