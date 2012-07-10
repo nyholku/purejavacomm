@@ -30,9 +30,11 @@
 
 package jtermios.windows;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.sun.jna.*;
 import com.sun.jna.ptr.IntByReference;
@@ -51,6 +53,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	private volatile Hashtable<Integer, Port> m_OpenPorts = new Hashtable<Integer, Port>();
 
+	
+	
 	private class Port {
 		volatile int m_FD = -1;
 		volatile boolean m_Locked;
@@ -969,7 +973,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		return s.toString();
 	}
 
+	public String getPortNamePattern() {
+		return "^COM.*";
+	}
+
 	public List<String> getPortList() {
+		Pattern p = JTermios.getPortNamePattern(this);
 		char[] buffer;
 		int size = 0;
 		for (size = 16 * 1024; size < 256 * 1024; size *= 2) {
@@ -980,7 +989,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				int offset = 0;
 				String port;
 				while ((port = getString(buffer, offset)).length() > 0) {
-					if (port.startsWith("COM"))
+					if (p.matcher(port).matches())
 						list.add(port);
 
 					offset += port.length() + 1;

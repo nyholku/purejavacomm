@@ -36,9 +36,11 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import jtermios.FDSet;
 
+import jtermios.JTermios;
 import jtermios.Pollfd;
 import jtermios.Termios;
 import jtermios.TimeVal;
@@ -435,6 +437,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		return m_Clib.ioctl(fd, cmd, data);
 	}
 
+	public String getPortNamePattern() {
+		return ".*";
+	}
+
 	public List<String> getPortList() {
 		File dir = new File(DEVICE_DIR_PATH);
 		if (!dir.isDirectory()) {
@@ -443,13 +449,15 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 		String[] devs = dir.list();
 		LinkedList<String> list = new LinkedList<String>();
+
+		Pattern p = JTermios.getPortNamePattern(this);
 		if (devs != null) {
 			for (int i = 0; i < devs.length; i++) {
 				String s = devs[i];
-				list.add(s);
+				if (p.matcher(s).matches())
+					list.add(s);
 			}
 		}
-
 		return list;
 	}
 

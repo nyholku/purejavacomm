@@ -37,9 +37,11 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import jtermios.FDSet;
 
+import jtermios.JTermios;
 import jtermios.Pollfd;
 import jtermios.Termios;
 import jtermios.TimeVal;
@@ -71,7 +73,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		public int fcntl(int fd, int cmd, int arg);
 
 		public int ioctl(int fd, int cmd, int[] arg);
-		
+
 		public int ioctl(int fd, int cmd, NativeLong[] arg);
 
 		public int open(String path, int flags);
@@ -306,11 +308,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public int ioctl(int fd, int cmd, int[] data) {
 		return m_Clib.ioctl(fd, cmd, data);
 	}
-	
+
 	public int ioctl(int fd, int cmd, NativeLong[] data) {
 		return m_Clib.ioctl(fd, cmd, data);
 	}
-
 
 	public List<String> getPortList() {
 		File dir = new File(DEVICE_DIR_PATH);
@@ -320,16 +321,20 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 		String[] devs = dir.list();
 		LinkedList<String> list = new LinkedList<String>();
+
+		Pattern p = JTermios.getPortNamePattern(this);
 		if (devs != null) {
 			for (int i = 0; i < devs.length; i++) {
 				String s = devs[i];
-				if (s.startsWith("tty."))
+				if (p.matcher(s).matches())
 					list.add(s);
 			}
-
 		}
-
 		return list;
+	}
+
+	public String getPortNamePattern() {
+		return "^(tty\\.|cu\\.).*";
 	}
 
 	public void shutDown() {
@@ -344,8 +349,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		if (r == 0)
 			r = tcsetattr(fd, TCSANOW, termios);
 		if (r != 0) {
-			NativeLong[] data = new NativeLong[] { new NativeLong(speed) };
-			r = ioctl(fd, IOSSIOSPEED, data);
+			// Darell Tan had patched RXTX with this sequence, so lets try this
+			if (cfsetispeed(termios, B9600) == 0 && cfsetospeed(termios, B9600) == 0 && tcsetattr(fd, TCSANOW, termios) == 0) {
+				NativeLong[] data = new NativeLong[] { new NativeLong(speed) };
+				r = ioctl(fd, IOSSIOSPEED, data);
+			}
 		}
 		return r;
 	}
