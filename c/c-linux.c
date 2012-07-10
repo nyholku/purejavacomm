@@ -26,7 +26,6 @@ main(){
 	printf("F_SETFL = 0x%08X;\n",F_SETFL);
 
 	printf("// errno.h stuff\n");
-	printf("EAGAIN = %d;\n",EAGAIN);
 	printf("EBADF = %d;\n",EBADF);
 	printf("EACCES= %d;\n",EINVAL);
 	printf("EEXIST= %d;\n",EEXIST);
@@ -91,7 +90,12 @@ main(){
 	printf("CSIZE = 0x%08X;\n",CSIZE);
 	printf("TCIFLUSH = 0x%08X;\n",TCIFLUSH);
 	printf("TCOFLUSH = 0x%08X;\n",TCOFLUSH);
-	printf("TCIOFLUSH = 0x%08X;\n",TCIOFLUSH);
+	printf("TCIOFLUSH = 0x%08X;\n",TCIOFLUSH);	
+	printf("TIOCGSERIAL = 0x%08X;\n",TIOCGSERIAL);
+	printf("TIOCSSERIAL = 0x%08X;\n",TIOCSSERIAL);
+
+	printf("ASYNC_SPD_MASK = 0x%08X;\n",ASYNC_SPD_MASK);	
+	printf("ASYNC_SPD_CUST = 0x%08X;\n",ASYNC_SPD_CUST);
 
 	
 	
@@ -104,6 +108,7 @@ main(){
 	printf("CREAD = 0x%08X;\n",CREAD);
 	printf("PARENB = 0x%08X;\n",PARENB);
 	printf("PARODD = 0x%08X;\n",PARODD);
+
 
 //	printf("CCTS_OFLOW = 0x%08X;\n",CCTS_OFLOW);
 //	printf("CRTS_IFLOW = 0x%08X;\n",CRTS_IFLOW);
@@ -152,12 +157,51 @@ main(){
 	printf("FD_SETSIZE = 0x%08X;\n",FD_SETSIZE);
 	
 	struct termios t;
-	printf("%d\n",sizeof(t));
-	printf("%d\n",sizeof(t.c_iflag));
-	printf("%d\n",sizeof(t.c_cflag));
-	printf("%d\n",sizeof(t.c_lflag));
-	printf("%d\n",sizeof(t.c_cc));
-	printf("%d\n",sizeof(t.c_ispeed));
-	printf("%d\n",sizeof(t.c_ospeed));
+	printf("termios %d\n",sizeof(t));
+	printf(".c_iflag %d\n",((char*)&t.c_iflag)-((char*)&t));	
+	printf(".c_oflag %d\n",((char*)&t.c_oflag)-((char*)&t));
+	printf(".c_cflag %d\n",((char*)&t.c_cflag)-((char*)&t));
+	printf(".c_lflag %d\n",((char*)&t.c_lflag)-((char*)&t));
+	printf(".c_line %d\n",((char*)&(t.c_line))-((char*)&t));
+	printf(".c_cc[0] %d\n",((char*)&(t.c_cc[0]))-((char*)&t));
+	printf(".c_cc[1] %d\n",((char*)&(t.c_cc[1]))-((char*)&t));
+	printf(".c_cc[30] %d\n",((char*)&(t.c_cc[30]))-((char*)&t));
+	printf(".c_cc[31] %d\n",((char*)&(t.c_cc[31]))-((char*)&t));
+	printf(".c_ispeed %d\n",((char*)&t.c_ispeed)-((char*)&t));
+	printf(".c_ospeed %d\n",((char*)&t.c_ospeed)-((char*)&t));
+
+	struct serial_struct ss;
+	printf("serial_struct %d\n",sizeof(ss));
+	printf(".type %d\n",((char*)&ss.type)-((char*)&ss));
+	printf(".line %d\n",((char*)&ss.line)-((char*)&ss));
+	printf(".port %d\n",((char*)&ss.port)-((char*)&ss));
+	printf(".irq %d\n",((char*)&ss.irq)-((char*)&ss));
+	printf(".flags %d\n",((char*)&ss.flags)-((char*)&ss));
+	printf(".xmit_fifo_size %d\n",((char*)&ss.xmit_fifo_size)-((char*)&ss));
+	printf(".custom_divisor %d\n",((char*)&ss.custom_divisor)-((char*)&ss));
+	printf(".baud_base %d\n",((char*)&ss.baud_base)-((char*)&ss));
+	printf(".close_delay %d\n",((char*)&ss.close_delay)-((char*)&ss));
+	printf(".io_type %d\n",((char*)&ss.io_type)-((char*)&ss));
+	printf(".reserved_char %d\n",((char*)&ss.reserved_char)-((char*)&ss));
+	printf(".hub6 %d\n",((char*)&ss.hub6)-((char*)&ss));	
+	printf(".closing_wait %d\n",((char*)&ss.closing_wait)-((char*)&ss));
+	printf(".closing_wait2 %d\n",((char*)&ss.closing_wait2)-((char*)&ss));
+	printf(".iomem_base %d\n",((char*)&ss.iomem_base)-((char*)&ss));
+	printf(".iomem_reg_shift %d\n",((char*)&ss.iomem_reg_shift)-((char*)&ss));
+	printf(".port_high %d\n",((char*)&ss.port_high)-((char*)&ss));
+	printf(".iomap_base %d\n",((char*)&ss.iomap_base)-((char*)&ss));
+
+	printf("timeval %d\n",sizeof(struct timeval));
+
+
+
+
+
+
+
+
+
+
+
 
   }
