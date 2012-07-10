@@ -157,8 +157,20 @@ main(){
 	printf("// _structs.h stuff\n");
 	printf("__DARWIN_NFDBITS = 0x%08X;\n",__DARWIN_NFDBITS);
 	printf("// _misc\n");
+    
 	struct termios t;
-	printf("sizeof(struct termios) = %d;\n",sizeof(t));
+	printf("termios %d\n",sizeof(t));
+	printf(".c_iflag %d\n",((char*)&t.c_iflag)-((char*)&t));	
+	printf(".c_oflag %d\n",((char*)&t.c_oflag)-((char*)&t));
+	printf(".c_cflag %d\n",((char*)&t.c_cflag)-((char*)&t));
+	printf(".c_lflag %d\n",((char*)&t.c_lflag)-((char*)&t));
+	printf(".c_cc[0] %d\n",((char*)&(t.c_cc[0]))-((char*)&t));
+	printf(".c_cc[1] %d\n",((char*)&(t.c_cc[1]))-((char*)&t));
+	printf(".c_cc[30] %d\n",((char*)&(t.c_cc[30]))-((char*)&t));
+	printf(".c_cc[31] %d\n",((char*)&(t.c_cc[31]))-((char*)&t));
+	printf(".c_ispeed %d\n",((char*)&t.c_ispeed)-((char*)&t));
+	printf(".c_ospeed %d\n",((char*)&t.c_ospeed)-((char*)&t));
+    
 	struct timeval tv;
 	printf("sizeof(timeval) = %d;\n",sizeof(tv));
 	
