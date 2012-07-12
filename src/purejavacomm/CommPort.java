@@ -117,10 +117,10 @@ public abstract class CommPort {
 	public abstract int getOutputBufferSize();
 
 	/**
-	 * Returns an output stream. ð
+	 * Returns an output stream. 
 	 * 
 	 * @return An output stream, or <code>null</code> if the port is
-	 *         unidirectional and ðdoesn't support sending data.
+	 *         unidirectional and doesn't support sending data.
 	 * @throws IOException
 	 */
 	public abstract OutputStream getOutputStream() throws IOException;
