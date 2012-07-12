@@ -48,7 +48,7 @@ public class Test2 extends TestBase {
 	private static volatile int m_ErrorCount = 0;
 	private static int N = 1000;
 
-	static void run() throws Exception {
+	static void run(int speed) throws Exception {
 		try {
 			m_Done = false;
 			rnd = new Random();
@@ -63,7 +63,7 @@ public class Test2 extends TestBase {
 			m_Port.notifyOnDataAvailable(true);
 			m_Port.notifyOnOutputEmpty(true);
 			m_Port.setFlowControlMode(SerialPort.FLOWCONTROL_XONXOFF_IN + SerialPort.FLOWCONTROL_XONXOFF_OUT);
-			m_Port.setSerialPortParams(19200, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+			m_Port.setSerialPortParams(speed, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 			final boolean[] stop = { false };
 			m_T0 = System.currentTimeMillis();
 			m_Port.addEventListener(new SerialPortEventListener() {
