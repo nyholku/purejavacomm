@@ -658,7 +658,8 @@ public class PureJavaSerialPort extends SerialPort {
 			if (fcres != 0) // not much we can do if this fails, so just log it
 				log = log && log(1, "fcntl(%d,%d,%d) returned %d\n", m_FD, F_SETFL, flags, fcres);
 
-			m_Thread.interrupt();
+			if (m_Thread!=null)
+				m_Thread.interrupt();
 			int err = jtermios.JTermios.close(fd);
 			if (err < 0)
 				log = log && log(1, "JTermios.close returned %d, errno %d\n", err, errno());
