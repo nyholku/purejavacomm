@@ -293,6 +293,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		FreeBSD_C_lib.Termios t = new FreeBSD_C_lib.Termios(termios);
 		m_Clib.cfmakeraw(t);
 		t.update(termios); 
+        t.c_iflag = 0;
+        t.c_oflag = 0;
+        t.c_lflag = 0;
+        t.c_cflag = 0;
 	}
 
 	public int fcntl(int fd, int cmd, int[] arg) {
