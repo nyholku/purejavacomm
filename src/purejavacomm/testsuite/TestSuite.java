@@ -34,14 +34,14 @@ import com.sun.jna.Native;
 
 public class TestSuite {
 	public static void main(String[] args) {
-		Native.setProtected(true);
+		//Native.setProtected(false);
 		TestBase.init(args);
-		//jtermios.JTermios.JTermiosLogging.setLogLevel(5);
+		//jtermios.JTermios.JTermiosLogging.setLogMask(255);
 		try {
 			System.out.println("PureJavaComm Test Suite");
 			System.out.println("Using port: " + TestBase.getPortName());
 			Test1.run();
-			Test2.run();
+			Test2.run(19200);
 			Test3.run();
 			Test4.run();
 			Test5.run();
