@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Kustaa Nyholm / SpareTimeLabs
+ * Copyright (c) 2012 Kustaa Nyholm / SpareTimeLabs
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -26,6 +26,11 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
+ * 
+ * This FreeBSD backend contributed by Denver Hull 
+ * 
+ * Many thanks for his persistence and efforts to make it happen!
+ * 
  */
 
 package jtermios.freebsd;
