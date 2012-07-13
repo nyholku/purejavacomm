@@ -1,0 +1,46 @@
+
+
+Version 0.0.7
+
+* Added support for FreeBSD
+
+- thanks to the persistent efforts of Denver Hull
+
+* Fixed a synchronization issue with control line state change detection
+
+- this bug often caused failure in Test1.java
+
+* Moved baudrate setting to each individual backend to support non standard baudrates
+
+- setting of non standard baudrates is very specific to OS and thus best
+  handled separately for each platform
+
+* Changed the way baudrate setting is handled in Mac OS X 
+
+- the code now first tries the standard (POSIX) way of setting the baudate
+  and if that fails then it tries the Mac OS X specific ioctl IOSSIOSPEED
+  
+* Change port enumeration matching to use a regular expression.
+
+- each backend defines its own rules for matching port names during enumeration,
+  see implementation of each jtermios.JTermios.JTermiosInterface.getPortNamePattern().
+  
+- for each backend the pattern can be overridden by setting the system property
+  purejavacomm.portnamepattern.<backend-fully-qualified-classname>.
+  
+- the pattern can be globally overriden by setting the system property
+  purejavacomm.portnamepattern
+  
+- the current default backend patterns, as returned by getPortNamePattern(),
+  are as follows:
+  
+  OS          Regular expression        Port name...
+  -------------------------------------------------------------------
+  Linux       ^tty*                     Starts with 'tty'
+  Mac OS      ^(tty\.|cu\.).*           Starts with 'cu.' or 'tty.'
+  FreeBSD     ^(tty\.|cu\.).*           Starts with 'cu.' or 'tty.'
+  Solaris     .*                        Anything goes
+  Windows     ^COM.*                    Starts with 'COM'
+  
+  
+  
