@@ -1,5 +1,0 @@
-#!/bin/bash          
-echo Run 'purejavacomm.testsuite.TestSuite'
-# java -cp bin/purejavacomm.jar:lib/jna.jar purejavacomm.testsuite.TestSuite
-java -cp classes:lib/jna.jar purejavacomm.testsuite.TestSuite
-
