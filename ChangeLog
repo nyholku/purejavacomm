@@ -1,4 +1,12 @@
 
+Version 0.0.7
+
+* On Linux ignore failure of TIOCGSERIAL in when trying to use standard baudrates
+
+- not every serial port driver supports TIOCGSERIAL, so when we set standard baudrate
+  we try to turn of custom divisor using TIOCGSERIAL, but if it fails we just ignore it
+  
+- related to above logging for JTermiosImpl.setspeed() was improved to help debugging
 
 Version 0.0.6
 
