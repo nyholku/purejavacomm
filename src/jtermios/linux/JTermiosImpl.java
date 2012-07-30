@@ -490,8 +490,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		return m_Clib.ioctl(fd, cmd, data);
 	}
 
-	public int ioctl(int fd, int cmd, serial_struct data) {
-		return m_Clib.ioctl(fd, cmd, data);
+	// This ioctl is Linux specific, so keep it private for now
+	private int ioctl(int fd, int cmd, serial_struct data) {
+		// Do the logging here as this does not go through the JTermios which normally does the logging
+		log = log && log(5, "> ioctl(%d,%d,%s)\n", fd, cmd, data);
+		int ret = m_Clib.ioctl(fd, cmd, data);
+		log = log && log(3, "< tcsetattr(%d,%d,%s) => %d\n", fd, cmd, data, ret);
+		return ret;
 	}
 
 	public String getPortNamePattern() {
@@ -533,25 +538,25 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				// in case custom divisor was in use, turn it off first
 				serial_struct ss = new serial_struct();
 
-				if ((r = ioctl(fd, TIOCGSERIAL, ss)) != 0)
-					return r;
-				ss.flags &= ~ASYNC_SPD_MASK;
-				if ((r = ioctl(fd, TIOCSSERIAL, ss)) != 0)
-					return r;
+				// not every driver supports TIOCGSERIAL, so if it fails, just ignore it
+				if ((r = ioctl(fd, TIOCGSERIAL, ss)) == 0) {
+					ss.flags &= ~ASYNC_SPD_MASK;
+					if ((r = ioctl(fd, TIOCSSERIAL, ss)) != 0)
+						return r;
+				}
 
 				// now set the speed with the constant from the table
 				c = m_BaudRates[i + 1];
-				if ((r = cfsetispeed(termios, c)) != 0)
+				if ((r = JTermios.cfsetispeed(termios, c)) != 0)
 					return r;
-				if ((r = cfsetospeed(termios, c)) != 0)
+				if ((r = JTermios.cfsetospeed(termios, c)) != 0)
 					return r;
-				if ((r = tcsetattr(fd, TCSANOW, termios)) != 0)
+				if ((r = JTermios.tcsetattr(fd, TCSANOW, termios)) != 0)
 					return r;
 
 				return 0;
 			}
 		}
-
 
 		// baudrate not defined in the table, try custom divisor approach
 
@@ -571,11 +576,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		if ((r = ioctl(fd, TIOCSSERIAL, ss)) != 0)
 			return r;
 
-		if ((r = cfsetispeed(termios, B38400)) != 0)
+		if ((r = JTermios.cfsetispeed(termios, B38400)) != 0)
 			return r;
-		if ((r = cfsetospeed(termios, B38400)) != 0)
+		if ((r = JTermios.cfsetospeed(termios, B38400)) != 0)
 			return r;
-		if ((r = tcsetattr(fd, TCSANOW, termios)) != 0)
+		if ((r = JTermios.tcsetattr(fd, TCSANOW, termios)) != 0)
 			return r;
 		return 0;
 	}
