@@ -31,6 +31,7 @@ package purejavacomm.testsuite;
 
 import java.util.Arrays;
 
+import purejavacomm.SerialPort;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
@@ -39,6 +40,9 @@ public class Test3 extends TestBase {
 		try {
 			begin("Test3 - transmit all characters");
 			openPort();
+			int mode = m_Port.getFlowControlMode();
+			mode &= ~(SerialPort.FLOWCONTROL_XONXOFF_IN | SerialPort.FLOWCONTROL_XONXOFF_OUT);
+			m_Port.setFlowControlMode(mode);
 			byte[] sent = new byte[256];
 			byte[] rcvd = new byte[256];
 			for (int i = 0; i < 256; i++)
