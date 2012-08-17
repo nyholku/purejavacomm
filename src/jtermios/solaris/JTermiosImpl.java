@@ -423,10 +423,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public int poll(Pollfd fds[], int nfds, int timeout) {
 		pollfd[] pfds = new pollfd[fds.length];
-		for (int i = 0; i < nfds; i++) {
+		for (int i = 0; i < nfds; i++)
 			pfds[i] = new pollfd(fds[i]);
-		}
-		return m_Clib.poll(pfds, nfds, timeout);
+        int ret = m_Clib.poll(pfds, nfds, timeout);
+        for(int i = 0; i < nfds; i++)
+            fds[i].revents = pfds[i].revents;
+		return ret;
 	}
 
 	public FDSet newFDSet() {
