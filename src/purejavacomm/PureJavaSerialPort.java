@@ -475,7 +475,7 @@ public class PureJavaSerialPort extends SerialPort {
 			throw e;
 		} catch (IllegalStateException e) {
 			m_Termios.set(prev);
-				checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
+			checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
 			throw e;
 		}
 	}
@@ -658,7 +658,7 @@ public class PureJavaSerialPort extends SerialPort {
 			if (fcres != 0) // not much we can do if this fails, so just log it
 				log = log && log(1, "fcntl(%d,%d,%d) returned %d\n", m_FD, F_SETFL, flags, fcres);
 
-			if (m_Thread!=null)
+			if (m_Thread != null)
 				m_Thread.interrupt();
 			int err = jtermios.JTermios.close(fd);
 			if (err < 0)
@@ -735,21 +735,22 @@ public class PureJavaSerialPort extends SerialPort {
 				try {
 					m_ThreadRunning = true;
 					// see: http://daniel.haxx.se/docs/poll-vs-select.html
-					final boolean USE_SELECT = true;
+					final boolean USE_POLL = Boolean.getBoolean("purejavacomm.use_poll") && !Platform.isMac();
 					final int TIMEOUT = 10; // msec
-					TimeVal timeout;
-					FDSet rset;
-					FDSet wset;
-					Pollfd[] pollfd;
+					TimeVal timeout = null;
+					FDSet rset = null;
+					FDSet wset = null;
+					Pollfd[] pollfd = null;
 
-					if (USE_SELECT) {
+					if (USE_POLL)
+						pollfd = new Pollfd[] { new Pollfd() };
+					else {
 						rset = newFDSet();
 						wset = newFDSet();
 						timeout = new TimeVal();
 						timeout.tv_sec = 0;
 						timeout.tv_usec = TIMEOUT * 1000; // 10 msec polling period
-					} else
-						pollfd = new Pollfd[] { new Pollfd() };
+					}
 
 					while (m_FD >= 0) { // lets die if the file descriptor dies on us ie the port closes
 						boolean read = (m_NotifyOnDataAvailable && !m_DataAvailableNotified);
@@ -758,17 +759,7 @@ public class PureJavaSerialPort extends SerialPort {
 						if (!read && !write)
 							Thread.sleep(TIMEOUT);
 						else { // do all this only if we actually wait for read or write
-							if (USE_SELECT) {
-								FD_ZERO(rset);
-								FD_ZERO(wset);
-								if (read)
-									FD_SET(m_FD, rset);
-								if (write)
-									FD_SET(m_FD, wset);
-								n = select(m_FD + 1, rset, wset, null, timeout);
-								read = read && FD_ISSET(m_FD, rset);
-								write = write && FD_ISSET(m_FD, wset);
-							} else { // use poll
+							if (USE_POLL) {
 								pollfd[0].fd = m_FD;
 								short e = 0;
 								if (read)
@@ -785,7 +776,18 @@ public class PureJavaSerialPort extends SerialPort {
 								}
 								read = read && (re & POLLIN) != 0;
 								write = write && (re & POLLOUT) != 0;
+							} else {
+								FD_ZERO(rset);
+								FD_ZERO(wset);
+								if (read)
+									FD_SET(m_FD, rset);
+								if (write)
+									FD_SET(m_FD, wset);
+								n = select(m_FD + 1, rset, wset, null, timeout);
+								read = read && FD_ISSET(m_FD, rset);
+								write = write && FD_ISSET(m_FD, wset);
 							}
+
 							if (Thread.currentThread().isInterrupted())
 								break;
 							if (n < 0) {
