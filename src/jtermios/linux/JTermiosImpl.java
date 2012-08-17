@@ -251,8 +251,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		F_GETFL = 0x00000003;
 		F_SETFL = 0x00000004;
 		//errno.h stuff
-		EAGAIN = 35;
-		EACCES = 22;
+		EAGAIN = 11;
+		EACCES = 13;
 		EEXIST = 17;
 		EINTR = 4;
 		EINVAL = 22;
@@ -329,7 +329,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		B200 = 6;
 		B300 = 7;
 		B600 = 8;
-		B1200 = 8;
+		B1200 = 9;
 		B1800 = 10;
 		B2400 = 11;
 		B4800 = 12;
