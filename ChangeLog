@@ -1,3 +1,25 @@
+Version 0.0.8
+
+-  Mostly thanks to Alexander Salgado 
+
+* Added support for internally switching to poll() instead of select()
+
+- poll is useful if the operating system uses file descriptors that overflow 'fd_set'
+- to use poll() set system property purejavacomm.use_poll = true
+- only available for Linux at the moment, for other platforms 
+   purejavacomm.use_poll is ignored
+
+* Fixed poll() in jtermios.linux.JTermiosImpl.java
+
+- poll() can now be used instead of select() , which has the benefit of 
+  marginally less overhead and support file descriptors that overdflow
+  what select() can handle, rare but useful if it happens
+  
+* Fixed a few wrong constants in jtermios.linux.JTermiosImpl.java
+
+- constant for baudrate 1200 was wrong (resulted in 600)
+- some error codes were wrong (probably had no effect)
+
 
 Version 0.0.7
 
