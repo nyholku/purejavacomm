@@ -66,8 +66,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	static FreeBSD_C_lib m_Clib = (FreeBSD_C_lib) Native.loadLibrary("c", FreeBSD_C_lib.class);
 
 	public interface FreeBSD_C_lib extends com.sun.jna.Library {
-		public IntByReference __error();
-
 		public int tcdrain(int fd);
 
 		public void cfmakeraw(Termios termios);
