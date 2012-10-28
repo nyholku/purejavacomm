@@ -63,9 +63,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	static Solaris_C_lib m_Clib = (Solaris_C_lib) Native.loadLibrary("c", Solaris_C_lib.class);
 
 	public interface Solaris_C_lib extends com.sun.jna.Library {
-
-		public IntByReference __error();
-
 		public int tcdrain(int fd);
 
 		public int fcntl(int fd, int cmd, int[] arg);
