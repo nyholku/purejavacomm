@@ -250,6 +250,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						"c_oflag",//
 						"c_cflag",//
 						"c_lflag",//
+						"c_line",//
 						"c_cc",//
 						"c_ispeed",//
 						"c_ospeed"//

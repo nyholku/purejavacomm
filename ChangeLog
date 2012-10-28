@@ -1,3 +1,7 @@
+Version 0.0.10
+
+* Fixed a missing field in getFieldOrder() for Linux 
+ 
 Version 0.0.9
 
 * Added support for JNA 3.5.0 which require getFieldOrder() for all Struct derived classes
