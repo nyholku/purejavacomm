@@ -137,7 +137,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public NativeLong read(int fd, ByteBuffer buffer, NativeLong count);
 
-		public int select(int n, int[] read, int[] write, int[] error, TimeVal timeout);
+		public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
 
 		public int poll(pollfd[] fds, int nfds, int timeout);
 
@@ -147,7 +147,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public int tcsendbreak(int fd, int duration);
 
-		static public class TimeVal extends Structure {
+		static public class timeval extends Structure {
 			public NativeLong tv_sec;
 			public NativeLong tv_usec;
 
@@ -159,7 +159,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				);
 			}
 
-			public TimeVal(jtermios.TimeVal timeout) {
+			public timeval(jtermios.TimeVal timeout) {
 				tv_sec = new NativeLong(timeout.tv_sec);
 				tv_usec = new NativeLong(timeout.tv_usec);
 			}
@@ -519,9 +519,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int select(int nfds, FDSet rfds, FDSet wfds, FDSet efds, TimeVal timeout) {
-		Linux_C_lib.TimeVal tout = null;
+		Linux_C_lib.timeval tout = null;
 		if (timeout != null)
-			tout = new Linux_C_lib.TimeVal(timeout);
+			tout = new Linux_C_lib.timeval(timeout);
 
 		int[] r = rfds != null ? ((FDSetImpl) rfds).bits : null;
 		int[] w = wfds != null ? ((FDSetImpl) wfds).bits : null;
