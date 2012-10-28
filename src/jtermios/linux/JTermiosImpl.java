@@ -35,6 +35,7 @@ import java.io.File;
 import java.nio.Buffer;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -152,6 +153,14 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public NativeLong tv_sec;
 			public NativeLong tv_usec;
 
+			@Override
+			protected List getFieldOrder() {
+				return Arrays.asList(//
+						"tv_sec",//
+						"tv_usec"//
+				);
+			}
+
 			public TimeVal(jtermios.TimeVal timeout) {
 				tv_sec = new NativeLong(timeout.tv_sec);
 				tv_usec = new NativeLong(timeout.tv_usec);
@@ -162,6 +171,15 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public int fd;
 			public short events;
 			public short revents;
+
+			@Override
+			protected List getFieldOrder() {
+				return Arrays.asList(//
+						"fd",//
+						"events",//
+						"revents"//
+				);
+			}
 
 			public pollfd(Pollfd pfd) {
 				fd = pfd.fd;
@@ -190,6 +208,31 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public short iomem_reg_shift;
 			public int port_high;
 			public NativeLong iomap_base;
+
+			@Override
+			protected List getFieldOrder() {
+				return Arrays.asList(//
+						"type",//
+						"line",//
+						"port",//
+						"irq",//
+						"flags",//
+						"xmit_fifo_size",//
+						"custom_divisor",//
+						"baud_base",//
+						"close_delay",//
+						"io_type",//
+						//public char io_type;
+						//public char reserved_char;
+						"hub6",//
+						"closing_wait",//
+						"closing_wait2",//
+						"iomem_base",//
+						"iomem_reg_shift",//
+						"port_high",//
+						"iomap_base"//
+				);
+			}
 		};
 
 		static public class termios extends Structure {
@@ -201,6 +244,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public byte[] c_cc = new byte[32];
 			public int c_ispeed;
 			public int c_ospeed;
+
+			@Override
+			protected List getFieldOrder() {
+				return Arrays.asList(//
+						"c_iflag",//
+						"c_oflag",//
+						"c_cflag",//
+						"c_lflag",//
+						"c_cc",//
+						"c_ispeed",//
+						"c_ospeed"//
+				);
+			}
 
 			public termios() {
 			}
@@ -479,9 +535,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		pollfd[] pfds = new pollfd[fds.length];
 		for (int i = 0; i < nfds; i++)
 			pfds[i] = new pollfd(fds[i]);
-        int ret = m_Clib.poll(pfds, nfds, timeout);
-        for(int i = 0; i < nfds; i++)
-            fds[i].revents = pfds[i].revents;
+		int ret = m_Clib.poll(pfds, nfds, timeout);
+		for (int i = 0; i < nfds; i++)
+			fds[i].revents = pfds[i].revents;
 		return ret;
 	}
 

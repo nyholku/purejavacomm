@@ -40,6 +40,7 @@ import java.io.File;
 import java.nio.Buffer;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -98,7 +99,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		public NativeLong read(int fd, ByteBuffer buffer, NativeLong count);
 
 		//public int select(int n, int[] read, int[] write, int[] error, TimeVal timeout);
-		public int select(int n, NativeLong[] read, NativeLong[] write, NativeLong[] error, TimeVal timeout); 
+		public int select(int n, NativeLong[] read, NativeLong[] write, NativeLong[] error, TimeVal timeout);
 
 		public int poll(pollfd[] fds, int nfds, int timeout);
 
@@ -112,6 +113,14 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public NativeLong tv_sec;
 			public NativeLong tv_usec;
 
+			@Override
+			protected List getFieldOrder() {
+				return Arrays.asList(//
+						"tv_sec",//
+						"tv_usec"//
+				);
+			}
+
 			public TimeVal(jtermios.TimeVal timeout) {
 				tv_sec = new NativeLong(timeout.tv_sec);
 				tv_usec = new NativeLong(timeout.tv_usec);
@@ -122,6 +131,15 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public int fd;
 			public short events;
 			public short revents;
+
+			@Override
+			protected List getFieldOrder() {
+				return Arrays.asList(//
+						"fd",//
+						"events",//
+						"revents"//
+				);
+			}
 
 			public pollfd(Pollfd pfd) {
 				fd = pfd.fd;
@@ -138,6 +156,18 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public byte[] c_cc = new byte[20];
 			public int c_ispeed;
 			public int c_ospeed;
+
+			@Override
+			protected List getFieldOrder() {
+				return Arrays.asList("c_iflag",//
+						"c_oflag",//
+						"c_cflag",//
+						"c_lflag",//
+						"c_cc",//
+						"c_ispeed",//
+						"c_ospeed"//
+				);
+			}
 
 			public Termios() {
 			}
@@ -183,7 +213,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		FIONREAD = 0x4004667F;
 		// fcntl.h stuff
 		O_RDWR = 0x00000002;
-		O_NONBLOCK= 0x00000004;
+		O_NONBLOCK = 0x00000004;
 		O_NOCTTY = 0x00008000;
 		O_NDELAY = 0x00000004;
 		F_GETFL = 0x00000003;
@@ -191,23 +221,23 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		// errno.h stuff
 		EAGAIN = 35;
 		EBADF = 9;
-		EACCES= 22;
-		EEXIST= 17;
-		EINTR= 4;
-		EINVAL= 22;
-		EIO= 5;
-		EISDIR= 21;
-		ELOOP= 62;
-		EMFILE= 24;
-		ENAMETOOLONG= 63;
-		ENFILE= 23;
-		ENOENT= 2;
-		ENOSPC= 28;
-		ENOTDIR= 20;
-		ENXIO= 6;
-		EOVERFLOW= 84;
-		EROFS= 30;
-		ENOTSUP= 45;
+		EACCES = 22;
+		EEXIST = 17;
+		EINTR = 4;
+		EINVAL = 22;
+		EIO = 5;
+		EISDIR = 21;
+		ELOOP = 62;
+		EMFILE = 24;
+		ENAMETOOLONG = 63;
+		ENFILE = 23;
+		ENOENT = 2;
+		ENOSPC = 28;
+		ENOTDIR = 20;
+		ENXIO = 6;
+		EOVERFLOW = 84;
+		EROFS = 30;
+		ENOTSUP = 45;
 		// termios.h stuff
 		TIOCM_RNG = 0x00000080;
 		TIOCM_CAR = 0x00000040;
@@ -238,7 +268,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		ECHO = 0x00000008;
 		ECHOE = 0x00000002;
 		ISIG = 0x00000080;
-		TIOCMSET= 0x8004746D;
+		TIOCMSET = 0x8004746D;
 		IXON = 0x00000200;
 		IXOFF = 0x00000400;
 		IXANY = 0x00000800;
@@ -297,7 +327,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public void cfmakeraw(Termios termios) {
 		FreeBSD_C_lib.Termios t = new FreeBSD_C_lib.Termios(termios);
 		m_Clib.cfmakeraw(t);
-		t.update(termios); 
+		t.update(termios);
 	}
 
 	public int fcntl(int fd, int cmd, int[] arg) {
@@ -382,7 +412,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			return;
 		FDSetImpl p = (FDSetImpl) set;
 		//p.bits[fd / FDSetImpl.NFBBITS] &= ~(1 << (fd % FDSetImpl.NFBBITS));
-		int i=fd / FDSetImpl.NFBBITS;
+		int i = fd / FDSetImpl.NFBBITS;
 		p.bits[i] = new NativeLong(p.bits[i].longValue() & ~(1 << (fd % FDSetImpl.NFBBITS)));
 	}
 
@@ -391,8 +421,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			return false;
 		FDSetImpl p = (FDSetImpl) set;
 		//return (p.bits[fd / FDSetImpl.NFBBITS] & (1 << (fd % FDSetImpl.NFBBITS))) != 0;
-		int i=fd / FDSetImpl.NFBBITS;
-		return (p.bits[i].longValue() & (1 << (fd % FDSetImpl.NFBBITS))) != 0; 
+		int i = fd / FDSetImpl.NFBBITS;
+		return (p.bits[i].longValue() & (1 << (fd % FDSetImpl.NFBBITS))) != 0;
 	}
 
 	public void FD_SET(int fd, FDSet set) {
@@ -400,8 +430,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			return;
 		FDSetImpl p = (FDSetImpl) set;
 		//p.bits[fd / FDSetImpl.NFBBITS] |= 1 << (fd % FDSetImpl.NFBBITS);
-		int i=fd / FDSetImpl.NFBBITS;
-		p.bits[i] = new NativeLong(p.bits[i].longValue() | (1 << (fd % FDSetImpl.NFBBITS))); 
+		int i = fd / FDSetImpl.NFBBITS;
+		p.bits[i] = new NativeLong(p.bits[i].longValue() | (1 << (fd % FDSetImpl.NFBBITS)));
 	}
 
 	public void FD_ZERO(FDSet set) {
@@ -430,9 +460,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		pollfd[] pfds = new pollfd[fds.length];
 		for (int i = 0; i < nfds; i++)
 			pfds[i] = new pollfd(fds[i]);
-        int ret = m_Clib.poll(pfds, nfds, timeout);
-        for(int i = 0; i < nfds; i++)
-            fds[i].revents = pfds[i].revents;
+		int ret = m_Clib.poll(pfds, nfds, timeout);
+		for (int i = 0; i < nfds; i++)
+			fds[i].revents = pfds[i].revents;
 		return ret;
 	}
 
@@ -467,7 +497,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public void shutDown() {
 
 	}
-	
+
 	public String getPortNamePattern() {
 		return "^(tty\\.|cu\\.).*";
 	}
