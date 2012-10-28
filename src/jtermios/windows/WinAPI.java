@@ -31,8 +31,6 @@
 package jtermios.windows;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
 
 import com.sun.jna.*;
 import com.sun.jna.ptr.IntByReference;
@@ -370,16 +368,6 @@ public class WinAPI {
 		public int OffsetHigh;
 		public HANDLE hEvent;
 
-		@Override
-		protected List getFieldOrder() {
-			return Arrays.asList("Internal",//
-					"InternalHigh",//
-					"Offset",//
-					"OffsetHigh",//
-					"hEvent"//
-			);
-		}
-
 		public OVERLAPPED() {
 			setAutoSynch(false);
 		}
@@ -389,14 +377,6 @@ public class WinAPI {
 		public int nLength;
 		public Pointer lpSecurityDescriptor;
 		public boolean bInheritHandle;
-
-		@Override
-		protected List getFieldOrder() {
-			return Arrays.asList("nLength",//
-					"lpSecurityDescriptor",//
-					"bInheritHandle"//
-			);
-		}
 	}
 
 	public static class DCB extends Structure {
@@ -429,27 +409,6 @@ public class WinAPI {
 		public byte EofChar;
 		public byte EvtChar;
 		public short wReserved1;
-
-		@Override
-		protected List getFieldOrder() {
-			return Arrays.asList("DCBlength",//
-					"BaudRate",//
-					"fFlags",//
-					"wReserved",//
-					"XonLim",//
-					"XoffLim",//
-					"ByteSize",//
-					"Parity",//
-					"StopBits",//
-					"XonChar",//
-					"XoffChar",//
-					"ErrorChar",//
-					"EofChar",//
-					"EvtChar",//
-					"wReserved1"//
-			);
-		}
-
 	};
 
 	public static class COMMTIMEOUTS extends Structure {
@@ -458,16 +417,6 @@ public class WinAPI {
 		public int ReadTotalTimeoutConstant;
 		public int WriteTotalTimeoutMultiplier;
 		public int WriteTotalTimeoutConstant;
-
-		@Override
-		protected List getFieldOrder() {
-			return Arrays.asList("ReadIntervalTimeout",//
-					"ReadTotalTimeoutMultiplier",//
-					"ReadTotalTimeoutConstant",//
-					"WriteTotalTimeoutMultiplier",//
-					"WriteTotalTimeoutConstant"//
-			);
-		}
 	};
 
 	public static class COMSTAT extends Structure {
@@ -482,14 +431,6 @@ public class WinAPI {
 		public static final int fReserved = 0xFFFFFF80;
 		public int cbInQue;
 		public int cbOutQue;
-
-		@Override
-		protected List getFieldOrder() {
-			return Arrays.asList("fFlags",//
-					"cbInQue",//
-					"cbOutQue"//
-			);
-		}
 	};
 
 	static public HANDLE CreateFileA(String name, int access, int sharing, SECURITY_ATTRIBUTES security, int create, int attribs, Pointer template) {

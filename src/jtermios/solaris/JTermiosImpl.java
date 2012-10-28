@@ -34,7 +34,6 @@ import java.io.File;
 import java.nio.Buffer;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -106,11 +105,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public NativeLong tv_sec;
 			public NativeLong tv_usec;
 
-			@Override
-			protected List getFieldOrder() {
-				return Arrays.asList("tv_sec","tv_usec");
-			}
-
 			public TimeVal(jtermios.TimeVal timeout) {
 				tv_sec = new NativeLong(timeout.tv_sec);
 				tv_usec = new NativeLong(timeout.tv_usec);
@@ -122,11 +116,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public int fd;
 			public short events;
 			public short revents;
-			
-			@Override
-			protected List getFieldOrder() {
-				return Arrays.asList("fd","events","revents");
-			}
 
 			public pollfd(Pollfd pfd) {
 				fd = pfd.fd;
@@ -142,11 +131,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public int c_cflag;
 			public int c_lflag;
 			public byte[] c_cc = new byte[32];
-			
-			@Override
-			protected List getFieldOrder() {
-				return Arrays.asList("c_iflag","c_oflag","c_cflag","c_lflag","c_cc");
-			}
 
 			public Termios() {
 			}

@@ -35,7 +35,6 @@ import java.io.File;
 import java.nio.Buffer;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -61,69 +60,7 @@ import static jtermios.JTermios.JTermiosLogging.log;
 public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static int IOSSIOSPEED = 0x80045402;
 	private static String DEVICE_DIR_PATH = "/dev/";
-	//static MacOSX_C_lib m_Clib = (MacOSX_C_lib) Native.loadLibrary("c", MacOSX_C_lib.class);
-	static MacOSX_C_lib m_Clib = new MacOSX_C_lib_DirectMapping();
-
-	//static MacOSX_C_lib_DirectMapping m_ClibDM = new MacOSX_C_lib_DirectMapping();
-
-	public static class MacOSX_C_lib_DirectMapping implements MacOSX_C_lib {
-
-		static {
-			try {
-				System.out.println("Registering DirectMapping class");
-				Native.register("c");
-			} catch (Throwable e) {
-				e.printStackTrace();
-			}
-		}
-
-		public native IntByReference __error();
-
-		public native int tcdrain(int fd);
-
-		public native void cfmakeraw(MacOSX_C_lib.Termios termios);
-
-		public native int fcntl(int fd, int cmd, int arg);
-
-		public native int ioctl(int fd, int cmd, int[] arg);
-
-		public native int ioctl(int fd, int cmd, long[] arg);
-
-		public int ioctl(int fd, int cmd, NativeLong[] arg) {
-			long[] t = { arg[0].longValue() };
-			int ret = ioctl(fd, cmd, t);
-			arg[0].setValue(t[0]);
-			return ret;
-		}
-
-		public native int open(String path, int flags);
-
-		public native int close(int fd);
-
-		public native int tcgetattr(int fd, MacOSX_C_lib.Termios termios);
-
-		public native int tcsetattr(int fd, int cmd, MacOSX_C_lib.Termios termios);
-
-		public native int cfsetispeed(Termios termios, NativeLong i);
-
-		public native int cfsetospeed(Termios termios, NativeLong i);
-
-		public native NativeLong cfgetispeed(Termios termios);
-
-		public native NativeLong cfgetospeed(Termios termios);
-
-		public native NativeLong write(int fd, ByteBuffer buffer, NativeLong count);
-
-		public native NativeLong read(int fd, ByteBuffer buffer, NativeLong count);
-
-		public native int select(int n, int[] read, int[] write, int[] error, MacOSX_C_lib.TimeVal timeout);
-
-		//public int poll(pollfd[] fds, int nfds, int timeout);
-
-		public native int tcflush(int fd, int qs);
-
-		public native void perror(String msg);
-	}
+	static MacOSX_C_lib m_Clib = (MacOSX_C_lib) Native.loadLibrary("c", MacOSX_C_lib.class);
 
 	public interface MacOSX_C_lib extends com.sun.jna.Library {
 
@@ -161,7 +98,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public int select(int n, int[] read, int[] write, int[] error, TimeVal timeout);
 
-		//public int poll(pollfd[] fds, int nfds, int timeout);
+		public int poll(pollfd[] fds, int nfds, int timeout);
 
 		public int tcflush(int fd, int qs);
 
@@ -170,14 +107,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		static public class TimeVal extends Structure {
 			public NativeLong tv_sec;
 			public NativeLong tv_usec;
-
-			@Override
-			protected List getFieldOrder() {
-				return Arrays.asList(//
-						"tv_sec",//
-						"tv_usec"//
-				);
-			}
 
 			public TimeVal(jtermios.TimeVal timeout) {
 				tv_sec = new NativeLong(timeout.tv_sec);
@@ -189,15 +118,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public int fd;
 			public short events;
 			public short revents;
-
-			@Override
-			protected List getFieldOrder() {
-				return Arrays.asList(//
-						"fd",//
-						"events",//
-						"revents"//
-				);
-			}
 
 			public pollfd(Pollfd pfd) {
 				fd = pfd.fd;
@@ -214,19 +134,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public byte[] c_cc = new byte[20];
 			public NativeLong c_ispeed = new NativeLong();
 			public NativeLong c_ospeed = new NativeLong();
-
-			@Override
-			protected List getFieldOrder() {
-				return Arrays.asList(//
-						"c_iflag",//
-						"c_oflag",//
-						"c_cflag",//
-						"c_lflag",//
-						"c_cc",//
-						"c_ispeed",//
-						"c_ospeed"//
-				);
-			}
 
 			public Termios() {
 			}
@@ -391,10 +298,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		pollfd[] pfds = new pollfd[fds.length];
 		for (int i = 0; i < nfds; i++)
 			pfds[i] = new pollfd(fds[i]);
-		//		int ret = m_Clib.poll(pfds, nfds, timeout);
-		int ret = -1;
-		for (int i = 0; i < nfds; i++)
-			fds[i].revents = pfds[i].revents;
+        int ret = m_Clib.poll(pfds, nfds, timeout);
+        for(int i = 0; i < nfds; i++)
+            fds[i].revents = pfds[i].revents;
 		return ret;
 	}
 
