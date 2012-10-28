@@ -595,13 +595,21 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				// in case custom divisor was in use, turn it off first
 				serial_struct ss = new serial_struct();
 
-				// not every driver supports TIOCGSERIAL, so if it fails, just ignore it
-				if ((r = ioctl(fd, TIOCGSERIAL, ss)) == 0) {
-					ss.flags &= ~ASYNC_SPD_MASK;
-					if ((r = ioctl(fd, TIOCSSERIAL, ss)) != 0)
+				r = ioctl(fd, TIOCGSERIAL, ss);
+				if (r != 0) {
+					// not every driver supports TIOCGSERIAL, so if it fails, just ignore it
+					if (errno() != EINVAL)
 						return r;
+				} else {
+					ss.flags &= ~ASYNC_SPD_MASK;
+					r = ioctl(fd, TIOCSSERIAL, ss);
+					if (r != 0) {
+						// not every driver supports TIOCSSERIAL, so if it fails, just ignore it
+						if (errno() != EINVAL)
+							return r;
+					}
 				}
-
+							
 				// now set the speed with the constant from the table
 				c = m_BaudRates[i + 1];
 				if ((r = JTermios.cfsetispeed(termios, c)) != 0)
