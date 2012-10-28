@@ -533,9 +533,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		pollfd[] pfds = new pollfd[fds.length];
 		for (int i = 0; i < nfds; i++)
 			pfds[i] = new pollfd(fds[i]);
-        int ret = m_Clib.poll(pfds, nfds, timeout);
-        for(int i = 0; i < nfds; i++)
-            fds[i].revents = pfds[i].revents;
+		int ret = m_Clib.poll(pfds, nfds, timeout);
+		for (int i = 0; i < nfds; i++)
+			fds[i].revents = pfds[i].revents;
 		return ret;
 	}
 
@@ -609,7 +609,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 							return r;
 					}
 				}
-							
+
 				// now set the speed with the constant from the table
 				c = m_BaudRates[i + 1];
 				if ((r = JTermios.cfsetispeed(termios, c)) != 0)
@@ -630,7 +630,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		if ((r = ioctl(fd, TIOCGSERIAL, ss)) != 0)
 			return r;
 		ss.flags = (ss.flags & ~ASYNC_SPD_MASK) | ASYNC_SPD_CUST;
+		
+		if (speed == 0) {
+			log = log && log(1, "unable to set custom baudrate %d \n", speed);
+			return -1;
+		}
+		
 		ss.custom_divisor = (ss.baud_base + (speed / 2)) / speed;
+
+		if (ss.custom_divisor == 0) {
+			log = log && log(1, "unable to set custom baudrate %d (possible division by zero)\n", speed);
+			return -1;
+		}
+		
 		int closestSpeed = ss.baud_base / ss.custom_divisor;
 
 		if (closestSpeed < speed * 98 / 100 || closestSpeed > speed * 102 / 100) {
