@@ -1,3 +1,10 @@
+Version 0.0.9
+
+* Added support for JNA 3.5.0 which require getFieldOrder() for all Struct derived classes
+
+* Changed Linux backend to ignore EINVAL error in ioctl/TIOCGSERIAL/TIOCSSERIAL calls
+  as all USB CDC ACM ack USB/Serial Dongles don't support it
+  
 Version 0.0.8
 
 -  Mostly thanks to Alexander Salgado 
