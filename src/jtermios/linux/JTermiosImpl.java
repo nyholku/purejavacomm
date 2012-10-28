@@ -105,8 +105,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	};
 
 	public interface Linux_C_lib extends com.sun.jna.Library {
-		public IntByReference __error();
-
 		public int tcdrain(int fd);
 
 		public void cfmakeraw(termios termios);
