@@ -30,6 +30,7 @@
 
 package purejavacomm;
 
+
 import java.io.*;
 import java.util.*;
 
@@ -720,6 +721,13 @@ public class PureJavaSerialPort extends SerialPort {
 
 		try {
 			setSerialPortParams(m_BaudRate, m_DataBits, m_StopBits, m_Parity);
+		} catch (UnsupportedCommOperationException e) {
+			// This really should not happen
+			e.printStackTrace();
+		}
+		
+		try {
+			setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 		} catch (UnsupportedCommOperationException e) {
 			// This really should not happen
 			e.printStackTrace();
