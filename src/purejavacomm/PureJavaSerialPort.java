@@ -901,10 +901,15 @@ public class PureJavaSerialPort extends SerialPort {
 
 	private void checkReturnCode(int code) {
 		if (code != 0) {
-			close();
-			StackTraceElement ste = Thread.currentThread().getStackTrace()[1];
-			String msg = String.format("JTermios call returned %d at %s", code, lineno());
+			String msg = String.format("JTermios call returned %d at %s", code, lineno(1)); // 1 qas implicit 0
 			log = log && log(1, "%s\n", msg);
+			try {
+				close();
+			} catch (Exception e) {
+				StackTraceElement st = e.getStackTrace()[0];
+				String msg2 = String.format("close threw %s at class %s line% d", e.getClass().getName(),st.getClassName(), st.getLineNumber());
+				log = log && log(1, "%s\n", msg2);
+			}
 			throw new IllegalStateException(msg);
 		}
 	}
