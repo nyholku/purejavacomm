@@ -463,7 +463,6 @@ public class PureJavaSerialPort extends SerialPort {
 			m_Termios.c_iflag = fi;
 
 			checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
-			checkReturnCode(tcflush(m_FD, TCIOFLUSH));
 
 			// finally everything went ok, so we can update our settings
 			m_BaudRate = baudRate;
