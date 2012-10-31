@@ -270,11 +270,6 @@ public class JTermios {
 	}
 
 	static { // INSTANTIATION 
-		String loglevel = System.getProperty("purejavacomm.loglevel");
-		if (loglevel != null)
-			JTermiosLogging.setLogLevel(Integer.parseInt(loglevel));
-		else
-			JTermiosLogging.setLogLevel(0);
 		int path_max;
 		if (Platform.isMac()) {
 			m_Termios = new jtermios.macosx.JTermiosImpl();
@@ -482,8 +477,14 @@ public class JTermios {
 	}
 
 	public static class JTermiosLogging {
-		private static int LOG_MASK;
-		public static boolean log;
+		private static int LOG_MASK = 0;
+		public static boolean log = false;
+		
+		static { // initialization 
+			String loglevel = System.getProperty("purejavacomm.loglevel");
+			if (loglevel != null)
+				setLogLevel(Integer.parseInt(loglevel));
+		}
 
 		public static String lineno() {
 			return lineno(0);
