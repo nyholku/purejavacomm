@@ -779,7 +779,7 @@ public class PureJavaSerialPort extends SerialPort {
 								n = poll(pollfd, 1, TIMEOUT);
 								int re = pollfd[0].revents;
 								if ((re & POLLNVAL) != 0) {
-									log = log && log(1, "poll() returned POLLNVAL, errno %\n", errno());
+									log = log && log(1, "poll() returned POLLNVAL, errno %d\n", errno());
 									break;
 								}
 								read = read && (re & POLLIN) != 0;
