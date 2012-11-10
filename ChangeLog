@@ -1,3 +1,41 @@
+Version 0.0.11 
+
+* Moved over to JNA DiretMapping in Linux back end to squeezy
+  out better performance on low end Linux system like
+  RaspberryPI
+  
+* Added property name 'purejavacomm.pollperiod' allow tuning of
+  polling period for port control lines. Default is 10 (msec)
+  if the property is not set, this is compatible with previous
+  practice and RXTX.
+
+* Changed property name 'purejavacomm.use_poll' to 'purejavacomm.usepoll'
+  for consistency. Old name is supported but deprecated.
+
+* Added pipe() to JTermios API, not implemented on Windows
+
+* Fixed getReceiveThreshold() and isReceiveThresholdEnabled() to
+  return correct values
+  
+* Fixed a bug that caused read(...) to block if the requested
+  number of bytes was less that the set receive threshold value
+
+* Re-ordered logging initialization so that setting the log level/mask in
+  code always works and overrides any properties regardless of when/where
+  the setting is set in code.
+
+* Fixed a logging format typo in Linux/poll code path 
+
+* Removed flushing of the serial port while opening it as this is not
+  required by JavaComm spec, RXTX does not do it, and it may loose
+  data if the device starts send something as soon as the port is open.
+  
+* Fixed PureJavaSerialPort to set FLOWCONTROL_NONE in hardware when opening the port
+  (previously the hardware was untouched which was confusing because it looked like
+  the default was no flow control.)
+  
+* Fixed checkReturnCode() to return the correct class/line where the error code was checked  
+
 Version 0.0.10
 
 * Fixed a missing field in getFieldOrder() for Linux 
@@ -75,13 +113,13 @@ Version 0.0.6
 - the current default backend patterns, as returned by getPortNamePattern(),
   are as follows:
   
-  OS          Regular expression        Port name...
-  -------------------------------------------------------------------
-  Linux       ^tty*                     Starts with 'tty'
-  Mac OS      ^(tty\.|cu\.).*           Starts with 'cu.' or 'tty.'
-  FreeBSD     ^(tty\.|cu\.).*           Starts with 'cu.' or 'tty.'
-  Solaris     .*                        Anything goes
-  Windows     ^COM.*                    Starts with 'COM'
+    OS          Regular expression        Port name...
+    -------------------------------------------------------------------
+    Linux       ^tty*                     Starts with 'tty'
+    Mac OS      ^(tty\.|cu\.).*           Starts with 'cu.' or 'tty.'
+    FreeBSD     ^(tty\.|cu\.).*           Starts with 'cu.' or 'tty.'
+    Solaris     .*                        Anything goes
+    Windows     ^COM.*                    Starts with 'COM'
   
   
   
