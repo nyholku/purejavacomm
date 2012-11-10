@@ -742,7 +742,8 @@ public class PureJavaSerialPort extends SerialPort {
 					// see: http://daniel.haxx.se/docs/poll-vs-select.html
 					final boolean USE_POLL =  Platform.isLinux() &&
 							(Boolean.getBoolean("purejavacomm.use_poll") || Boolean.getBoolean("purejavacomm.usepoll"));
-					final int TIMEOUT = 10; // msec
+					final int TIMEOUT = Integer.getInteger("purejavacomm.pollperiod",10) ; 
+					
 					TimeVal timeout = null;
 					FDSet rset = null;
 					FDSet wset = null;
