@@ -63,7 +63,8 @@ import static jtermios.JTermios.JTermiosLogging.log;
 
 public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static String DEVICE_DIR_PATH = "/dev/";
-	static Linux_C_lib m_Clib = (Linux_C_lib) Native.loadLibrary("c", Linux_C_lib.class);
+	private static final boolean is64b = NativeLong.SIZE == 8;
+	static Linux_C_lib m_Clib = new Linux_C_lib_DirectMapping();
 
 	private final static int TIOCGSERIAL = 0x0000541E;
 	private final static int TIOCSSERIAL = 0x0000541F;
@@ -104,9 +105,64 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			4000000, 0010017 //
 	};
 
+	public static class Linux_C_lib_DirectMapping implements Linux_C_lib {
+
+		native public int pipe(int[] fds);
+
+		native public int tcdrain(int fd);
+
+		native public void cfmakeraw(termios termios);
+
+		native public int fcntl(int fd, int cmd, int[] arg);
+
+		native public int fcntl(int fd, int cmd, int arg);
+
+		native public int ioctl(int fd, int cmd, int[] arg);
+
+		native public int ioctl(int fd, int cmd, serial_struct arg);
+
+		native public int open(String path, int flags);
+
+		native public int close(int fd);
+
+		native public int tcgetattr(int fd, termios termios);
+
+		native public int tcsetattr(int fd, int cmd, termios termios);
+
+		native public int cfsetispeed(termios termios, NativeLong i);
+
+		native public int cfsetospeed(termios termios, NativeLong i);
+
+		native public NativeLong cfgetispeed(termios termios);
+
+		native public NativeLong cfgetospeed(termios termios);
+
+		native public int write(int fd, byte[] buffer, int count);
+
+		native public int read(int fd, byte[] buffer, int count);
+
+		native public long write(int fd, byte[] buffer, long count);
+
+		native public long read(int fd, byte[] buffer, long count);
+
+		native public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
+
+		native public int poll(pollfd[] fds, int nfds, int timeout);
+
+		native public int tcflush(int fd, int qs);
+
+		native public void perror(String msg);
+
+		native public int tcsendbreak(int fd, int duration);
+
+		static {
+			Native.register("c");
+		}
+	}
+
 	public interface Linux_C_lib extends com.sun.jna.Library {
 		public int pipe(int[] fds);
-		
+
 		public int tcdrain(int fd);
 
 		public void cfmakeraw(termios termios);
@@ -135,9 +191,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public NativeLong cfgetospeed(termios termios);
 
-		public NativeLong write(int fd, ByteBuffer buffer, NativeLong count);
+		public int write(int fd, byte[] buffer, int count);
 
-		public NativeLong read(int fd, ByteBuffer buffer, NativeLong count);
+		public int read(int fd, byte[] buffer, int count);
+
+		public long write(int fd, byte[] buffer, long count);
+
+		public long read(int fd, byte[] buffer, long count);
 
 		public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
 
@@ -457,11 +517,17 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int read(int fd, byte[] buffer, int len) {
-		return m_Clib.read(fd, ByteBuffer.wrap(buffer), new NativeLong(len)).intValue();
+		if (is64b)
+			return (int) m_Clib.read(fd, buffer, (long) len);
+		else
+			return m_Clib.read(fd, buffer, len);
 	}
 
 	public int write(int fd, byte[] buffer, int len) {
-		return m_Clib.write(fd, ByteBuffer.wrap(buffer), new NativeLong(len)).intValue();
+		if (is64b)
+			return (int) m_Clib.write(fd, buffer, (long) len);
+		else
+			return m_Clib.write(fd, buffer, len);
 	}
 
 	public int close(int fd) {
@@ -633,19 +699,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		if ((r = ioctl(fd, TIOCGSERIAL, ss)) != 0)
 			return r;
 		ss.flags = (ss.flags & ~ASYNC_SPD_MASK) | ASYNC_SPD_CUST;
-		
+
 		if (speed == 0) {
 			log = log && log(1, "unable to set custom baudrate %d \n", speed);
 			return -1;
 		}
-		
+
 		ss.custom_divisor = (ss.baud_base + (speed / 2)) / speed;
 
 		if (ss.custom_divisor == 0) {
 			log = log && log(1, "unable to set custom baudrate %d (possible division by zero)\n", speed);
 			return -1;
 		}
-		
+
 		int closestSpeed = ss.baud_base / ss.custom_divisor;
 
 		if (closestSpeed < speed * 98 / 100 || closestSpeed > speed * 102 / 100) {
