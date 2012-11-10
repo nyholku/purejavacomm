@@ -147,7 +147,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		native public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
 
-		native public int poll(pollfd[] fds, int nfds, int timeout);
+		native public int poll(pollfd fds, int nfds, int timeout);
 
 		native public int tcflush(int fd, int qs);
 
@@ -201,7 +201,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
 
-		public int poll(pollfd[] fds, int nfds, int timeout);
+		public int poll(pollfd fds, int nfds, int timeout);
 
 		public int tcflush(int fd, int qs);
 
@@ -599,12 +599,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int poll(Pollfd fds[], int nfds, int timeout) {
-		pollfd[] pfds = new pollfd[fds.length];
-		for (int i = 0; i < nfds; i++)
-			pfds[i] = new pollfd(fds[i]);
+		if (fds.length!=1)
+			throw new IllegalArgumentException("poll() can poll exactly one file descriptor");
+		pollfd pfds = new pollfd(fds[0]);
 		int ret = m_Clib.poll(pfds, nfds, timeout);
-		for (int i = 0; i < nfds; i++)
-			fds[i].revents = pfds[i].revents;
+		fds[0].revents = pfds.revents;
 		return ret;
 	}
 
