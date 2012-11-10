@@ -605,8 +605,7 @@ public class PureJavaSerialPort extends SerialPort {
 	@Override
 	synchronized public int getReceiveThreshold() {
 		checkState();
-		// Not supported
-		return 0;
+		return m_ReceiveThresholdValue;
 	}
 
 	@Override
@@ -625,8 +624,7 @@ public class PureJavaSerialPort extends SerialPort {
 	@Override
 	synchronized public boolean isReceiveThresholdEnabled() {
 		checkState();
-		// Not supported
-		return false;
+		return m_ReceiveThresholdEnabled;
 	}
 
 	@Override
