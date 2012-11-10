@@ -499,6 +499,10 @@ public class PureJavaSerialPort extends SerialPort {
 
 			@Override
 			public void write(byte[] b, int off, int len) throws IOException {
+				if (b==null)
+					throw new IllegalArgumentException();
+				if (off<0 ||len<0 || off+len>=b.length)
+					throw new IndexOutOfBoundsException();
 				checkState();
 				while (len > 0) {
 					int n = min(len, min(m_Buffer.length, b.length - off));
@@ -564,6 +568,10 @@ public class PureJavaSerialPort extends SerialPort {
 
 			@Override
 			public int read(byte[] b, int off, int len) throws IOException {
+				if (b==null)
+					throw new IllegalArgumentException();
+				if (off<0 ||len<0 || off+len>=b.length)
+					throw new IndexOutOfBoundsException();
 				checkState();
 				long T0 = m_ReceiveTimeOutEnabled ? System.currentTimeMillis() : 0;
 				int N = 0;
