@@ -1,6 +1,6 @@
 Version 0.0.11 
 
-* Moved over to JNA DiretMapping in Linux back end to squeezy
+* Moved over to JNA DiretMapping in Linux back end to squeeze
   out better performance on low end Linux system like
   RaspberryPI
   
