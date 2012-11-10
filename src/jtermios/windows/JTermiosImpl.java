@@ -1098,4 +1098,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			return r;
 		return 0;
 	}
+	
+	public int pipe(int[] fds) {
+		m_ErrNo = EMFILE; // pipe() not implemented on Windows backend
+		return -1;
+	}
+
 }

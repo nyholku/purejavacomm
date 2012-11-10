@@ -64,6 +64,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	static MacOSX_C_lib m_Clib = (MacOSX_C_lib) Native.loadLibrary("c", MacOSX_C_lib.class);
 
 	public interface MacOSX_C_lib extends com.sun.jna.Library {
+		public int pipe(int[] fds);
+
 		public int tcdrain(int fd);
 
 		public void cfmakeraw(termios termios);
@@ -387,5 +389,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			}
 		}
 		return r;
+	}
+
+	public int pipe(int[] fds) {
+		return m_Clib.pipe(fds);
 	}
 }

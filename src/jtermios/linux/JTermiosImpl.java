@@ -105,6 +105,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	};
 
 	public interface Linux_C_lib extends com.sun.jna.Library {
+		public int pipe(int[] fds);
+		
 		public int tcdrain(int fd);
 
 		public void cfmakeraw(termios termios);
@@ -661,5 +663,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		if ((r = JTermios.tcsetattr(fd, TCSANOW, termios)) != 0)
 			return r;
 		return 0;
+	}
+
+	public int pipe(int[] fds) {
+		return m_Clib.pipe(fds);
 	}
 }

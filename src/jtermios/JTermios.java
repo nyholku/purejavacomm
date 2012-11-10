@@ -200,6 +200,7 @@ public class JTermios {
 	private static JTermiosInterface m_Termios;
 
 	public interface JTermiosInterface {
+		int pipe(int[] fds);
 
 		void shutDown();
 
