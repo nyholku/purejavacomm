@@ -583,7 +583,7 @@ public class PureJavaSerialPort extends SerialPort {
 					//System.out.printf("n=%d off=%d left=%d N=%d th=%d to=%d dt=%d\n",n, off,left,N,m_ReceiveThresholdValue,m_ReceiveTimeOutValue,System.currentTimeMillis() - T0);
 					if (!m_ReceiveThresholdEnabled && N > 0)
 						break;
-					if (m_ReceiveThresholdEnabled && N >= m_ReceiveThresholdValue)
+					if (m_ReceiveThresholdEnabled && N >= min(m_ReceiveThresholdValue,len))
 						break;
 					if (m_ReceiveTimeOutEnabled && System.currentTimeMillis() - T0 >= m_ReceiveTimeOutValue)
 						break;
