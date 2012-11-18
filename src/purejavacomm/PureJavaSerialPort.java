@@ -44,13 +44,6 @@ import static jtermios.JTermios.*;
 import com.sun.jna.Platform;
 
 public class PureJavaSerialPort extends SerialPort {
-
-	int readCount;
-	int readLoopCount;
-	int sleepCount;
-	int pollCount;
-	int pollTimeoutCount;
-
 	final boolean USE_POLL;
 	final boolean RAW_READ_MODE;
 
@@ -574,7 +567,6 @@ public class PureJavaSerialPort extends SerialPort {
 		return m_OutputStream;
 	}
 
-
 	synchronized public InputStream getInputStream() throws IOException {
 		checkState();
 		if (m_InputStream == null) {
@@ -628,7 +620,6 @@ public class PureJavaSerialPort extends SerialPort {
 							return 0;
 
 						checkState();
-						readCount++;
 
 						// Now configure VTIME and VMIN
 
@@ -636,7 +627,6 @@ public class PureJavaSerialPort extends SerialPort {
 						long T0 = m_ReceiveTimeOutEnabled ? System.currentTimeMillis() : 0;
 						long T1 = T0;
 						while (true) {
-							readLoopCount++;
 							int bytesLeft = length - bytesReceived;
 							int timeLeft = 0;
 
@@ -856,15 +846,6 @@ public class PureJavaSerialPort extends SerialPort {
 					break;
 				}
 			}
-
-			System.out.println();
-			System.out.println("readCount        " + readCount);
-			System.out.println("readLoopCount    " + readLoopCount);
-			System.out.println("sleepCount       " + sleepCount);
-			System.out.println("pollCount        " + pollCount);
-			System.out.println("pollTimeoutCount " + pollTimeoutCount);
-			System.out.println();
-
 			super.close();
 		}
 	}
@@ -885,9 +866,9 @@ public class PureJavaSerialPort extends SerialPort {
 				usepoll = true;
 		}
 		USE_POLL = usepoll;
-		
+
 		RAW_READ_MODE = Boolean.getBoolean("purejavacomm.rawreadmode");
-		
+
 		this.name = name;
 
 		// unbelievable, sometimes quickly closing and re-opening fails on Windows
@@ -945,12 +926,15 @@ public class PureJavaSerialPort extends SerialPort {
 		checkReturnCode(ioctl(m_FD, TIOCMGET, m_ioctl));
 		m_ControlLineStates = m_ioctl[0];
 
-		int[] pipes = new int[2];
-		if (pipe(pipes) == 0) {
-			m_HaveNudgePipe = true;
-			m_PipeRdFD = pipes[0];
-			m_PipeWrFD = pipes[1];
-			checkReturnCode(fcntl(m_PipeRdFD, F_SETFL, fcntl(m_PipeRdFD, F_GETFL, 0) | O_NONBLOCK));
+		String nudgekey = "purejavacomm.usenudgepipe";
+		if (System.getProperty(nudgekey) == null || Boolean.getBoolean(nudgekey)) {
+			int[] pipes = new int[2];
+			if (pipe(pipes) == 0) {
+				m_HaveNudgePipe = true;
+				m_PipeRdFD = pipes[0];
+				m_PipeWrFD = pipes[1];
+				checkReturnCode(fcntl(m_PipeRdFD, F_SETFL, fcntl(m_PipeRdFD, F_GETFL, 0) | O_NONBLOCK));
+			}
 		}
 
 		Runnable runnable = new Runnable() {
@@ -996,13 +980,10 @@ public class PureJavaSerialPort extends SerialPort {
 									e |= POLLOUT_IN;
 								pollfd[1] = e;
 								pollfd[3] = POLLIN_IN;
-								pollCount++;
 								if (m_HaveNudgePipe)
 									n = poll(pollfd, 2, -1);
 								else
 									n = poll(pollfd, 1, TIMEOUT);
-								if (n == 0)
-									pollTimeoutCount++;
 
 								int re = pollfd[3];
 
@@ -1043,7 +1024,6 @@ public class PureJavaSerialPort extends SerialPort {
 								break;
 							}
 						} else {
-							sleepCount++;
 							Thread.sleep(TIMEOUT);
 						}
 
