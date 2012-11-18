@@ -722,8 +722,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 									waiting.add(port);
 								}
 							} catch (InterruptedException ie) {
-								m_ErrNo = 777; // FIXME figure out the proper unit
-												// error code
+								m_ErrNo = EINTR; 
 								return -1;
 							}
 
@@ -798,7 +797,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int poll(Pollfd fds[], int nfds, int timeout) {
-		return 0;
+		m_ErrNo=EINVAL;
+		return -1;
+	}
+	
+	public int poll(int fds[], int nfds, int timeout) {
+		m_ErrNo=EINVAL;
+		return -1;
 	}
 
 	public void perror(String msg) {
