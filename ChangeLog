@@ -1,10 +1,53 @@
+Version 0.0.12 *** EXPERIMENTAL ***
+
+* This version includes a major re-factoring of receive timeout and
+  threshold handling to improve performance on low end platforms
+  like RaspberryPI and to improve conformance to the JavaComm spec.
+  
+  This version has had limited testing so it may unintentially
+  break existing applications, proceed with caution. This
+  version has not been tested on Windows for the lack
+  of suitable setup.
+
+* New faster DirectMapping for poll() in Linux backend
+
+* Linux backend now defaults to poll() instead of select()
+  to default to better performance. This can be overridden
+  by setting the system property 'purejavacomm.usepoll' to 'false'.
+
+* Re-factored receive timeout and threshold handling that
+  exploits the platform native VMIN and VTIME to reduce
+  CPU loading
+  
+* Added property named 'purejavacomm.rawreadmode' that further
+  reduces overhead in InputStream.read(...) with the
+  risk of indefinite blocking on reads without timeout.
+
+* Improved event handling to not to poll at all if control
+  line notifications are not requested, to improve performance
+  on low end platforms.  Currently this feature is not available 
+  on the Windows backend, where it is typically not needed.
+
+* A blocking read() can now be interrupted by close() 
+  
+* A blocking read() with timeout can no longer block indefinitely
+  even if the serial line is indefinitely idle
+
+* Added equals() and hashCode() methods to CommPortIdentfier
+  to fix ownership mechanism
+  
+* PureJavaSeriaPort.getInputStream()/getOutputStream() now
+  return same stream instances if called multiple times.
+  
+* Number of potential multithreading issues fixed
+
 Version 0.0.11 
 
 * Moved over to JNA DiretMapping in Linux back end to squeeze
   out better performance on low end Linux system like
   RaspberryPI
   
-* Added property name 'purejavacomm.pollperiod' allow tuning of
+* Added property named 'purejavacomm.pollperiod' to allow tuning of
   polling period for port control lines. Default is 10 (msec)
   if the property is not set, this is compatible with previous
   practice and RXTX.
