@@ -30,6 +30,8 @@
 
 package purejavacomm;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.TooManyListenersException;
 
 abstract public class SerialPort extends CommPort {
@@ -335,5 +337,85 @@ abstract public class SerialPort extends CommPort {
 	 * @throws UnsupportedCommOperationException
 	 */
 	public abstract void setSerialPortParams(int baudRate, int dataBits, int stopBits, int parity) throws UnsupportedCommOperationException;
+
+	
+	/**
+	 * Returns an input stream. This is the only way to receive data from the
+	 * communications port. If the port is unidirectional and doesn't support
+	 * receiving data, then getInputStream returns null.
+	 * 
+	 * The read behavior of the input stream returned by getInputStream depends
+	 * on combination of the threshold and timeout values. The behaviors are
+	 * described in the table below.
+	 * 
+	 * <p>
+	 * 
+	 * <table border="3" cellpadding="4">
+	 * <tr>
+	 * <th colspan="2" align="center">threshold</th>
+	 * <th colspan="2"align="center" >timeout</th>
+	 * <th rowspan="2" align="center">read buffer size</th>
+	 * <th rowspan="2" align="center">read behaviour</th>
+	 * </tr>
+	 * <tr>
+	 * <th align="center">state</th>
+	 * <th align="center">value</th>
+	 * <th align="center">state</th>
+	 * <th align="center">value</th>
+	 * </tr>
+	 * <tr>
+	 * <td align="center">disabled</td>
+	 * <td align="center">-</td>
+	 * <td align="center">disabled</td>
+	 * <td align="center">-</td>
+	 * <td align="center">n bytes</td>
+	 * <td align="left">block until minimum one byte of data is available</td>
+	 * </tr>
+	 * <tr>
+	 * <td align="center">enabled</td>
+	 * <td align="center">m bytes</td>
+	 * <td align="center">disabled</td>
+	 * <td align="center">-</td>
+	 * <td align="center">n bytes</td>
+	 * <td align="left">block until min(m,n) bytes are available</td>
+	 * </tr>
+	 * <tr>
+	 * <td align="center">disabled</td>
+	 * <td align="center">-</td>
+	 * <td align="center">enabled</td>
+	 * <td align="center">x msec</td>
+	 * <td align="center">n bytes</td>
+	 * <td align="left">block for x msec or until any data is available</td>
+	 * </tr>
+	 * <tr>
+	 * <td align="center">enabled</td>
+	 * <td align="center">m bytes</td>
+	 * <td align="center">enabled</td>
+	 * <td align="center">x msec</td>
+	 * <td align="center">n bytes</td>
+	 * <td align="center">block for x msec or until min(m,n) bytes are available
+	 * </td>
+	 * </tr>
+	 * </table>
+	 * <p>
+	 * Framing errors may cause the Timeout and Threshold trigger early and to
+	 * complete the read prematurely without raising an exception.
+	 * <p>
+	 * Enabling the Timeout OR Threshold with a value a zero is a special case.
+	 * This causes the underlying driver to poll for incoming data instead being
+	 * event driven. Otherwise, the behaviour is identical to having both the
+	 * Timeout and Threshold disabled. Returns: InputStream object that can be
+	 * used to read from the port Throws: java.io.IOException - if an I/O error
+	 * occurred.
+	 * <p>
+	 * Timeout is interpreted as inter character timeout, in other words
+	 * the timeout will not occur as long as the pause before the first
+	 * character or between characters is shorter that the timeout value.
+	 * <p>
+	 * 
+	 */
+	
+	public abstract InputStream getInputStream() throws IOException;
+
 
 }
