@@ -63,8 +63,9 @@ import static jtermios.JTermios.JTermiosLogging.log;
 
 public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static String DEVICE_DIR_PATH = "/dev/";
-	private static final boolean is64b = NativeLong.SIZE == 8;
-	static Linux_C_lib m_Clib = new Linux_C_lib_DirectMapping();
+	private static final boolean IS64B = NativeLong.SIZE == 8;
+	static Linux_C_lib_DirectMapping m_ClibDM = new Linux_C_lib_DirectMapping();
+	static Linux_C_lib m_Clib = m_ClibDM;
 
 	private final static int TIOCGSERIAL = 0x0000541E;
 	private final static int TIOCSSERIAL = 0x0000541F;
@@ -106,6 +107,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	};
 
 	public static class Linux_C_lib_DirectMapping implements Linux_C_lib {
+		native public long memcpy(int[] dst, short[] src, long n);
+
+		native public int memcpy(int[] dst, short[] src, int n);
 
 		native public int pipe(int[] fds);
 
@@ -147,7 +151,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		native public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
 
-		native public int poll(pollfd fds, int nfds, int timeout);
+		native public int poll(int[] fds, int nfds, int timeout);
+
+		public int poll(pollfd[] fds, int nfds, int timeout) {
+			throw new IllegalArgumentException();
+		}
 
 		native public int tcflush(int fd, int qs);
 
@@ -156,11 +164,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		native public int tcsendbreak(int fd, int duration);
 
 		static {
-			Native.register("c");
+			try {
+				Native.register("c");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	public interface Linux_C_lib extends com.sun.jna.Library {
+		public long memcpy(int[] dst, short[] src, long n);
+
+		public int memcpy(int[] dst, short[] src, int n);
+
 		public int pipe(int[] fds);
 
 		public int tcdrain(int fd);
@@ -201,7 +217,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
 
-		public int poll(pollfd fds, int nfds, int timeout);
+		public int poll(pollfd[] fds, int nfds, int timeout);
+
+		public int poll(int[] fds, int nfds, int timeout);
 
 		public int tcflush(int fd, int qs);
 
@@ -462,8 +480,26 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		POLLOUT = 0x0004;
 		POLLERR = 0x0008;
 		POLLNVAL = 0x0020;
-		//select.h stuff
 
+		// these depend on the endianness off the machine
+		POLLIN_IN = pollMask(0, POLLIN);
+		POLLOUT_IN = pollMask(0, POLLOUT);
+
+		POLLIN_OUT = pollMask(1, POLLIN);
+		POLLOUT_OUT = pollMask(1, POLLOUT);
+		POLLNVAL_OUT = pollMask(1, POLLNVAL);
+	}
+
+	public static int pollMask(int i, short n) {
+		short[] s = new short[2];
+		int[] d = new int[1];
+		s[i] = n;
+		// the native call depends on weather this is 32 or 64 bit arc
+		if (IS64B)
+			m_ClibDM.memcpy(d, s, (long) 4);
+		else
+			m_ClibDM.memcpy(d, s, (int) 4);
+		return d[0];
 	}
 
 	public int errno() {
@@ -517,14 +553,14 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int read(int fd, byte[] buffer, int len) {
-		if (is64b)
+		if (IS64B)
 			return (int) m_Clib.read(fd, buffer, (long) len);
 		else
 			return m_Clib.read(fd, buffer, len);
 	}
 
 	public int write(int fd, byte[] buffer, int len) {
-		if (is64b)
+		if (IS64B)
 			return (int) m_Clib.write(fd, buffer, (long) len);
 		else
 			return m_Clib.write(fd, buffer, len);
@@ -599,12 +635,17 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int poll(Pollfd fds[], int nfds, int timeout) {
-		if (fds.length!=1)
-			throw new IllegalArgumentException("poll() can poll exactly one file descriptor");
-		pollfd pfds = new pollfd(fds[0]);
+		pollfd[] pfds = new pollfd[fds.length];
+		for (int i = 0; i < nfds; i++)
+			pfds[i] = new pollfd(fds[i]);
 		int ret = m_Clib.poll(pfds, nfds, timeout);
-		fds[0].revents = pfds.revents;
+		for (int i = 0; i < nfds; i++)
+			fds[i].revents = pfds[i].revents;
 		return ret;
+	}
+
+	public int poll(int fds[], int nfds, int timeout) {
+		return m_Clib.poll(fds, nfds, timeout);
 	}
 
 	public FDSet newFDSet() {

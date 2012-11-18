@@ -99,6 +99,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
 
 		public int poll(pollfd[] fds, int nfds, int timeout);
+		
+		public int poll(int[] fds, int nfds, int timeout);
 
 		public int tcflush(int fd, int qs);
 
@@ -333,6 +335,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
             fds[i].revents = pfds[i].revents;
 		return ret;
 	}
+	
+	public int poll(int fds[], int nfds, int timeout) {
+        return m_Clib.poll(fds, nfds, timeout);
+	}
+
 
 	public FDSet newFDSet() {
 		return new FDSetImpl();
