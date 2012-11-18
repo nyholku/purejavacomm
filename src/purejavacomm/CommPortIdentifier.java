@@ -45,12 +45,22 @@ public class CommPortIdentifier {
 	private static volatile Object m_Mutex = new Object();
 	private volatile String m_PortName;
 	private volatile int m_PortType;
-	private volatile CommPort m_CommPort;
 	private volatile CommDriver m_Driver;
+
 	private volatile static Hashtable<String, CommPortIdentifier> m_PortIdentifiers = new Hashtable<String, CommPortIdentifier>();
 	private volatile static Hashtable<CommPort, CommPortIdentifier> m_OpenPorts = new Hashtable<CommPort, CommPortIdentifier>();
 	private volatile static Hashtable<CommPortIdentifier, String> m_Owners = new Hashtable<CommPortIdentifier, String>();
 	private volatile Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>> m_OwnerShipListeners = new Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>>();
+
+	@Override
+	public boolean equals(Object x) {
+		return (x instanceof CommPortIdentifier) && m_PortName.equals(((CommPortIdentifier) x).m_PortName);
+	}
+
+	@Override
+	public int hashCode() {
+		return m_PortName.hashCode();
+	}
 
 	/**
 	 * This has not been tested at all
@@ -149,7 +159,7 @@ public class CommPortIdentifier {
 			CommPortIdentifier portid = m_OpenPorts.remove(port);
 			if (portid != null) {
 				portid.fireOwnershipEvent(CommPortOwnershipListener.PORT_UNOWNED);
-            	m_Owners.remove(portid);
+				m_Owners.remove(portid);
 			}
 		}
 	}
