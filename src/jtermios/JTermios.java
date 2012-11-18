@@ -183,14 +183,20 @@ public class JTermios {
 	public static int B230400 = 230400;
 	// poll.h stuff
 	public static short POLLIN = 0x0001;
+	public static int POLLIN_IN = 0x0001; // for use with poll(int[]...)
+	public static int POLLIN_OUT = 0x0001; // for use with poll(int[]...)
 	//public static short POLLRDNORM = 0x0040; // Not Linux
 	//public static short POLLRDBAND = 0x0080; // Not Linux
 	public static short POLLPRI = 0x0002;
 	public static short POLLOUT = 0x0004;
+	public static int POLLOUT_IN = 0x0004; // for use with poll(int[]...)
+	public static int POLLOUT_OUT = 0x0004; // for use with poll(int[]...)
 	//public static short POLLWRNORM = 0x0004; // Not Linux
 	//public static short POLLWRBAND = 0x0100; // Not Linux
 	public static short POLLERR = 0x0008;
+	public static short POLLERR_OUT = 0x0008;
 	public static short POLLNVAL = 0x0020;
+	public static int POLLNVAL_OUT = 0x0020;
 
 	// misc stuff
 	public static int DC1 = 0x11; // Ctrl-Q;
@@ -247,6 +253,8 @@ public class JTermios {
 		 * Mac OS X, does not work for devices.
 		 */
 		int poll(Pollfd[] fds, int nfds, int timeout);
+
+		int poll(int[] fds, int nfds, int timeout);
 
 		void perror(String msg);
 
@@ -439,6 +447,20 @@ public class JTermios {
 		return ret;
 	}
 
+	static public int poll(int[] fds, int nfds, int timeout) {
+		log = log && log(5, "> poll(%s,%d,%d)\n", log(fds, 8), nfds, timeout);
+		int ret = m_Termios.poll(fds, nfds, timeout);
+		log = log && log(3, "< poll(%s,%d,%d) => %d\n", log(fds, 8), nfds, timeout, ret);
+		return ret;
+	}
+
+	static public int pipe(int[] fds) {
+		log = log && log(5, "> pipe([%d,%d,%d])\n", fds.length, fds[0], fds[1]);
+		int ret = m_Termios.pipe(fds);
+		log = log && log(3, "< pipe([%d,%d,%d]) => %d\n", fds.length, fds[0], fds[1], ret);
+		return ret;
+	}
+
 	static public void perror(String msg) {
 		m_Termios.perror(msg);
 	}
@@ -480,7 +502,7 @@ public class JTermios {
 	public static class JTermiosLogging {
 		private static int LOG_MASK = 0;
 		public static boolean log = false;
-		
+
 		static { // initialization 
 			String loglevel = System.getProperty("purejavacomm.loglevel");
 			if (loglevel != null)
@@ -511,6 +533,19 @@ public class JTermios {
 			for (int i = 0; i < n; i++)
 				b.append(String.format(",0x%02X", bts[i]));
 			if (n < bts.length)
+				b.append("...");
+			b.append("]");
+			return b.toString();
+		}
+
+		public static String log(int[] ints, int n) {
+			StringBuffer b = new StringBuffer();
+			if (n < 0 || n > ints.length)
+				n = ints.length;
+			b.append(String.format("[%d", ints.length));
+			for (int i = 0; i < n; i++)
+				b.append(String.format(",0x%08X", ints[i]));
+			if (n < ints.length)
 				b.append("...");
 			b.append("]");
 			return b.toString();
