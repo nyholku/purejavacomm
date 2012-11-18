@@ -1,3 +1,14 @@
+Version 0.0.13 *** EXPERIMENTAL ***
+
+* Removed some debugging output from SerialPort.close() that
+  was left there by mistake
+  
+* Added a new property that disables the internal us of
+  a pipe to get nudge select()/poll() out of coma. The
+  pipe uses two extra file descriptors so in a huge
+  system this maybe a critical resource. To disable
+  the use of the pipe set 'purejavacomm.usenudgepipe' to 'false'
+  
 Version 0.0.12 *** EXPERIMENTAL ***
 
 * This version includes a major re-factoring of receive timeout and
