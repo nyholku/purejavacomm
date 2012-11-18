@@ -45,8 +45,7 @@ public class Test16 extends TestBase {
 		
 		try {
 
-			begin("Test16 - port ownership\n");
-			System.out.println();
+			begin("Test16 - port ownership");
 			
 			openPort();
 
