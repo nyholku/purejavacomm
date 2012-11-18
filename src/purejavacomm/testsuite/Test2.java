@@ -42,6 +42,7 @@ public class Test2 extends TestBase {
 	private static volatile byte[] m_ReceiveBuffer = new byte[10000];
 	private static volatile int m_BytesReceived = 0;
 	private static volatile int m_TotalReceived;
+	private static volatile long m_T0;
 	private static volatile long m_T1;
 	private static volatile int m_TxCount = 0;
 	private static volatile int m_RxCount = 0;

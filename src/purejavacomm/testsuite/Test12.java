@@ -27,39 +27,52 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm.testsuite;
 
-import com.sun.jna.Native;
+import purejavacomm.SerialPortEvent;
+import purejavacomm.SerialPortEventListener;
 
-public class TestSuite {
-	public static void main(String[] args) {
-		//Native.setProtected(false);
-		TestBase.init(args);
-		//jtermios.JTermios.JTermiosLogging.setLogMask(255);
-		//System.setProperty("purejavacomm.usepoll", "true");
+public class Test12 extends TestBase {
+	static void run() throws Exception {
+
 		try {
-			System.out.println("PureJavaComm Test Suite");
-			System.out.println("Using port: " + TestBase.getPortName());
-			Test1.run();
-			Test2.run(19200);
-			Test3.run();
-			Test4.run();
-			Test5.run();
-			Test6.run();
-			Test7.run();
-			Test8.run();
-			Test9.run();
-			Test10.run();
-			Test11.run();
-			Test12.run();
-			Test13.run();
-			Test15.run();
-			System.out.println("All tests passed OK.");
-		} catch (TestBase.TestFailedException e) {
-			System.out.println("Test failure");
-		} catch (Exception e) {
-			e.printStackTrace();
+			begin("Test12 - enableReceiveTimeout(0)");
+			openPort();
+
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
+
+			final byte[] txbuffer = new byte[10];
+			final byte[] rxbuffer = new byte[txbuffer.length];
+
+			m_Port.enableReceiveTimeout(0);
+			m_Port.enableReceiveThreshold(100);
+			m_Out.write(txbuffer, 0, 8);
+			sleep(100); // give the data some time to loop back
+			{ // ask for 10 but expect to get back immediately with the 8 bytes that are available
+				long T0 = System.currentTimeMillis();
+				int n = m_In.read(rxbuffer, 0, 10);
+				long T1 = System.currentTimeMillis();
+				if (n != 8)
+					fail("did not get all data back, got only " + n + " bytes");
+				if (T1 - T0 > 1)
+					fail("read did not return immediately, it took " + (T1 - T0) + " msec");
+			}
+			{ // ask for 10 but expect to get back immediately with the 0 bytes that are available
+				long T0 = System.currentTimeMillis();
+				int n = m_In.read(rxbuffer, 0, 10);
+				long T1 = System.currentTimeMillis();
+				if (n != 0)
+					fail("was expecting 0 bytes, but got " + n + " bytes");
+				if (T1 - T0 > 1)
+					fail("read did not return immediately, it took " + (T1 - T0) + " msec");
+			}
+
+
+			finishedOK();
+		} finally {
+			closePort();
 		}
+
 	}
 }

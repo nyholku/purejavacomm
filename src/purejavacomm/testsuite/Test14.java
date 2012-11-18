@@ -29,70 +29,73 @@
  */
 package purejavacomm.testsuite;
 
+import java.io.IOException;
+
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
-public class Test5 extends TestBase {
-	private static Exception m_Exception = null;
-	private static Thread m_Receiver;
-	private static Thread m_Transmitter;
+public class Test14 extends TestBase {
+	static volatile boolean m_ReadThreadRunning;
+	static volatile int m_ReadBytes = 0;
+	static volatile long m_T0;
+	static volatile long m_T1;
 
 	static void run() throws Exception {
+
 		try {
-			begin("Test5 - timeout");
+			int timeout = 100;
+			begin("Test14 - treshold disabled, timeout disabled");
 			openPort();
-			// receiving thread
-			m_Receiver = new Thread(new Runnable() {
-				public void run() {
-					try {
-						sync(2);
-						m_Port.disableReceiveThreshold();
-						m_Port.enableReceiveTimeout(1000);
-						long T0 = System.currentTimeMillis();
-						byte[] b = { 0 };
-						int n = m_In.read(b);
-						long dT = System.currentTimeMillis() - T0;
-						if (n != 0)
-							fail("read did not time out as expected, read returned %d > 0", n);
-						if (dT < 1000 - 10)
-							fail("read timed out early, expected 1000 msec, got %d msec", dT);
-						if (dT > 1010)
-							fail("read timed out with suspicious delay, expected 1000 msec, got %d msec", dT);
-					} catch (InterruptedException e) {
-					} catch (Exception e) {
-						if (m_Exception == null)
-							m_Exception = e;
-						m_Receiver.interrupt();
-						m_Transmitter.interrupt();
-					}
-				};
-			});
 
-			// sending thread
-			m_Transmitter = new Thread(new Runnable() {
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
+
+			final byte[] txbuffer = new byte[1000];
+			final byte[] rxbuffer = new byte[txbuffer.length];
+
+			m_Port.disableReceiveTimeout();
+			m_Port.disableReceiveThreshold();
+
+			Thread rxthread = new Thread(new Runnable() {
 				public void run() {
+					m_ReadThreadRunning = true;
 					try {
-						sync(2);
-					} catch (InterruptedException e) {
-					} catch (Exception e) {
+						m_ReadBytes = m_In.read(rxbuffer, 0, rxbuffer.length);
+						m_T1 = System.currentTimeMillis();
+					} catch (IOException e) {
 						e.printStackTrace();
-						if (m_Exception == null)
-							m_Exception = e;
-						m_Receiver.interrupt();
-						m_Transmitter.interrupt();
 					}
-				};
+					m_ReadThreadRunning = false;
+
+				}
 			});
 
-			m_Receiver.start();
-			m_Transmitter.start();
+			m_ReadThreadRunning = false;
+			rxthread.start();
+			while (!m_ReadThreadRunning)
+				Thread.sleep(10);
 
-			while (m_Receiver.isAlive() || m_Transmitter.isAlive()) {
-				sleep(100);
+			{
+				sleep(500);
+				if (!m_ReadThreadRunning)
+					fail("read did not block but returned with " + m_ReadBytes + " bytes");
+				m_Out.write(txbuffer, 0, 1);
+				m_T0 = System.currentTimeMillis();
+				Thread.sleep(20);
+				int i = 200;
+				while (--i > 0 && m_ReadThreadRunning)
+					Thread.sleep(5);
+				if (i <= 0)
+					fail("read did not return in time");
+
+				if (m_ReadBytes != 1)
+					fail("was expecting read to return 1 but got " + m_ReadBytes);
+				int time = (int) (m_T1 - m_T0);
+				int timeMax = 6;
+				if (time > timeMax)
+					fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
 			}
 
-			if (m_Exception != null)
-				throw m_Exception;
 			finishedOK();
 		} finally {
 			closePort();

@@ -27,39 +27,55 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm.testsuite;
 
-import com.sun.jna.Native;
+import java.io.IOException;
 
-public class TestSuite {
-	public static void main(String[] args) {
-		//Native.setProtected(false);
-		TestBase.init(args);
-		//jtermios.JTermios.JTermiosLogging.setLogMask(255);
-		//System.setProperty("purejavacomm.usepoll", "true");
+import purejavacomm.SerialPortEvent;
+import purejavacomm.SerialPortEventListener;
+
+public class Test11 extends TestBase {
+	static volatile boolean m_ReadThreadRunning;
+
+	static void run() throws Exception {
+
 		try {
-			System.out.println("PureJavaComm Test Suite");
-			System.out.println("Using port: " + TestBase.getPortName());
-			Test1.run();
-			Test2.run(19200);
-			Test3.run();
-			Test4.run();
-			Test5.run();
-			Test6.run();
-			Test7.run();
-			Test8.run();
-			Test9.run();
-			Test10.run();
-			Test11.run();
-			Test12.run();
-			Test13.run();
-			Test15.run();
-			System.out.println("All tests passed OK.");
-		} catch (TestBase.TestFailedException e) {
-			System.out.println("Test failure");
-		} catch (Exception e) {
-			e.printStackTrace();
+			System.setProperty("purejavacomm.rawreadmode", "false");
+			begin("Test11 - exit from blocking read ");
+			openPort();
+
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
+
+			m_Port.disableReceiveTimeout();
+			m_Port.disableReceiveThreshold();
+
+			final byte[] rxbuffer = new byte[1];
+
+			Thread rxthread = new Thread(new Runnable() {
+				public void run() {
+					m_ReadThreadRunning = true;
+					try {
+						int rxn = m_In.read(rxbuffer, 0, rxbuffer.length);
+					} catch (IOException e) {
+					}
+					m_ReadThreadRunning = false;
+
+				}
+			});
+
+			m_ReadThreadRunning = false;
+			rxthread.start();
+			while (!m_ReadThreadRunning)
+				Thread.sleep(10);
+			closePort();
+			Thread.sleep(1000);
+			if (m_ReadThreadRunning)
+				fail("closing failed to interrupt a blocking read()");
+			finishedOK();
+		} finally {
+			closePort();
 		}
+
 	}
 }

@@ -29,6 +29,7 @@
  */
 package purejavacomm.testsuite;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
@@ -45,7 +46,7 @@ public class TestBase {
 
 	protected static volatile String m_TestPortName;
 	protected static volatile SerialPort m_Port;
-	protected static volatile long m_T0;
+	private  static volatile long m_T0;
 	protected static volatile OutputStream m_Out;
 	protected static volatile InputStream m_In;
 	protected static volatile int[] m_SyncSema4 = { 0 };
@@ -77,8 +78,17 @@ public class TestBase {
 	}
 
 	static protected void closePort() {
-		if (m_Port != null)
-			m_Port.close();
+		if (m_Port != null) {
+			try {
+				m_Out.flush();
+				m_Port.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			finally {
+				m_Port = null;
+			}
+		}
 	}
 
 	static protected void drain(InputStream ins) throws Exception {
@@ -92,8 +102,8 @@ public class TestBase {
 	}
 
 	static void begin(String name) {
-		System.out.printf("%-36s", name);
-		m_Tab = 36;
+		System.out.printf("%-46s", name);
+		m_Tab = 46;
 		m_T0 = System.currentTimeMillis();
 		m_Progress = 0;
 	}
