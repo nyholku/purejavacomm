@@ -1016,7 +1016,7 @@ public class PureJavaSerialPort extends SerialPort {
 								write = write && FD_ISSET(m_FD, wset);
 							}
 
-							if (m_FD < 0 || Thread.currentThread().isInterrupted())
+							if (m_FD < 0)
 								break;
 							if (n < 0) {
 								log = log && log(1, "select() or poll() returned %d, errno %d\n", n, errno());
