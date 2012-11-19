@@ -584,6 +584,8 @@ public class PureJavaSerialPort extends SerialPort {
 					m_ReadFDSet = newFDSet();
 					m_ReadTimeVal = new TimeVal();
 					m_ReadPollFD = new int[4];
+					m_ReadPollFD[0] = m_FD;
+					m_ReadPollFD[2] = m_PipeRdFD;
 					m_Nudge = new byte[1];
 				}
 
@@ -674,9 +676,7 @@ public class PureJavaSerialPort extends SerialPort {
 							// called when no data is available
 							// so that we will not hang for ever in a read
 							if (USE_POLL) {
-								m_ReadPollFD[0] = m_FD;
 								m_ReadPollFD[1] = POLLIN_IN;
-								m_ReadPollFD[2] = m_PipeRdFD;
 								m_ReadPollFD[3] = POLLIN_IN;
 								int n;
 								if (m_HaveNudgePipe)
