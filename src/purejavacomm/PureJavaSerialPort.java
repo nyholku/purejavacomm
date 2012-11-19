@@ -692,9 +692,7 @@ public class PureJavaSerialPort extends SerialPort {
 								if ((re & POLLNVAL_OUT) != 0)
 									throw new IOException();
 								dataAvailable = (re & POLLIN_OUT) != 0;
-
 							} else {
-
 								FD_ZERO(m_ReadFDSet);
 								FD_SET(m_FD, m_ReadFDSet);
 								int maxFD = m_FD;
