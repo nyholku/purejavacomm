@@ -719,7 +719,7 @@ public class PureJavaSerialPort extends SerialPort {
 						}
 
 						// at this point data is either available or we take our chances in raw mode
-						if (RAW_READ_MODE || pollingRead || dataAvailable) {
+						if (RAW_READ_MODE || dataAvailable || pollingRead) {
 							if (offset > 0) {
 								bytesRead = jtermios.JTermios.read(m_FD, m_Buffer, bytesLeft);
 								if (bytesRead > 0)
