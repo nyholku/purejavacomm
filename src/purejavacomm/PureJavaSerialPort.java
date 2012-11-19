@@ -732,7 +732,6 @@ public class PureJavaSerialPort extends SerialPort {
 							throw new IOException();
 
 						bytesReceived += bytesRead;
-						offset += bytesRead;
 						if (pollingRead)
 							break;
 						if (!m_ReceiveThresholdEnabled && bytesReceived > 0)
@@ -742,7 +741,8 @@ public class PureJavaSerialPort extends SerialPort {
 						T1 = m_ReceiveTimeOutEnabled ? System.currentTimeMillis() : 0;
 						if (m_ReceiveTimeOutEnabled && T1 - T0 >= m_ReceiveTimeOutValue)
 							break;
-					}
+						offset += bytesRead;
+				}
 
 					m_DataAvailableNotified = false;
 					return bytesReceived;
