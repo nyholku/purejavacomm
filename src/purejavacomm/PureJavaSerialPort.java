@@ -627,6 +627,10 @@ public class PureJavaSerialPort extends SerialPort {
 					// Now configure VTIME and VMIN
 
 					int bytesReceived = 0;
+					int minBytesRequired = 1;
+					if (m_ReceiveThresholdEnabled)
+						minBytesRequired = m_ReceiveThresholdValue < length ? m_ReceiveThresholdValue : length;
+
 					long T0 = m_ReceiveTimeOutEnabled ? System.currentTimeMillis() : 0;
 					long T1 = T0;
 					while (true) {
@@ -732,17 +736,17 @@ public class PureJavaSerialPort extends SerialPort {
 							throw new IOException();
 
 						bytesReceived += bytesRead;
+						if (bytesReceived >= minBytesRequired)
+							break;
+						if (m_ReceiveTimeOutEnabled) {
+							T1 = m_ReceiveTimeOutEnabled ? System.currentTimeMillis() : 0;
+							if (T1 - T0 >= m_ReceiveTimeOutValue)
+								break;
+						}
 						if (pollingRead)
 							break;
-						if (!m_ReceiveThresholdEnabled && bytesReceived > 0)
-							break;
-						if (m_ReceiveThresholdEnabled && bytesReceived >= min(m_ReceiveThresholdValue, length))
-							break;
-						T1 = m_ReceiveTimeOutEnabled ? System.currentTimeMillis() : 0;
-						if (m_ReceiveTimeOutEnabled && T1 - T0 >= m_ReceiveTimeOutValue)
-							break;
 						offset += bytesRead;
-				}
+					}
 
 					m_DataAvailableNotified = false;
 					return bytesReceived;
