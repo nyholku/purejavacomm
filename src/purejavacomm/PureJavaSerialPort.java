@@ -890,7 +890,7 @@ public class PureJavaSerialPort extends SerialPort {
 				throw new PortInUseException();
 		}
 
-		m_MinVTIME = Integer.getInteger("purejavacomm.minvtime", 100)/100;
+		m_MinVTIME = Integer.getInteger("purejavacomm.minvtime", 100);
 		int flags = fcntl(m_FD, F_GETFL, 0);
 		flags &= ~O_NONBLOCK;
 		checkReturnCode(fcntl(m_FD, F_SETFL, flags));
