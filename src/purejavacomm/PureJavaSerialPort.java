@@ -685,7 +685,6 @@ public class PureJavaSerialPort extends SerialPort {
 									n = poll(m_ReadPollFD, 1, timeLeft);
 								if (n < 0 || m_FD < 0) // the port closed while we were blocking in poll
 									throw new IOException();
-								// FIXME is there a raise condition with the internal thread doing poll
 								if ((m_ReadPollFD[3] & POLLIN_OUT) != 0)
 									jtermios.JTermios.read(m_PipeRdFD, m_Nudge, 1);
 
