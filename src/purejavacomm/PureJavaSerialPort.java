@@ -70,6 +70,7 @@ public class PureJavaSerialPort extends SerialPort {
 	private volatile int m_ReceiveTimeOutValue;
 	private volatile boolean m_ReceiveThresholdEnabled;
 	private volatile int m_ReceiveThresholdValue;
+	private volatile boolean m_PollingReadMode;
 
 	private volatile boolean m_NotifyOnDataAvailable;
 	private volatile boolean m_DataAvailableNotified;
@@ -333,18 +334,24 @@ public class PureJavaSerialPort extends SerialPort {
 	synchronized public void disableReceiveThreshold() {
 		checkState();
 		m_ReceiveThresholdEnabled = false;
+		thresholdOrTimeoutChanged();
 	}
 
 	@Override
 	synchronized public void disableReceiveTimeout() {
 		checkState();
 		m_ReceiveTimeOutEnabled = false;
+		thresholdOrTimeoutChanged();
 	}
 
 	@Override
 	synchronized public void enableReceiveFraming(int arg0) throws UnsupportedCommOperationException {
 		checkState();
 		throw new UnsupportedCommOperationException();
+	}
+
+	private void thresholdOrTimeoutChanged() {
+		m_PollingReadMode = (m_ReceiveTimeOutEnabled && m_ReceiveTimeOutValue == 0) || (m_ReceiveThresholdEnabled && m_ReceiveThresholdValue == 0);
 	}
 
 	@Override
@@ -354,6 +361,7 @@ public class PureJavaSerialPort extends SerialPort {
 			throw new IllegalArgumentException("threshold" + value + " < 0 ");
 		m_ReceiveThresholdEnabled = true;
 		m_ReceiveThresholdValue = value;
+		thresholdOrTimeoutChanged();
 	}
 
 	@Override
@@ -377,6 +385,7 @@ public class PureJavaSerialPort extends SerialPort {
 		checkState();
 		m_ReceiveTimeOutEnabled = true;
 		m_ReceiveTimeOutValue = value;
+		thresholdOrTimeoutChanged();
 	}
 
 	@Override
@@ -637,14 +646,10 @@ public class PureJavaSerialPort extends SerialPort {
 						int bytesLeft = length - bytesReceived;
 						int timeLeft = 0;
 
-						int vtime;
-						int vmin;
-						boolean pollingRead = (m_ReceiveTimeOutEnabled && m_ReceiveTimeOutValue == 0) || (m_ReceiveThresholdEnabled && m_ReceiveThresholdValue == 0);
-						if (pollingRead) {
+						int vtime = 0;
+						int vmin = 0;
+						if (!m_PollingReadMode) {
 							// This is Kusti's interpretation of the JavaComm javadoc for getInputStream()
-							vtime = 0;
-							vmin = 0;
-						} else {
 							if (RAW_READ_MODE) {
 								vtime = min(255, ((m_ReceiveTimeOutEnabled ? m_ReceiveTimeOutValue : 0) + 99) / 100);
 								vmin = min(255, m_ReceiveThresholdEnabled ? m_ReceiveThresholdValue : 1);
@@ -677,7 +682,7 @@ public class PureJavaSerialPort extends SerialPort {
 						int bytesRead = 0;
 
 						boolean dataAvailable = false;
-						if (!RAW_READ_MODE && !pollingRead) {
+						if (!RAW_READ_MODE && !m_PollingReadMode) {
 							// do a select()/poll(), just in case this read was
 							// called when no data is available
 							// so that we will not hang for ever in a read
@@ -723,7 +728,7 @@ public class PureJavaSerialPort extends SerialPort {
 						}
 
 						// at this point data is either available or we take our chances in raw mode
-						if (RAW_READ_MODE || dataAvailable || pollingRead) {
+						if (RAW_READ_MODE || dataAvailable || m_PollingReadMode) {
 							if (offset > 0) {
 								bytesRead = jtermios.JTermios.read(m_FD, m_Buffer, bytesLeft);
 								if (bytesRead > 0)
@@ -743,7 +748,7 @@ public class PureJavaSerialPort extends SerialPort {
 								break;
 							T1 = m_ReceiveTimeOutEnabled ? System.currentTimeMillis() : 0;
 						}
-						if (pollingRead)
+						if (m_PollingReadMode)
 							break;
 						offset += bytesRead;
 					}
