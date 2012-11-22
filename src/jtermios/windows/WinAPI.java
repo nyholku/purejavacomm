@@ -42,7 +42,7 @@ import static jtermios.JTermios.JTermiosLogging.*;
  * This WinAPI class implements a simple wrapper API to access the Windows COM
  * ports from Java.
  * 
- * The purpose is to follow reasonable closely the WIN32 API so that COM port
+ * The purpose is to follow reasonably closely the WIN32 API so that COM port
  * related C-code can be ported to Java almost as-is with little changes when
  * this class is statically imported.
  * <p>
