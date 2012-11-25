@@ -6,6 +6,14 @@ Version 0.0.14 *** EXPERIMENTAL ***
 
 * Added getNativeFileDescriptor() to allow mixing and matching JTermios
   raw calls with PureJavaComm functionality. Caveat emptor!
+  
+* In raw read mode (purejavacomm.rawreadmode == true) the maximum
+  allowed enableReceiveThreshold(value) is 255. An attempt to set
+  a too large value will result in UnsupportedCommOperationException.
+  
+* The maximum enableReceiveTimeout(value) is now 255000 msec
+  ie 25.5 seconds. An attempt to set a too large value will 
+  result in UnsupportedCommOperationException.
 
 Version 0.0.13 *** EXPERIMENTAL ***
 
