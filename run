@@ -1,8 +1,5 @@
 #!/bin/bash          
-echo Ensure 'classes' directory exists
-mkdir classes
-echo Compile purejavacomm.testsuite.TestSuite and associated classes
-javac -d classes -sourcepath ./src -cp lib/jna.jar src/purejavacomm/testsuite/TestSuite.java
 echo Run purejavacomm.testsuite.TestSuite
-java -cp classes:lib/jna.jar purejavacomm.testsuite.TestSuite /dev/ttyUSB0
+#java -cp classes:lib/jna.jar purejavacomm.testsuite.TestSuite ttyUSB0
+java -cp bin/purejavacomm.jar:lib/jna.jar purejavacomm.testsuite.TestSuite ttyUSB0
 
