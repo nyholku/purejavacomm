@@ -47,27 +47,41 @@ public class Test12 extends TestBase {
 
 			m_Port.enableReceiveTimeout(0);
 			m_Port.enableReceiveThreshold(100);
-			m_Out.write(txbuffer, 0, 8);
-			sleep(100); // give the data some time to loop back
-			{ // ask for 10 but expect to get back immediately with the 8 bytes that are available
-				long T0 = System.currentTimeMillis();
-				int n = m_In.read(rxbuffer, 0, 10);
-				long T1 = System.currentTimeMillis();
-				if (n != 8)
-					fail("did not get all data back, got only " + n + " bytes");
-				if (T1 - T0 > 1)
-					fail("read did not return immediately, it took " + (T1 - T0) + " msec");
-			}
-			{ // ask for 10 but expect to get back immediately with the 0 bytes that are available
-				long T0 = System.currentTimeMillis();
-				int n = m_In.read(rxbuffer, 0, 10);
-				long T1 = System.currentTimeMillis();
-				if (n != 0)
-					fail("was expecting 0 bytes, but got " + n + " bytes");
-				if (T1 - T0 > 1)
-					fail("read did not return immediately, it took " + (T1 - T0) + " msec");
-			}
+			int totalN = 10;
+			int bytesN = 8;
+			{
+				long totalT = 0;
+				for (int i = 0; i < totalN; i++) {
+					m_Out.write(txbuffer, 0, bytesN);
+					sleep(100); // give the data some time to loop back
+					{ // ask for 10 but expect to get back immediately with the 8 bytes that are available
+						long T0 = System.currentTimeMillis();
+						int n = m_In.read(rxbuffer, 0, 10);
+						long T1 = System.currentTimeMillis();
+						totalT += T1 - T0;
+						if (n != 8)
+							fail("did not get all data back, got only " + n + " bytes");
+					}
+				}
+				if (totalT / totalN > 1)
+					fail("read did not return immediately, it took " + totalT / totalN + " msec on average to read " + bytesN + " bytes");
 
+			}
+			{
+				long totalT = 0;
+				for (int i = 0; i < totalN; i++) {
+					{ // ask for 10 but expect to get back immediately with the 0 bytes that are available
+						long T0 = System.currentTimeMillis();
+						int n = m_In.read(rxbuffer, 0, 10);
+						long T1 = System.currentTimeMillis();
+						totalT += T1 - T0;
+						if (n != 0)
+							fail("was expecting 0 bytes, but got " + n + " bytes");
+					}
+				}
+				if (totalT / totalN > 1)
+					fail("read did not return immediately, it took " + totalT / totalN + " msec");
+			}
 
 			finishedOK();
 		} finally {
