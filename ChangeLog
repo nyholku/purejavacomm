@@ -1,6 +1,6 @@
 Version 0.0.14 *** EXPERIMENTAL ***
 
-* More re-factoring to improve read performance and improve code
+* More re-factoring to improve read performance and code
 
 * Fixes to numerous corner cases to conform to specification
 
