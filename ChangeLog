@@ -2,7 +2,7 @@ Version 0.0.14 *** EXPERIMENTAL ***
 
 * More re-factoring to improve read performance and improve code
 
-* Fixes to numerous corner case to conform to specification
+* Fixes to numerous corner cases to conform to specification
 
 * Added getNativeFileDescriptor() to allow mixing and matching JTermios
   raw calls with PureJavaComm functionality. Caveat emptor!
