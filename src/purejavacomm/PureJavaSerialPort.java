@@ -569,8 +569,8 @@ public class PureJavaSerialPort extends SerialPort {
 	 * 			errorHandling();
 	 * 
 	 * 		// then set VTIME and VMIN, note VTIME in 1/10th of sec and both max 255
-	 * 		termios.c_cc[VTIME] = (byte) (timeout / 100); // 200 msec timeout
-	 * 		termios.c_cc[VMIN] = (byte) messageLength; // minimum 10 characters 
+	 * 		termios.c_cc[VTIME] = (byte) ((timeout+99) / 100); 
+	 * 		termios.c_cc[VMIN] = (byte) messageLength;  
 	 * 		
 	 * 		// update termios
 	 * 		if (0 != tcsetattr(FD, TCSANOW, termios))
