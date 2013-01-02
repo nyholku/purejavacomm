@@ -32,7 +32,7 @@ Version 0.0.12 *** EXPERIMENTAL ***
   threshold handling to improve performance on low end platforms
   like RaspberryPI and to improve conformance to the JavaComm spec.
   
-  This version has had limited testing so it may unintentially
+  This version has had limited testing so it may unintentionally
   break existing applications, proceed with caution. This
   version has not been tested on Windows for the lack
   of suitable setup.
