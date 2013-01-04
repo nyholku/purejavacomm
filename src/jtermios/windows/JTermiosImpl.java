@@ -81,7 +81,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		volatile int m_SelN[] = { 0 };
 		volatile OVERLAPPED m_SelOVL = new OVERLAPPED();
 
-		volatile IntByReference m_EvenFlags = new IntByReference();
+		volatile IntByReference m_EventFlags = new IntByReference();
 		volatile Termios m_Termios = new Termios();
 		volatile int MSR; // initial value
 
@@ -662,7 +662,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	private void maskToFDSets(Port port, FDSet readfds, FDSet writefds, FDSet exceptfds) {
-		int emask = port.m_EvenFlags.getValue();
+		int emask = port.m_EventFlags.getValue();
 		int fd = port.m_FD;
 		if ((emask & EV_RXCHAR) != 0)
 			FD_SET(fd, readfds);
@@ -708,10 +708,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 									flags |= EV_TXEMPTY;
 								if (!SetCommMask(port.m_Comm, flags))
 									port.fail();
-								if (WaitCommEvent(port.m_Comm, port.m_EvenFlags, port.m_SelOVL)) {
+								if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
 									// actually it seems that overlapped WaitCommEvent never returns true so we never get here
 									clearCommErrors(port);
-									if (!(((port.m_EvenFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
+									if (!(((port.m_EventFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
 										maskToFDSets(port, readfds, writefds, exceptfds);
 										ready++;
 									}
@@ -770,7 +770,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 							// following checking is needed because EV_RXCHAR can be set even if nothing is available for reading
 							clearCommErrors(port);
-							if (!(((port.m_EvenFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
+							if (!(((port.m_EventFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
 								maskToFDSets(port, readfds, writefds, exceptfds);
 								ready = 1;
 							}
