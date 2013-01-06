@@ -871,9 +871,9 @@ public class PureJavaSerialPort extends SerialPort {
 								timedout = true;
 						}
 
-						if (timedout) 
+						if (timedout)
 							break;
-						
+
 						// At this point data is either available or we take our
 						// chances in raw mode or this polling read which can't block
 						int bytesRead = 0;
@@ -889,9 +889,9 @@ public class PureJavaSerialPort extends SerialPort {
 								// this the BEST case execution path
 								bytesRead = jtermios.JTermios.read(m_FD, buffer, bytesLeft);
 							// readtime += System.nanoTime() - T0;
-							if (bytesRead == 0) 
+							if (bytesRead == 0)
 								timedout = true;
-					}
+						}
 
 						// Now we have read data and try to return as quickly as
 						// possibly or we have timed out.
@@ -904,9 +904,9 @@ public class PureJavaSerialPort extends SerialPort {
 						if (bytesReceived >= minBytesRequired) // BEST case this if is taken and we  exit
 							break; // we have read the minimum required and will return that
 
-						if (timedout) 
+						if (timedout)
 							break;
-						
+
 						// Ok, looks like we are in for an other loop, so update
 						// the offset
 						// and loop for some more
@@ -1269,7 +1269,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 	private void checkReturnCode(int code) {
 		if (code != 0) {
-			String msg = String.format("JTermios call returned %d at %s", code, lineno(1)); 
+			String msg = String.format("JTermios call returned %d at %s", code, lineno(1));
 			log = log && log(1, "%s\n", msg);
 			try {
 				close();
