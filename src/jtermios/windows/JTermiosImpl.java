@@ -53,8 +53,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	private volatile Hashtable<Integer, Port> m_OpenPorts = new Hashtable<Integer, Port>();
 
-	
-	
 	private class Port {
 		volatile int m_FD = -1;
 		volatile boolean m_Locked;
@@ -62,28 +60,31 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		volatile int m_OpenFlags;
 		volatile DCB m_DCB = new DCB();
 		volatile COMMTIMEOUTS m_Timeouts = new COMMTIMEOUTS();
-
-		volatile COMSTAT m_ClearStat = new COMSTAT();
+		volatile COMSTAT m_COMSTAT = new COMSTAT();
 		volatile int[] m_ClearErr = { 0 };
-
 		volatile Memory m_RdBuffer = new Memory(2048);
-		volatile COMSTAT m_RdStat = new COMSTAT();
 		volatile int[] m_RdErr = { 0 };
 		volatile int m_RdN[] = { 0 };
 		volatile OVERLAPPED m_RdOVL = new OVERLAPPED();
-
 		volatile Memory m_WrBuffer = new Memory(2048);
 		volatile COMSTAT m_WrStat = new COMSTAT();
 		volatile int[] m_WrErr = { 0 };
 		volatile int m_WrN[] = { 0 };
+		volatile int m_WritePending;
 		volatile OVERLAPPED m_WrOVL = new OVERLAPPED();
-
 		volatile int m_SelN[] = { 0 };
+		volatile HANDLE m_CancelWaitSema4;
 		volatile OVERLAPPED m_SelOVL = new OVERLAPPED();
-
 		volatile IntByReference m_EventFlags = new IntByReference();
 		volatile Termios m_Termios = new Termios();
 		volatile int MSR; // initial value
+		// these cached values are used to detect changes in termios structure and speed up things by avoiding unnecessary updates
+		volatile int m_VTIME = -1;
+		volatile int m_VMIN = -1;
+		volatile int m_c_speed = -1;
+		volatile int m_c_cflag = -1;
+		volatile int m_c_iflag = -1;
+		volatile int m_c_oflag = -1;
 
 		synchronized public void fail() throws Fail {
 			int err = GetLastError();
@@ -129,6 +130,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						m_FD = i;
 						m_PortFDs[i] = true;
 						m_OpenPorts.put(m_FD, this);
+						m_CancelWaitSema4 = CreateEventA(null, false, false, null);
+						if (m_CancelWaitSema4 == null)
+							throw new RuntimeException("Unexpected failure of CreateEvent() call");
 						return;
 					}
 				}
@@ -144,11 +148,18 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 					m_FD = -1;
 				}
 
-				if (m_Comm != null)
+				if (m_CancelWaitSema4 != null)
+					SetEvent(m_CancelWaitSema4);
+				if (m_Comm != null) {
+					ResetEvent(m_SelOVL.hEvent);
+
+					if (!CancelIo(m_Comm))
+						log = log && log(1, "CancelIo() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
 					if (!PurgeComm(m_Comm, PURGE_TXABORT + PURGE_TXCLEAR + PURGE_RXABORT + PURGE_RXCLEAR))
 						log = log && log(1, "PurgeComm() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
-
-				HANDLE h; /// 'hEvent' might never have been 'read' so read it to this var first
+				}
+				HANDLE h; // / 'hEvent' might never have been 'read' so read it
+				// to this var first
 
 				synchronized (m_RdBuffer) {
 					h = (HANDLE) m_RdOVL.readField("hEvent");
@@ -165,7 +176,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						CloseHandle(h);
 				}
 
-				// Ensure that select() is through before releasing the m_SelOVL 
+				// Ensure that select() is through before releasing the m_SelOVL
 				waitUnlock();
 
 				h = (HANDLE) m_SelOVL.readField("hEvent");
@@ -340,43 +351,79 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int read(int fd, byte[] buffer, int length) {
+
 		Port port = getPort(fd);
 		if (port == null)
 			return -1;
 		synchronized (port.m_RdBuffer) {
 			try {
-				// coldly limit reads to internal buffer size
+				// limit reads to internal buffer size
 				if (length > port.m_RdBuffer.size())
 					length = (int) port.m_RdBuffer.size();
 
 				if (length == 0)
 					return 0;
+
 				int error;
 
 				if ((port.m_OpenFlags & O_NONBLOCK) != 0) {
-					if (!ClearCommError(port.m_Comm, port.m_RdErr, port.m_RdStat))
-						port.fail();
-					int available = port.m_RdStat.cbInQue;
+					clearCommErrors(port);
+					int available = port.m_COMSTAT.cbInQue;
 					if (available == 0) {
 						m_ErrNo = EAGAIN;
 						return -1;
 					}
 					length = min(length, available);
 				} else {
-					int vtime = port.m_Termios.c_cc[VTIME];
-					int vmin = port.m_Termios.c_cc[VMIN];
-
-					if (!ClearCommError(port.m_Comm, port.m_RdErr, port.m_RdStat))
-						port.fail();
-					int available = port.m_RdStat.cbInQue;
+					clearCommErrors(port);
+					int available = port.m_COMSTAT.cbInQue;
+					int vtime = 0xff & port.m_Termios.c_cc[VTIME];
+					int vmin = 0xff & port.m_Termios.c_cc[VMIN];
 
 					if (vmin == 0 && vtime == 0) {
+						// VMIN = 0 and VTIME = 0 => totally non blocking,if data is
+						// available, return it, ie this is poll operation
+						// For reference below commented out is how timeouts are set for this vtime/vmin combo
+						//touts.ReadIntervalTimeout = MAXDWORD;
+						//touts.ReadTotalTimeoutConstant = 0;
+						//touts.ReadTotalTimeoutMultiplier = 0;
 						if (available == 0)
 							return 0;
 						length = min(length, available);
 					}
-					if (vmin > 0)
+					if (vmin == 0 && vtime > 0) {
+						// VMIN = 0 and VTIME > 0 => timed read, return as soon as data is
+						// available, VTIME = total time
+						// For reference below commented out is how timeouts are set for this vtime/vmin combo
+						//touts.ReadIntervalTimeout = 0;
+						//touts.ReadTotalTimeoutConstant = vtime;
+						//touts.ReadTotalTimeoutMultiplier = 0;
+
+						// NOTE to behave like unix we should probably wait until there is something available
+						// and then try to do a read as many bytes as are available bytes at that point in time. 
+						// As this is coded now, this will attempt to read as many bytes as requested and this may end up
+						// spending vtime in the read when a unix would return less bytes but as soon as they become
+						// available. 
+					}
+					if (vmin > 0 && vtime > 0) {
+						// VMIN > 0 and VTIME > 0 => blocks until VMIN chars has arrived or  between chars expired, 
+						// note that this will block if nothing arrives
+						// For reference below commented out is how timeouts are set for this vtime/vmin combo
+						//touts.ReadIntervalTimeout = vtime;
+						//touts.ReadTotalTimeoutConstant = 0;
+						//touts.ReadTotalTimeoutMultiplier = 0;
 						length = min(max(vmin, available), length);
+					}
+					if (vmin > 0 && vtime == 0) {
+						// VMIN > 0 and VTIME = 0 => blocks until VMIN characters have been
+						// received
+						// For reference below commented out is how timeouts are set for this vtime/vmin combo
+						//touts.ReadIntervalTimeout = 0;
+						//touts.ReadTotalTimeoutConstant = 0;
+						//touts.ReadTotalTimeoutMultiplier = 0;
+						length = min(max(vmin, available), length);
+					}
+
 				}
 
 				if (!ResetEvent(port.m_RdOVL.hEvent))
@@ -406,6 +453,22 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		synchronized (port.m_WrBuffer) {
 			try {
+				if (port.m_WritePending > 0) {
+					while (true) {
+						int res = WaitForSingleObject(port.m_WrOVL.hEvent, INFINITE);
+						if (res == WAIT_TIMEOUT) {
+							clearCommErrors(port);
+							log = log && log(1, "write pending, cbInQue %d cbOutQue %d\n", port.m_COMSTAT.cbInQue, port.m_COMSTAT.cbOutQue);
+							continue;
+						}
+						if (!GetOverlappedResult(port.m_Comm, port.m_WrOVL, port.m_WrN, false))
+							port.fail();
+						if (port.m_WrN[0] != port.m_WritePending) // I exptect this is never going to happen, if it does
+							new RuntimeException("Windows OVERLAPPED WriteFile failed to write all, tried to write " + port.m_WritePending + " but got " + port.m_WrN[0]);
+						break;
+					}
+					port.m_WritePending = 0;
+				}
 				if ((port.m_OpenFlags & O_NONBLOCK) != 0) {
 					if (!ClearCommError(port.m_Comm, port.m_WrErr, port.m_WrStat))
 						port.fail();
@@ -419,27 +482,18 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				if (!ResetEvent(port.m_WrOVL.hEvent))
 					port.fail();
 
+				if (length > port.m_WrBuffer.size())
+					length = (int) port.m_WrBuffer.size();
 				port.m_WrBuffer.write(0, buffer, 0, length); // copy from buffer to Memory
 				boolean ok = WriteFile(port.m_Comm, port.m_WrBuffer, length, port.m_WrN, port.m_WrOVL);
 
 				if (!ok) {
 					if (GetLastError() != ERROR_IO_PENDING)
 						port.fail();
-
-					while (true) {
-						// FIXME would need to implement thread interruption
-						int res = WaitForSingleObject(port.m_WrOVL.hEvent, INFINITE);
-						if (res == WAIT_TIMEOUT) {
-							clearCommErrors(port);
-							log = log && log(1, "write pending, cbInQue %d cbOutQue %d\n", port.m_ClearStat.cbInQue, port.m_ClearStat.cbOutQue);
-							continue;
-						}
-						if (!GetOverlappedResult(port.m_Comm, port.m_WrOVL, port.m_WrN, false))
-							port.fail();
-						break;
-					}
+					port.m_WritePending = length;
 				}
-				return port.m_WrN[0];
+				// 
+				return length; // port.m_WrN[0];
 			} catch (Fail f) {
 				return -1;
 			}
@@ -518,13 +572,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public int tcsetattr(int fd, int cmd, Termios termios) {
 		if (cmd != TCSANOW)
-			log(0, "tcsetattr only supports TCSANOW");
+			log(0, "tcsetattr only supports TCSANOW\n");
 
 		Port port = getPort(fd);
 		if (port == null)
 			return -1;
 		synchronized (port.m_Termios) {
-
 			try {
 				port.m_Termios.set(termios);
 				updateFromTermios(port);
@@ -535,223 +588,264 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 	}
 
-	//FIXME this needs serious code review from people who know this stuff...
+	// FIXME this needs serious code review from people who know this stuff...
 	public int updateFromTermios(Port port) throws Fail {
 		Termios tios = port.m_Termios;
-		DCB dcb = port.m_DCB;
-
-		dcb.DCBlength = dcb.size();
-		dcb.BaudRate = tios.c_ospeed;
-		if (tios.c_ospeed != tios.c_ispeed)
-			log(0, "c_ospeed (%d) != c_ispeed (%d)\n", tios.c_ospeed, tios.c_ispeed);
+		int c_speed = tios.c_ospeed;
 		int c_cflag = tios.c_cflag;
 		int c_iflag = tios.c_iflag;
 		int c_oflag = tios.c_oflag;
-		int flags = 0;
-		// rxtx does: 	if ( s_termios->c_iflag & ISTRIP ) dcb.fBinary = FALSE; but Winapi doc says fBinary always true
-		flags |= fBinary;
-		if ((c_cflag & PARENB) != 0)
-			flags |= fParity;
 
-		if ((c_iflag & IXON) != 0)
-			flags |= fOutX;
-		if ((c_iflag & IXOFF) != 0)
-			flags |= fInX;
-		if ((c_iflag & IXANY) != 0)
-			flags |= fTXContinueOnXoff;
+		if (c_speed != port.m_c_speed || c_cflag != port.m_c_cflag || c_iflag != port.m_c_iflag || c_oflag != port.m_c_oflag) {
+			DCB dcb = port.m_DCB;
+			if (!GetCommState(port.m_Comm, dcb))
+				port.fail();
 
-		if ((c_iflag & CRTSCTS) != 0) {
-			flags |= fRtsControl;
-			flags |= fOutxCtsFlow;
-			;
+			dcb.DCBlength = dcb.size();
+			dcb.BaudRate = c_speed;
+			if (tios.c_ospeed != tios.c_ispeed)
+				log(0, "c_ospeed (%d) != c_ispeed (%d)\n", tios.c_ospeed, tios.c_ispeed);
+			int flags = 0;
+			// rxtx does: if ( s_termios->c_iflag & ISTRIP ) dcb.fBinary = FALSE;
+			// but Winapi doc says fBinary always true
+			flags |= fBinary;
+			if ((c_cflag & PARENB) != 0)
+				flags |= fParity;
+
+			if ((c_iflag & IXON) != 0)
+				flags |= fOutX;
+			if ((c_iflag & IXOFF) != 0)
+				flags |= fInX;
+			if ((c_iflag & IXANY) != 0)
+				flags |= fTXContinueOnXoff;
+
+			if ((c_iflag & CRTSCTS) != 0) {
+				flags |= fRtsControl;
+				flags |= fOutxCtsFlow;
+			}
+
+			// Following have no corresponding functionality in unix termios
+			// fOutxDsrFlow = 0x00000008;
+			// fDtrControl = 0x00000030;
+			// fDsrSensitivity = 0x00000040;
+			// fErrorChar = 0x00000400;
+			// fNull = 0x00000800;
+			// fAbortOnError = 0x00004000;
+			// fDummy2 = 0xFFFF8000;
+			dcb.fFlags = flags;
+			// Don't touch these, windows seems to use: XonLim 2048 XoffLim 512 and who am I to argue with those
+			//dcb.XonLim = 0;
+			//dcb.XoffLim = 128;
+			byte cs = 8;
+			int csize = c_cflag & CSIZE;
+			if (csize == CS5)
+				cs = 5;
+			if (csize == CS6)
+				cs = 6;
+			if (csize == CS7)
+				cs = 7;
+			if (csize == CS8)
+				cs = 8;
+			dcb.ByteSize = cs;
+
+			if ((c_cflag & PARENB) != 0) {
+				if ((c_cflag & PARODD) != 0 && (c_cflag & CMSPAR) != 0)
+					dcb.Parity = MARKPARITY;
+				else if ((c_cflag & PARODD) != 0)
+					dcb.Parity = ODDPARITY;
+				else if ((c_cflag & CMSPAR) != 0)
+					dcb.Parity = SPACEPARITY;
+				else
+					dcb.Parity = EVENPARITY;
+			} else
+				dcb.Parity = NOPARITY;
+
+			dcb.StopBits = (c_cflag & CSTOPB) != 0 ? TWOSTOPBITS : ONESTOPBIT;
+			dcb.XonChar = tios.c_cc[VSTART]; // In theory these could change but they only get updated if the baudrate/char size changes so this could be a time bomb 
+			dcb.XoffChar = tios.c_cc[VSTOP]; // In practice in PJC these are never changed so updating on the first pass is enough
+			dcb.ErrorChar = 0;
+
+			// rxtx has some thing like
+			// if ( EV_BREAK|EV_CTS|EV_DSR|EV_ERR|EV_RING | ( EV_RLSD & EV_RXFLAG )
+			// )
+			// dcb.EvtChar = '\n';
+			// else
+			// dcb.EvtChar = '\0';
+			// But those are all defines so there is something fishy there?
+
+			dcb.EvtChar = '\n';
+			dcb.EofChar = tios.c_cc[VEOF];
+
+			if (!SetCommState(port.m_Comm, dcb))
+				port.fail();
+
+			port.m_c_speed = c_speed;
+			port.m_c_cflag = c_cflag;
+			port.m_c_iflag = c_iflag;
+			port.m_c_oflag = c_oflag;
 		}
-
-		// Following have no corresponding functionality in unix termios
-		//fOutxDsrFlow = 0x00000008;
-		//fDtrControl = 0x00000030;
-		//fDsrSensitivity = 0x00000040;
-		//fErrorChar = 0x00000400;
-		//fNull = 0x00000800;
-		//fAbortOnError = 0x00004000;
-		//fDummy2 = 0xFFFF8000;
-		dcb.fFlags = flags;
-		dcb.XonLim = 128; // rxtx sets there to 0 but Windows API doc says must not be 0
-		dcb.XoffLim = 128;
-		byte cs = 8;
-		int csize = c_cflag & CSIZE;
-		if (csize == CS5)
-			cs = 5;
-		if (csize == CS6)
-			cs = 6;
-		if (csize == CS7)
-			cs = 7;
-		if (csize == CS8)
-			cs = 8;
-		dcb.ByteSize = cs;
-
-		if ((c_cflag & PARENB) != 0) {
-			if ((c_cflag & PARODD) != 0 && (c_cflag & CMSPAR) != 0)
-				dcb.Parity = MARKPARITY;
-			else if ((c_cflag & PARODD) != 0)
-				dcb.Parity = ODDPARITY;
-			else if ((c_cflag & CMSPAR) != 0)
-				dcb.Parity = SPACEPARITY;
-			else
-				dcb.Parity = EVENPARITY;
-		} else
-			dcb.Parity = NOPARITY;
-
-		dcb.StopBits = (tios.c_cflag & CSTOPB) != 0 ? TWOSTOPBITS : ONESTOPBIT;
-		dcb.XonChar = tios.c_cc[VSTART];
-		dcb.XoffChar = tios.c_cc[VSTOP];
-		dcb.ErrorChar = 0;
-
-		// rxtx has some thing like 
-		// if ( EV_BREAK|EV_CTS|EV_DSR|EV_ERR|EV_RING | ( EV_RLSD & EV_RXFLAG ) )
-		//	dcb.EvtChar = '\n';
-		//else
-		//	dcb.EvtChar = '\0';
-		// But those are all defines so there is something fishy there?
-
-		dcb.EvtChar = '\n';
-		dcb.EofChar = tios.c_cc[VEOF];
 
 		int vmin = port.m_Termios.c_cc[VMIN] & 0xFF;
 		int vtime = (port.m_Termios.c_cc[VTIME] & 0xFF) * 100;
-		COMMTIMEOUTS touts = port.m_Timeouts;
-		// There are really no write timeouts in classic unix termios
-		// FIXME test that we can still interrupt the tread
-		touts.WriteTotalTimeoutConstant = 0;
-		touts.WriteTotalTimeoutMultiplier = 0;
-		if (vmin == 0 && vtime == 0) {
-			// VMIN = 0 and VTIME = 0 => totally non blocking,if data is
-			// available, return it, ie this is poll operation
-			touts.ReadIntervalTimeout = MAXDWORD;
-			touts.ReadTotalTimeoutConstant = 0;
-			touts.ReadTotalTimeoutMultiplier = 0;
-		}
-		if (vmin == 0 && vtime > 0) {
-			// VMIN = 0 and VTIME > 0 => timed read, return as soon as data is
-			// available, VTIME = total time
-			touts.ReadIntervalTimeout = MAXDWORD;
-			touts.ReadTotalTimeoutConstant = vtime;
-			touts.ReadTotalTimeoutMultiplier = MAXDWORD;
-		}
-		if (vmin > 0 && vtime > 0) {
-			// VMIN > 0 and VTIME > 0 => blocks until VMIN chars has arrived or
-			// VTIME between chars expired
-			// 1) will block if nothing arrives
-			touts.ReadIntervalTimeout = vtime;
-			touts.ReadTotalTimeoutConstant = 0;
-			touts.ReadTotalTimeoutMultiplier = 0;
-		}
-		if (vmin > 0 && vtime == 0) {
-			// VMIN > 0 and VTIME = 0 => blocks until VMIN characters have been
-			// received
-			touts.ReadIntervalTimeout = 0;
-			touts.ReadTotalTimeoutConstant = 0;
-			touts.ReadTotalTimeoutMultiplier = 0;
+		if (vmin != port.m_VMIN || vtime != port.m_VTIME) {
+			COMMTIMEOUTS touts = port.m_Timeouts;
+			// There are really no write timeouts in classic unix termios
+			// FIXME test that we can still interrupt the tread
+			touts.WriteTotalTimeoutConstant = 0;
+			touts.WriteTotalTimeoutMultiplier = 0;
+			if (vmin == 0 && vtime == 0) {
+				// VMIN = 0 and VTIME = 0 => totally non blocking,if data is
+				// available, return it, ie this is poll operation
+				touts.ReadIntervalTimeout = MAXDWORD;
+				touts.ReadTotalTimeoutConstant = 0;
+				touts.ReadTotalTimeoutMultiplier = 0;
+			}
+			if (vmin == 0 && vtime > 0) {
+				// VMIN = 0 and VTIME > 0 => timed read, return as soon as data is
+				// available, VTIME = total time
+				touts.ReadIntervalTimeout = 0;
+				touts.ReadTotalTimeoutConstant = vtime;
+				touts.ReadTotalTimeoutMultiplier = 0;
+			}
+			if (vmin > 0 && vtime > 0) {
+				// VMIN > 0 and VTIME > 0 => blocks until VMIN chars has arrived or  between chars expired, 
+				// note that this will block if nothing arrives
+				touts.ReadIntervalTimeout = vtime;
+				touts.ReadTotalTimeoutConstant = 0;
+				touts.ReadTotalTimeoutMultiplier = 0;
+			}
+			if (vmin > 0 && vtime == 0) {
+				// VMIN > 0 and VTIME = 0 => blocks until VMIN characters have been
+				// received
+				touts.ReadIntervalTimeout = 0;
+				touts.ReadTotalTimeoutConstant = 0;
+				touts.ReadTotalTimeoutMultiplier = 0;
+			}
+			if (!SetCommTimeouts(port.m_Comm, port.m_Timeouts))
+				port.fail();
+			port.m_VMIN = vmin;
+			port.m_VTIME = vtime;
+			log = log && log(2, "vmin %d vtime %d ReadIntervalTimeout %d ReadTotalTimeoutConstant %d ReadTotalTimeoutMultiplier %d\n", vmin, vtime, touts.ReadIntervalTimeout, touts.ReadTotalTimeoutConstant, touts.ReadTotalTimeoutMultiplier);
 		}
 
-		if (!SetCommState(port.m_Comm, dcb))
-			port.fail();
-
-		if (!SetCommTimeouts(port.m_Comm, port.m_Timeouts))
-			port.fail();
 		return 0;
 	}
 
-	private void maskToFDSets(Port port, FDSet readfds, FDSet writefds, FDSet exceptfds) {
+	private int maskToFDSets(Port port, FDSet readfds, FDSet writefds, FDSet exceptfds, int ready) throws Fail {
+		clearCommErrors(port);
 		int emask = port.m_EventFlags.getValue();
 		int fd = port.m_FD;
-		if ((emask & EV_RXCHAR) != 0)
+		if ((emask & EV_RXCHAR) != 0 && port.m_COMSTAT.cbInQue > 0) {
 			FD_SET(fd, readfds);
-		if ((emask & EV_TXEMPTY) != 0)
+			ready++;
+		}
+		if ((emask & EV_TXEMPTY) != 0 && port.m_COMSTAT.cbOutQue == 0) {
 			FD_SET(fd, writefds);
+			ready++;
+		}
+		return ready;
 	}
 
 	private void clearCommErrors(Port port) throws Fail {
-		synchronized (port.m_ClearErr) {
-			if (!ClearCommError(port.m_Comm, port.m_ClearErr, port.m_ClearStat))
+		synchronized (port.m_COMSTAT) {
+			if (!ClearCommError(port.m_Comm, port.m_ClearErr, port.m_COMSTAT))
 				port.fail();
 		}
 	}
 
 	public int select(int n, FDSet readfds, FDSet writefds, FDSet exceptfds, TimeVal timeout) {
+		// long T0 = System.currentTimeMillis();
 		int ready = 0;
-		while (ready == 0) {
-			LinkedList<Port> locked = new LinkedList<Port>();
+		LinkedList<Port> locked = new LinkedList<Port>();
+		try {
 			try {
-				try {
-					LinkedList<Port> waiting = new LinkedList<Port>();
-					for (int fd = 0; fd < n; fd++) {
-						boolean rd = FD_ISSET(fd, readfds);
-						boolean wr = FD_ISSET(fd, writefds);
-						FD_CLR(fd, readfds);
-						FD_CLR(fd, writefds);
-						if (rd || wr) {
-							Port port = getPort(fd);
-							if (port == null)
-								return -1;
-							try {
-								port.lock();
-								locked.add(port);
-								clearCommErrors(port);
+				LinkedList<Port> waiting = new LinkedList<Port>();
+				for (int fd = 0; fd < n; fd++) {
+					boolean rd = FD_ISSET(fd, readfds);
+					boolean wr = FD_ISSET(fd, writefds);
+					FD_CLR(fd, readfds);
+					FD_CLR(fd, writefds);
+					if (rd || wr) {
+						Port port = getPort(fd);
+						if (port == null)
+							return -1;
+						try {
+							port.lock();
+							locked.add(port);
+							clearCommErrors(port);
 
-								if (!ResetEvent(port.m_SelOVL.hEvent))
-									port.fail();
+							// check if there is data to be read, as WaitCommEvent
+							// does check for only *new* data that and thus
+							// might wait indefinitely if select() is called twice
+							// without first reading away all data
 
-								int flags = 0;
-								if (rd)
-									flags |= EV_RXCHAR;
-								if (wr)
-									flags |= EV_TXEMPTY;
-								if (!SetCommMask(port.m_Comm, flags))
-									port.fail();
-								if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
-									// actually it seems that overlapped WaitCommEvent never returns true so we never get here
-									clearCommErrors(port);
-									if (!(((port.m_EventFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
-										maskToFDSets(port, readfds, writefds, exceptfds);
-										ready++;
-									}
-								} else {
-									// FIXME if the port dies on us what happens
-									if (GetLastError() != ERROR_IO_PENDING)
-										port.fail();
-									waiting.add(port);
-								}
-							} catch (InterruptedException ie) {
-								m_ErrNo = EINTR; 
-								return -1;
+							if (rd && port.m_COMSTAT.cbInQue > 0) {
+								FD_SET(fd, readfds);
+								ready++;
 							}
 
+							if (wr && port.m_COMSTAT.cbOutQue == 0) {
+								FD_SET(fd, writefds);
+								ready++;
+							}
+
+							if (!ResetEvent(port.m_SelOVL.hEvent))
+								port.fail();
+
+							int flags = 0;
+							if (rd)
+								flags |= EV_RXCHAR;
+							if (wr)
+								flags |= EV_TXEMPTY;
+							if (!SetCommMask(port.m_Comm, flags))
+								port.fail();
+							if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
+								if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
+									port.fail();
+								// actually it seems that overlapped
+								// WaitCommEvent never returns true so we never get here
+								ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
+							} else {
+								// FIXME if the port dies on us what happens
+								if (GetLastError() != ERROR_IO_PENDING)
+									port.fail();
+								waiting.add(port);
+							}
+						} catch (InterruptedException ie) {
+							m_ErrNo = EINTR;
+							return -1;
 						}
+
 					}
+				}
+				if (ready == 0) {
 					int waitn = waiting.size();
-					if (ready == 0 && waitn > 0) {
-						HANDLE[] wobj = new HANDLE[waiting.size()];
+					if (waitn > 0) {
+						HANDLE[] wobj = new HANDLE[waiting.size() * 2];
 						int i = 0;
-						for (Port port : waiting)
+						for (Port port : waiting) {
 							wobj[i++] = port.m_SelOVL.hEvent;
+							wobj[i++] = port.m_CancelWaitSema4;
+						}
 						int tout = timeout != null ? (int) (timeout.tv_sec * 1000 + timeout.tv_usec / 1000) : INFINITE;
-						//int res = WaitForSingleObject(wobj[0], tout);
-						int res = WaitForMultipleObjects(waitn, wobj, false, tout);
+						// int res = WaitForSingleObject(wobj[0], tout);
+						int res = WaitForMultipleObjects(waitn * 2, wobj, false, tout);
 
 						if (res == WAIT_TIMEOUT) {
-							// work around the fact that sometimes we miss events
+							// work around the fact that sometimes we miss
+							// events
 							for (Port port : waiting) {
 								clearCommErrors(port);
 								int[] mask = { 0 };
 
 								if (!GetCommMask(port.m_Comm, mask))
 									port.fail();
-								if (port.m_ClearStat.cbInQue > 0 && ((mask[0] & EV_RXCHAR) != 0)) {
+								if (port.m_COMSTAT.cbInQue > 0 && ((mask[0] & EV_RXCHAR) != 0)) {
 									FD_SET(port.m_FD, readfds);
 									log = log && log(1, "missed EV_RXCHAR event\n");
 									return 1;
 								}
-								if (port.m_ClearStat.cbOutQue == 0 && ((mask[0] & EV_TXEMPTY) != 0)) {
+								if (port.m_COMSTAT.cbOutQue == 0 && ((mask[0] & EV_TXEMPTY) != 0)) {
 									FD_SET(port.m_FD, writefds);
 									log = log && log(1, "missed EV_TXEMPTY event\n");
 									return 1;
@@ -760,7 +854,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 						}
 						if (res != WAIT_TIMEOUT) {
-							i = res - WAIT_OBJECT_0;
+							i = (res - WAIT_OBJECT_0) / 2;
 							if (i < 0 || i >= waitn)
 								throw new Fail();
 
@@ -768,12 +862,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 							if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
 								port.fail();
 
-							// following checking is needed because EV_RXCHAR can be set even if nothing is available for reading
-							clearCommErrors(port);
-							if (!(((port.m_EventFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
-								maskToFDSets(port, readfds, writefds, exceptfds);
-								ready = 1;
-							}
+							ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
 						}
 					} else {
 						if (timeout != null)
@@ -784,25 +873,28 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						}
 						return 0;
 					}
-				} catch (Fail f) {
-					return -1;
 				}
-			} finally {
-				for (Port port : locked)
-					port.unlock();
-
+			} catch (Fail f) {
+				return -1;
 			}
+		} finally {
+			for (Port port : locked)
+				port.unlock();
+
 		}
+		// long T1 = System.currentTimeMillis();
+		// System.err.println("select() " + (T1 - T0));
+
 		return ready;
 	}
 
 	public int poll(Pollfd fds[], int nfds, int timeout) {
-		m_ErrNo=EINVAL;
+		m_ErrNo = EINVAL;
 		return -1;
 	}
-	
+
 	public int poll(int fds[], int nfds, int timeout) {
-		m_ErrNo=EINVAL;
+		m_ErrNo = EINVAL;
 		return -1;
 	}
 
@@ -891,7 +983,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		try {
 			if (cmd == FIONREAD) {
 				clearCommErrors(port);
-				arg[0] = port.m_ClearStat.cbInQue;
+				arg[0] = port.m_COMSTAT.cbInQue;
 				return 0;
 			} else if (cmd == TIOCMSET) {
 				int a = arg[0];
@@ -1003,7 +1095,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			} else {
 				int err = GetLastError();
 				if (err != ERROR_INSUFFICIENT_BUFFER) {
-					log = log && log(1, "QueryDosDeviceW() failed with GetLastError() ", err);
+					log = log && log(1, "QueryDosDeviceW() failed with GetLastError() = %d\n", err);
 					return null;
 				}
 			}
@@ -1103,7 +1195,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			return r;
 		return 0;
 	}
-	
+
 	public int pipe(int[] fds) {
 		m_ErrNo = EMFILE; // pipe() not implemented on Windows backend
 		return -1;
