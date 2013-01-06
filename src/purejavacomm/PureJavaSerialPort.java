@@ -47,28 +47,21 @@ import com.sun.jna.Platform;
 public class PureJavaSerialPort extends SerialPort {
 	final boolean USE_POLL;
 	final boolean RAW_READ_MODE;
-
 	private Thread m_Thread;
-
 	private volatile SerialPortEventListener m_EventListener;
 	private volatile OutputStream m_OutputStream;
 	private volatile InputStream m_InputStream;
-
 	private volatile int m_FD = -1;
-
 	private volatile boolean m_HaveNudgePipe = false;
 	private volatile int m_PipeWrFD = 0;
 	private volatile int m_PipeRdFD = 0;
 	private byte[] m_NudgeData = { 0 };
-
 	private volatile int m_BaudRate;
 	private volatile int m_DataBits;
 	private volatile int m_FlowControlMode;
 	private volatile int m_Parity;
 	private volatile int m_StopBits;
-
 	private volatile Object m_ThresholdTimeoutLock = new Object();
-
 	private volatile boolean m_TimeoutThresholdChanged = true;
 	private volatile boolean m_ReceiveTimeoutEnabled;
 	private volatile int m_ReceiveTimeoutValue;
@@ -76,13 +69,10 @@ public class PureJavaSerialPort extends SerialPort {
 	private volatile boolean m_ReceiveThresholdEnabled;
 	private volatile int m_ReceiveThresholdValue;
 	private volatile boolean m_PollingReadMode;
-
 	private volatile boolean m_NotifyOnDataAvailable;
 	private volatile boolean m_DataAvailableNotified;
-
 	private volatile boolean m_NotifyOnOutputEmpty;
 	private volatile boolean m_OutputEmptyNotified;
-
 	private volatile boolean m_NotifyOnRI;
 	private volatile boolean m_NotifyOnCTS;
 	private volatile boolean m_NotifyOnDSR;
@@ -93,13 +83,11 @@ public class PureJavaSerialPort extends SerialPort {
 	private volatile boolean m_NotifyOnBreakInterrupt;
 	private volatile boolean m_ThreadRunning;
 	private volatile boolean m_ThreadStarted;
-
 	private int[] m_ioctl = { 0 };
 	private int m_ControlLineStates;
 	// we cache termios in m_Termios because we don't rely on reading it back with tcgetattr()
-	// which for Mac OS X / CRTSCTS does not work, it is also more efficient 
+	// which for Mac OS X / CRTSCTS does not work, it is also more efficient
 	private Termios m_Termios = new Termios();
-
 	private int m_MinVTIME;
 
 	private void sendDataEvents(boolean read, boolean write) {
@@ -115,7 +103,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 	private synchronized void sendNonDataEvents() {
 		if (ioctl(m_FD, TIOCMGET, m_ioctl) < 0)
-			return; //FIXME decide what to with errors in the background thread
+			return; // FIXME decide what to with errors in the background thread
 		int oldstates = m_ControlLineStates;
 		m_ControlLineStates = m_ioctl[0];
 		int newstates = m_ControlLineStates;
@@ -498,7 +486,7 @@ public class PureJavaSerialPort extends SerialPort {
 						throw new UnsupportedCommOperationException("parity = " + parity);
 				}
 
-				// update the hardware 
+				// update the hardware
 
 				fc &= ~CSIZE; /* Mask the character size bits */
 				fc |= db; /* Set data bits */
@@ -511,7 +499,8 @@ public class PureJavaSerialPort extends SerialPort {
 				m_Termios.c_cflag = fc;
 				m_Termios.c_iflag = fi;
 
-				checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
+				if (tcsetattr(m_FD, TCSANOW, m_Termios) != 0)
+					throw new UnsupportedCommOperationException();
 
 				// finally everything went ok, so we can update our settings
 				m_BaudRate = baudRate;
@@ -665,6 +654,14 @@ public class PureJavaSerialPort extends SerialPort {
 	synchronized public InputStream getInputStream() throws IOException {
 		checkState();
 		if (m_InputStream == null) {
+			// NOTE: Windows and unixes are so different that it actually might
+			// make sense to have the backend (ie JTermiosImpl) to provide
+			// an InputStream that is optimal for the platform, instead of
+			// trying to share of the InputStream logic here and force
+			// Windows backend to conform to the the POSIX select()/
+			// read()/vtim/vtime model. See the amount of code here
+			// and in windows.JTermiosImpl for  select() and read().
+			//
 			m_InputStream = new InputStream() {
 				// im_ for inner class members
 				private int[] im_Available = { 0 };
@@ -683,12 +680,6 @@ public class PureJavaSerialPort extends SerialPort {
 				private int im_ReceiveThresholdValue;
 				private boolean im_PollingReadMode;
 				private int im_ReceiveTimeoutVTIME;
-
-				//				int reads;
-				//				int loops;
-				//				int ioctls;
-				//				long polltime;
-				//				long readtime;
 
 				{ // initialized block instead of construct in anonymous class
 					im_ReadFDSet = newFDSet();
@@ -724,19 +715,11 @@ public class PureJavaSerialPort extends SerialPort {
 				@Override
 				public void close() throws IOException {
 					super.close();
-					//					System.out.println("reads  " + reads);
-					//					System.out.println("loops  " + loops);
-					//					System.out.println("ioctls " + ioctls);
-					//					if (reads <= 0)
-					//						reads = 1;
-					//					System.out.println("polltime " + polltime / 1000 / reads / 1000.0 + " msec / read");
-					//					System.out.println("readtime " + readtime / 1000 / reads / 1000.0 + " msec / read");
-					//					System.out.println("rawreadmode " + RAW_READ_MODE);
 				}
 
 				@Override
 				final public int read(byte[] buffer, int offset, int length) throws IOException {
-					//reads++;
+					// reads++;
 					if (buffer == null)
 						throw new IllegalArgumentException("buffer null");
 					if (length == 0)
@@ -747,7 +730,7 @@ public class PureJavaSerialPort extends SerialPort {
 					if (RAW_READ_MODE) {
 						if (m_TimeoutThresholdChanged) { // does not need the lock if we just check the value
 							synchronized (m_ThresholdTimeoutLock) {
-								int vtime = m_ReceiveTimeoutEnabled ? m_ReceiveTimeoutValue : 0;
+								int vtime = m_ReceiveTimeoutEnabled ? m_ReceiveTimeoutVTIME : 0;
 								int vmin = m_ReceiveThresholdEnabled ? m_ReceiveThresholdValue : 1;
 								synchronized (m_Termios) {
 									m_Termios.c_cc[VTIME] = (byte) vtime;
@@ -775,7 +758,7 @@ public class PureJavaSerialPort extends SerialPort {
 					if (m_FD < 0) // replaces checkState call
 						failWithIllegalStateException();
 
-					if (m_TimeoutThresholdChanged) { // does not need the lock if we just check the value
+					if (m_TimeoutThresholdChanged) { // does not need the lock if we just check the alue
 						synchronized (m_ThresholdTimeoutLock) {
 							// capture these here under guard so that we get a coherent picture of the settings
 							im_ReceiveTimeoutEnabled = m_ReceiveTimeoutEnabled;
@@ -792,11 +775,11 @@ public class PureJavaSerialPort extends SerialPort {
 					int bytesReceived = 0;
 					int minBytesRequired;
 
-					// Note for optimal performance: message length == receive  threshold == read length <= 255
+					// Note for optimal performance: message length == receive threshold == read length <= 255
 					// the best case execution path is marked with BEST below
 
 					while (true) {
-						//loops++;
+						// loops++;
 						int vmin;
 						int vtime;
 						if (im_PollingReadMode) {
@@ -822,7 +805,7 @@ public class PureJavaSerialPort extends SerialPort {
 								vtime = 0;
 						}
 						if (vmin != im_VMIN || vtime != im_VTIME) { // in BEST case 'if' not taken more than once for given InputStream instance
-							//ioctls++;
+							// ioctls++;
 							im_VMIN = vmin;
 							im_VTIME = vtime;
 							// This needs to be guarded with m_Termios so that these thing don't change on us
@@ -834,31 +817,29 @@ public class PureJavaSerialPort extends SerialPort {
 						}
 
 						// Now wait for data to be available, except in raw read mode
-						// and polling read modes. Following looks a bit longish but
-						// there is actually not that much code to be executed
+						// and polling read modes. Following looks a bit longish
+						// but  there is actually not that much code to be executed
 						boolean dataAvailable = false;
 						boolean timedout = false;
 						if (!im_PollingReadMode) {
-							//long T0 = System.nanoTime();
+							int n;
+							// long T0 = System.nanoTime();
 							// do a select()/poll(), just in case this read was
 							// called when no data is available
 							// so that we will not hang for ever in a read
 							int timeoutValue = im_ReceiveTimeoutEnabled ? im_ReceiveTimeoutValue : Integer.MAX_VALUE;
-							if (USE_POLL) { // BEST case in Linux but not on Windows or Mac OS X
-								int n = poll(im_ReadPollFD, im_PollFDn, timeoutValue);
-								if (n == 0)
-									timedout = true;
-								else {
-									if (n < 0 || m_FD < 0) // the port closed while we were blocking in poll
-										throw new IOException();
+							if (USE_POLL) { // BEST case in Linux but not on
+											// Windows or Mac OS X
+								n = poll(im_ReadPollFD, im_PollFDn, timeoutValue);
+								if (n < 0 || m_FD < 0) // the port closed while we were blocking in poll
+									throw new IOException();
 
-									if ((im_ReadPollFD[3] & POLLIN_OUT) != 0)
-										jtermios.JTermios.read(m_PipeRdFD, im_Nudge, 1);
-									int re = im_ReadPollFD[1];
-									if ((re & POLLNVAL_OUT) != 0)
-										throw new IOException();
-									dataAvailable = (re & POLLIN_OUT) != 0;
-								}
+								if ((im_ReadPollFD[3] & POLLIN_OUT) != 0)
+									jtermios.JTermios.read(m_PipeRdFD, im_Nudge, 1);
+								int re = im_ReadPollFD[1];
+								if ((re & POLLNVAL_OUT) != 0)
+									throw new IOException();
+								dataAvailable = (re & POLLIN_OUT) != 0;
 
 							} else { // this is a bit slower but then again it is unlikely
 								// this gets executed in a low horsepower system
@@ -878,22 +859,23 @@ public class PureJavaSerialPort extends SerialPort {
 									im_ReadTimeVal.tv_sec = 0;
 									im_ReadTimeVal.tv_usec = timeoutValue * 1000;
 								}
-								int n = select(maxFD + 1, im_ReadFDSet, null, null, im_ReadTimeVal);
+								n = select(maxFD + 1, im_ReadFDSet, null, null, im_ReadTimeVal);
 								if (n < 0)
 									throw new IOException();
-								if (n == 0)
-									timedout = true;
-								else {
-									if (m_FD < 0) // the port closed while we were blocking in select
-										throw new IOException();
-									dataAvailable = FD_ISSET(m_FD, im_ReadFDSet);
-								}
+								if (m_FD < 0) // the port closed while we were
+												// blocking in select
+									throw new IOException();
+								dataAvailable = FD_ISSET(m_FD, im_ReadFDSet);
 							}
-							//polltime += System.nanoTime() - T0;
+							if (n == 0 && m_ReceiveTimeoutEnabled)
+								timedout = true;
 						}
 
-						// At this point data is either available or we take our chances in raw mode or this polling read which
-						// can't block
+						if (timedout) 
+							break;
+						
+						// At this point data is either available or we take our
+						// chances in raw mode or this polling read which can't block
 						int bytesRead = 0;
 						if (dataAvailable || im_PollingReadMode) {
 							if (offset > 0) {
@@ -906,27 +888,27 @@ public class PureJavaSerialPort extends SerialPort {
 							} else
 								// this the BEST case execution path
 								bytesRead = jtermios.JTermios.read(m_FD, buffer, bytesLeft);
-							//readtime += System.nanoTime() - T0;
-						}
+							// readtime += System.nanoTime() - T0;
+							if (bytesRead == 0) 
+								timedout = true;
+					}
 
-						// Now we have read data and try to return as quickly as possibly or
-						// we have timed out.
+						// Now we have read data and try to return as quickly as
+						// possibly or we have timed out.
 
 						if (bytesRead < 0) // an error occured
 							throw new IOException();
 
 						bytesReceived += bytesRead;
 
-						if (bytesReceived >= minBytesRequired) {// BEST case this if is taken and we exit
+						if (bytesReceived >= minBytesRequired) // BEST case this if is taken and we  exit
 							break; // we have read the minimum required and will return that
-						}
 
-						if (bytesRead == 0)
-							timedout = true;
-
-						if (timedout)
+						if (timedout) 
 							break;
-						// Ok, looks like we are in for an other loop, so update the offset
+						
+						// Ok, looks like we are in for an other loop, so update
+						// the offset
 						// and loop for some more
 						offset += bytesRead;
 						bytesLeft -= bytesRead;
@@ -1002,15 +984,20 @@ public class PureJavaSerialPort extends SerialPort {
 		if (fd != -1) {
 			m_FD = -1;
 			try {
-				m_InputStream.close();
+				if (m_InputStream != null)
+					m_InputStream.close();
 			} catch (IOException e) {
 				log = log && log(1, "m_InputStream.close threw an IOException %s\n", e.getMessage());
+			} finally {
+				m_InputStream = null;
 			}
 			try {
-				m_OutputStream.close();
+				if (m_OutputStream != null)
+					m_OutputStream.close();
 			} catch (IOException e) {
 				log = log && log(1, "m_OutputStream.close threw an IOException %s\n", e.getMessage());
-
+			} finally {
+				m_OutputStream = null;
 			}
 			nudgePipe();
 			int flags = fcntl(fd, F_GETFL, 0);
@@ -1068,7 +1055,8 @@ public class PureJavaSerialPort extends SerialPort {
 
 		this.name = name;
 
-		// unbelievable, sometimes quickly closing and re-opening fails on Windows
+		// unbelievable, sometimes quickly closing and re-opening fails on
+		// Windows
 		// so try a few times
 		int tries = 100;
 		long T0 = System.currentTimeMillis();
@@ -1281,7 +1269,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 	private void checkReturnCode(int code) {
 		if (code != 0) {
-			String msg = String.format("JTermios call returned %d at %s", code, lineno(1)); // 1 qas implicit 0
+			String msg = String.format("JTermios call returned %d at %s", code, lineno(1)); 
 			log = log && log(1, "%s\n", msg);
 			try {
 				close();
