@@ -144,6 +144,8 @@ public class WinAPI {
 
 		boolean PurgeComm(HANDLE hFile, int qmask);
 
+		boolean CancelIo(HANDLE hFile);
+
 		boolean CloseHandle(HANDLE hFile);
 
 		boolean ClearCommError(HANDLE hFile, int[] n, COMSTAT s);
@@ -173,6 +175,8 @@ public class WinAPI {
 		HANDLE CreateEventW(SECURITY_ATTRIBUTES lpEventAttributes, boolean bManualReset, boolean bInitialState, WString lpName);
 
 		boolean ResetEvent(HANDLE hEvent);
+
+		boolean SetEvent(HANDLE hEvent);
 
 		// Note lpEvtMask must be IntByRerence when WaitCommEvent is overlapped
 		boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, OVERLAPPED lpOverlapped);
@@ -383,6 +387,12 @@ public class WinAPI {
 		public OVERLAPPED() {
 			setAutoSynch(false);
 		}
+
+		public String toString() {
+			return String.format(//
+					"[Offset %d OffsetHigh %d hEvent %s]",//
+					Offset, OffsetHigh, hEvent.toString());
+		}
 	}
 
 	public static class SECURITY_ATTRIBUTES extends Structure {
@@ -450,6 +460,12 @@ public class WinAPI {
 			);
 		}
 
+		public String toString() {
+			return String.format(//
+					"[BaudRate %d fFlags %04X wReserved %d XonLim %d XoffLim %d ByteSize %d Parity %d StopBits %d XonChar %02X XoffChar %02X ErrorChar %02X EofChar %02X EvtChar %02X wReserved1 %d]", //
+					BaudRate, fFlags, wReserved, XonLim, XoffLim, ByteSize, Parity, StopBits, XonChar, XoffChar, ErrorChar, EofChar, EvtChar, wReserved1);
+		}
+
 	};
 
 	public static class COMMTIMEOUTS extends Structure {
@@ -468,6 +484,13 @@ public class WinAPI {
 					"WriteTotalTimeoutConstant"//
 			);
 		}
+
+		public String toString() {
+			return String.format(//
+					"[ReadIntervalTimeout %d ReadTotalTimeoutMultiplier %d ReadTotalTimeoutConstant %d WriteTotalTimeoutMultiplier %d WriteTotalTimeoutConstant %d]", //
+					ReadIntervalTimeout, ReadTotalTimeoutMultiplier, ReadTotalTimeoutConstant, WriteTotalTimeoutMultiplier, WriteTotalTimeoutConstant);
+		}
+
 	};
 
 	public static class COMSTAT extends Structure {
@@ -489,6 +512,10 @@ public class WinAPI {
 					"cbInQue",//
 					"cbOutQue"//
 			);
+		}
+
+		public String toString() {
+			return String.format("[fFlags %04X cbInQue %d cbInQue %d]", fFlags, cbInQue, cbOutQue);
 		}
 	};
 
@@ -552,6 +579,13 @@ public class WinAPI {
 		return res;
 	}
 
+	static public boolean CancelIo(HANDLE hFile) {
+		log = log && log(5, "> CancelIo(%s)\n", hFile);
+		boolean res = m_K32lib.CancelIo(hFile);
+		log = log && log(4, "< CancelIo(%s) => %s\n", hFile, res);
+		return res;
+	}
+
 	static public boolean CloseHandle(HANDLE hFile) {
 		log = log && log(5, "> CloseHandle(%s)\n", hFile);
 		boolean res = m_K32lib.CloseHandle(hFile);
@@ -560,9 +594,9 @@ public class WinAPI {
 	}
 
 	static public boolean ClearCommError(HANDLE hFile, int[] n, COMSTAT s) {
-		log = log && log(5, "> ClearCommError(%s, [%d], %s)\n", hFile, n[0], ref(s));
+		log = log && log(5, "> ClearCommError(%s, [%d], %s)\n", hFile, n[0], s);
 		boolean res = m_K32lib.ClearCommError(hFile, n, s);
-		log = log && log(4, "< ClearCommError(%s, [%d], %s) => %s\n", hFile, n[0], ref(s), res);
+		log = log && log(4, "< ClearCommError(%s, [%d], %s) => %s\n", hFile, n[0], s, res);
 		return res;
 	}
 
@@ -581,23 +615,23 @@ public class WinAPI {
 	}
 
 	static public boolean GetCommState(HANDLE hFile, DCB dcb) {
-		log = log && log(5, "> GetCommState(%s, %s)\n", hFile, ref(dcb));
+		log = log && log(5, "> GetCommState(%s, %s)\n", hFile, dcb);
 		boolean res = m_K32lib.GetCommState(hFile, dcb);
-		log = log && log(4, "< GetCommState(%s, %s) => %s\n", hFile, ref(dcb), res);
+		log = log && log(4, "< GetCommState(%s, %s) => %s\n", hFile, dcb, res);
 		return res;
 	}
 
 	static public boolean SetCommState(HANDLE hFile, DCB dcb) {
-		log = log && log(5, "> SetCommState(%s, %s)\n", hFile, ref(dcb));
+		log = log && log(5, "> SetCommState(%s, %s)\n", hFile, dcb);
 		boolean res = m_K32lib.SetCommState(hFile, dcb);
-		log = log && log(4, "< SetCommState(%s, %s) => %s\n", hFile, ref(dcb), res);
+		log = log && log(4, "< SetCommState(%s, %s) => %s\n", hFile, dcb, res);
 		return res;
 	}
 
 	static public boolean SetCommTimeouts(HANDLE hFile, COMMTIMEOUTS touts) {
-		log = log && log(5, "> SetCommTimeouts(%s, %s)\n", hFile, ref(touts));
+		log = log && log(5, "> SetCommTimeouts(%s, %s)\n", hFile, touts);
 		boolean res = m_K32lib.SetCommTimeouts(hFile, touts);
-		log = log && log(4, "< SetCommTimeouts(%s, %s) => %s\n", hFile, ref(touts), res);
+		log = log && log(4, "< SetCommTimeouts(%s, %s) => %s\n", hFile, touts, res);
 		return res;
 	}
 
@@ -648,6 +682,13 @@ public class WinAPI {
 		HANDLE h = m_K32lib.CreateEventA(security, manual, initial, name);
 		log = log && log(4, "< CreateEventA(%s, %s, %s, %s) => %s\n", ref(security), manual, initial, name, h);
 		return h;
+	}
+
+	static public boolean SetEvent(HANDLE hEvent) {
+		log = log && log(5, "> SetEvent(%s)\n", hEvent);
+		boolean res = m_K32lib.SetEvent(hEvent);
+		log = log && log(4, "< SetEvent(%s) => %s\n", hEvent, res);
+		return res;
 	}
 
 	static public boolean ResetEvent(HANDLE hEvent) {
