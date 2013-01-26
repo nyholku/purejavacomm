@@ -36,6 +36,7 @@ import purejavacomm.SerialPortEventListener;
 
 public class Test10 extends TestBase {
 	static volatile boolean m_ReadThreadRunning;
+	static volatile boolean m_ThreadStarted;
 	static volatile int m_ReadBytes = 0;
 	static volatile long m_T0;
 	static volatile long m_T1;
@@ -59,6 +60,7 @@ public class Test10 extends TestBase {
 				Thread rxthread = new Thread(new Runnable() {
 					public void run() {
 						m_ReadThreadRunning = true;
+						m_ThreadStarted = true;
 						try {
 							m_ReadBytes = m_In.read(rxbuffer, 0, rxbuffer.length);
 							m_T1 = System.currentTimeMillis();
@@ -70,8 +72,10 @@ public class Test10 extends TestBase {
 				});
 
 				m_ReadThreadRunning = false;
+				m_ThreadStarted = false;
+				m_ReadBytes = -666;
 				rxthread.start();
-				while (!m_ReadThreadRunning)
+				while (!m_ThreadStarted)
 					Thread.sleep(10);
 
 				for (int i = 0; i < chunks; i++) {
@@ -83,7 +87,7 @@ public class Test10 extends TestBase {
 				}
 				m_T0 = System.currentTimeMillis();
 				Thread.sleep(100);
-				int i = 200;
+				int i = 2000;
 				while (--i > 0 && m_ReadThreadRunning)
 					Thread.sleep(5);
 				if (i <= 0)
@@ -97,14 +101,15 @@ public class Test10 extends TestBase {
 					fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
 			}
 
-			{ // Test a single big read with  read length < threshold 
+		{ // Test a single big read with  read length < threshold 
 				Thread rxthread = new Thread(new Runnable() {
 					public void run() {
 						m_ReadThreadRunning = true;
+						m_ThreadStarted = true;
 						try {
 							m_ReadBytes = m_In.read(rxbuffer, 0, threshold / 2);
 							m_T1 = System.currentTimeMillis();
-						} catch (IOException e) {
+					} catch (IOException e) {
 							e.printStackTrace();
 						}
 						m_ReadThreadRunning = false;
@@ -112,8 +117,10 @@ public class Test10 extends TestBase {
 				});
 
 				m_ReadThreadRunning = false;
-				rxthread.start();
-				while (!m_ReadThreadRunning)
+				m_ThreadStarted = false;
+				m_ReadBytes = -666;
+			rxthread.start();
+				while (!m_ThreadStarted)
 					Thread.sleep(10);
 
 				for (int i = 0; i < chunks / 2; i++) {

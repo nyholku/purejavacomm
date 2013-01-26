@@ -55,7 +55,7 @@ public class Test15 extends TestBase {
 				if (n != 0)
 					fail("was expecting 0 bytes, but got " + n + " bytes");
 				int timeLo = timeout;
-				int timeHi = timeout * 105 / 100;
+				int timeHi = timeout * 110 / 100;
 				int time = (int) (T1 - T0);
 				if (time < timeLo)
 					fail("timed out early, was expecting  " + timeLo + " but got " + time + " msec");
@@ -69,13 +69,12 @@ public class Test15 extends TestBase {
 				long T0 = System.currentTimeMillis();
 				int n = m_In.read(rxbuffer, 0, 1000);
 				long T1 = System.currentTimeMillis();
-				if (n < 10)
-					fail("was expecting at least 10 bytes, but got " + n + " bytes");
-				if (n > 100)
-					fail("was expecting at most 100 bytes, but got " + n + " bytes");
 				int time = (int) (T1 - T0);
-				if (time > 1)
-					fail("expected read to return ASAP but it took" + time + " msec");
+				int etime= n * 150/100; // at 9600
+				if (time > etime)
+					fail("expected read to return in " + etime+" but it took " + time + " msec and returned "+n +" bytes");
+				if (n < 10)
+					fail("was expecting at least 900 bytes, but got " + n + " bytes");
 			}
 
 			

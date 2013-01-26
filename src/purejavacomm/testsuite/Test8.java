@@ -36,45 +36,104 @@ import purejavacomm.*;
 public class Test8 extends TestBase {
 	static void run() throws Exception {
 		try {
-			begin("Test8 - parity");
+			begin("Test8 - parity etc");
 			openPort();
 			int[] parity = { SerialPort.PARITY_NONE, SerialPort.PARITY_ODD, SerialPort.PARITY_EVEN };
-			int[] stopbits = { SerialPort.STOPBITS_1, SerialPort.STOPBITS_2 };// , SerialPort.STOPBITS_1_5 }; 
-			int[] databits = { SerialPort.DATABITS_5, SerialPort.DATABITS_6, SerialPort.DATABITS_7, SerialPort.DATABITS_8 };
+			int[] stopbits = { SerialPort.STOPBITS_1, SerialPort.STOPBITS_1_5, SerialPort.STOPBITS_2 };// ,
+			// SerialPort.STOPBITS_1_5
+			// };
+			int[] databits = { SerialPort.DATABITS_8, SerialPort.DATABITS_7, SerialPort.DATABITS_6, SerialPort.DATABITS_5 };
 			int[] datamask = { 0x1F, 0x3F, 0x7F, 0xFF };
-			for (int pi = 0; pi < parity.length; pi++) {
+			System.out.println();
+			int tn = 0;
+			for (int ppi = 0; ppi < parity.length; ppi++) {
 				for (int sbi = 0; sbi < stopbits.length; sbi++) {
 					for (int dbi = 0; dbi < databits.length; dbi++) {
+
 						m_Port.enableReceiveTimeout(10000);
 						m_Port.enableReceiveThreshold(256);
-						m_Port.setSerialPortParams(115200, databits[dbi], stopbits[sbi], parity[pi]);
-						byte[] sent = new byte[256];
-						byte[] rcvd = new byte[256];
-						for (int i = 0; i < 256; i++)
-							sent[i] = (byte) (i & datamask[dbi]);
-						m_Out = m_Port.getOutputStream();
-						m_In = m_Port.getInputStream();
-						long t0 = System.currentTimeMillis();
-						m_Out.write(sent);
+						try {
+							String db = "?";
+							switch (databits[dbi]) {
+								case SerialPort.DATABITS_5:
+									db = "5";
+									break;
+								case SerialPort.DATABITS_6:
+									db = "6";
+									break;
+								case SerialPort.DATABITS_7:
+									db = "7";
+									break;
+								case SerialPort.DATABITS_8:
+									db = "8";
+									break;
+							}
 
-						//sleep(500);
+							String sb = "?";
+							switch (stopbits[sbi]) {
+								case SerialPort.STOPBITS_1:
+									sb = "1";
+									break;
+								case SerialPort.STOPBITS_1_5:
+									sb = "1.5";
+									break;
+								case SerialPort.STOPBITS_2:
+									sb = "2";
+									break;
+							}
 
-						int n = m_In.read(rcvd);
+							String pb = "?";
+							switch (parity[ppi]) {
+								case SerialPort.PARITY_EVEN:
+									pb = "E";
+									break;
+								case SerialPort.PARITY_ODD:
+									pb = "O";
+									break;
+								case SerialPort.PARITY_MARK:
+									pb = "M";
+									break;
+								case SerialPort.PARITY_SPACE:
+									pb = "S";
+									break;
+								case SerialPort.PARITY_NONE:
+									pb = "N";
+									break;
+							}
+							tn++;
+							begin("Test8." + tn + " databits=" + db + " stopbits=" + sb + " parity=" + pb);
+							m_Port.setSerialPortParams(19200, databits[dbi], stopbits[sbi], parity[ppi]);
+							sleep(100);
+							byte[] sent = new byte[256];
+							byte[] rcvd = new byte[256];
+							for (int i = 0; i < 256; i++)
+								sent[i] = (byte) (i & datamask[dbi]);
+							m_Out = m_Port.getOutputStream();
+							m_In = m_Port.getInputStream();
+							long t0 = System.currentTimeMillis();
+							m_Out.write(sent);
 
-						if (n != sent.length)
-							fail("was expecting %d characters got %d", sent.length, n);
-						for (int i = 0; i < 256; ++i) {
-							if (sent[i] != rcvd[i])
-								fail("failed: transmit '0x%02X' != receive'0x%02X' with databits %d stopbit %d parity %d", sent[i], rcvd[i], databits[dbi], stopbits[sbi], parity[pi]);
+							int n = 0;
+							while ((n += m_In.read(rcvd, n, 256 - n)) < 256)
+								;
+
+							if (n != sent.length)
+								fail("was expecting %d characters got %d", sent.length, n);
+							for (int i = 0; i < 256; ++i) {
+								if (sent[i] != rcvd[i])
+									fail("failed: transmit '0x%02X' != receive'0x%02X'", sent[i], rcvd[i]);
+							}
+							if (n < 256)
+								fail("did not receive all 256 chars, got %d", n);
+							finishedOK();
+						} catch (UnsupportedCommOperationException e) {
+							finishedOK(" NOT SUPPORTED");
 						}
-						if (n < 256)
-							fail("did not receive all 256 chars, got %d", n);
-						//sleep(1);
+						// sleep(1);
 					}
 				}
 			}
 
-			finishedOK();
 		} finally {
 			closePort();
 		}

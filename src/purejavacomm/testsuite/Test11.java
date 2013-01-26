@@ -40,7 +40,6 @@ public class Test11 extends TestBase {
 	static void run() throws Exception {
 
 		try {
-			System.setProperty("purejavacomm.rawreadmode", "false");
 			begin("Test11 - exit from blocking read ");
 			openPort();
 

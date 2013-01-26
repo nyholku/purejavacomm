@@ -105,7 +105,7 @@ public class Test9 extends TestBase {
 					fail("read did not complete in time");
 
 				int time = (int) (m_T1 - m_T0);
-				int timeMax = (threshold/txn+1)*txt;
+				int timeMax = (threshold/txn+2)*txt;
 				
 				if (time>timeMax)
 					fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
