@@ -582,14 +582,20 @@ public class JTermios {
 		static private StringBuffer buffer = new StringBuffer();
 
 		static public boolean log(int l, String format, Object... args) {
-			if (LOG_MASK != 0) {
+			if (l == 0 || LOG_MASK != 0) {
 				synchronized (buffer) {
 					buffer.setLength(0);
-					if ((LOG_MASK & (1 << (6 - 1))) != 0)
-						buffer.append(String.format(lineno(2) + ", "));
-					if ((LOG_MASK & (1 << (7 - 1))) != 0)
-						buffer.append(String.format(Thread.currentThread().getName() + ", "));
-					if ((LOG_MASK & (1 << (l - 1))) != 0)
+					if ((LOG_MASK & (1 << (5))) != 0)
+						buffer.append(String.format("%06d,", System.currentTimeMillis() % 1000000));
+					if ((LOG_MASK & (1 << (6))) != 0) {
+						buffer.append(lineno(2));
+						buffer.append(", ");
+					}
+					if ((LOG_MASK & (1 << (7))) != 0) {
+						buffer.append(Thread.currentThread().getName());
+						buffer.append(", ");
+					}
+					if (l == 0 || (LOG_MASK & (1 << (l - 1))) != 0)
 						buffer.append(String.format(format, args));
 					if (buffer.length() > 0) {
 						System.err.printf("log: " + buffer.toString());
