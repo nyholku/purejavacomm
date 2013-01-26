@@ -1,3 +1,9 @@
+Version 0.0.15
+
+* Improved the Windows back end ie fixed bugs revealed by the 
+  changes in the front end that were done to improve Linux
+  performance.
+  
 Version 0.0.14 *** EXPERIMENTAL ***
 
 * More re-factoring to improve read performance and code
