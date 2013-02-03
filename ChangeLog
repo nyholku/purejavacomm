@@ -1,3 +1,10 @@
+Version 0.0.16
+
+* Just bumped the version number because the what was supposed to 
+  be release 0.0.15 actually reported version number 0.0.15.rc2.
+  
+  No code changes.
+  
 Version 0.0.15
 
 * Improved the Windows back end ie fixed bugs revealed by the 
@@ -26,7 +33,7 @@ Version 0.0.13 *** EXPERIMENTAL ***
 * Removed some debugging output from SerialPort.close() that
   was left there by mistake
   
-* Added a new property that disables the internal us of
+* Added a new property that disables the internal use of
   a pipe to get nudge select()/poll() out of coma. The
   pipe uses two extra file descriptors so in a huge
   system this maybe a critical resource. To disable
