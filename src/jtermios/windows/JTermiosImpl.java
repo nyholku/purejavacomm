@@ -789,18 +789,33 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 								ready++;
 							}
 
-							GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false);
-							int err = GetLastError();
-							if (err != ERROR_IO_INCOMPLETE && err != ERROR_IO_PENDING) {
-								if (!ResetEvent(port.m_SelOVL.hEvent))
-									port.fail();
+							int flags = 0;
+							if (rd)
+								flags |= EV_RXCHAR;
+							if (wr)
+								flags |= EV_TXEMPTY;
 
-								int flags = 0;
-								if (rd)
-									flags |= EV_RXCHAR;
-								if (wr)
-									flags |= EV_TXEMPTY;
+							int[] currentMask = { 0 };
+							if (!GetCommMask(port.m_Comm, currentMask))
+								port.fail();
+
+							// check if there is no pending WaitCommEvent operation
+							// pointing to port.m_SelOVL OVERLAPPED structure
+							// or if event flags have changed
+							// before starting a new WaitCommEvent operation
+							// pointing to the same OVERLAPPED structure
+
+							boolean startWaitCommEvent = true;
+							if (currentMask[0] == flags) {
+								GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false);
+								int err = GetLastError();
+								startWaitCommEvent = (err != ERROR_IO_INCOMPLETE && err != ERROR_IO_PENDING);
+							} else {
 								if (!SetCommMask(port.m_Comm, flags))
+									port.fail();
+							}
+							if (startWaitCommEvent) {
+								if (!ResetEvent(port.m_SelOVL.hEvent))
 									port.fail();
 								if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
 									if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
