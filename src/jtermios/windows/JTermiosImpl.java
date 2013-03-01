@@ -789,28 +789,31 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 								ready++;
 							}
 
-							if (!ResetEvent(port.m_SelOVL.hEvent))
-								port.fail();
+							if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
+								if (GetLastError() != ERROR_IO_PENDING) {
+									if (!ResetEvent(port.m_SelOVL.hEvent))
+										port.fail();
 
-							int flags = 0;
-							if (rd)
-								flags |= EV_RXCHAR;
-							if (wr)
-								flags |= EV_TXEMPTY;
-							if (!SetCommMask(port.m_Comm, flags))
-								port.fail();
-							if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
-								if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
-									port.fail();
-								// actually it seems that overlapped
-								// WaitCommEvent never returns true so we never get here
-								ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
-							} else {
-								// FIXME if the port dies on us what happens
-								if (GetLastError() != ERROR_IO_PENDING)
-									port.fail();
-								waiting.add(port);
-							}
+									int flags = 0;
+									if (rd)
+										flags |= EV_RXCHAR;
+									if (wr)
+										flags |= EV_TXEMPTY;
+									if (!SetCommMask(port.m_Comm, flags))
+										port.fail();
+									if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
+										if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
+											port.fail();
+										// actually it seems that overlapped
+										// WaitCommEvent never returns true so we never get here
+										ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
+									} else {
+										// FIXME if the port dies on us what happens
+										if (GetLastError() != ERROR_IO_PENDING)
+											port.fail();
+										waiting.add(port);
+									}
+								}
 						} catch (InterruptedException ie) {
 							m_ErrNo = EINTR;
 							return -1;
