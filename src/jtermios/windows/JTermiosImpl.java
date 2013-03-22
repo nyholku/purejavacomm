@@ -100,7 +100,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 
 		synchronized public void lock() throws InterruptedException {
-			if (m_Locked)
+			while (m_Locked)
 				wait();
 			m_Locked = true;
 		}
@@ -561,7 +561,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		try {
 			if (!SetCommBreak(port.m_Comm))
 				port.fail();
-			nanoSleep(duration * 250000000);
+			nanoSleep(duration * 250000000L);
 			if (!ClearCommBreak(port.m_Comm))
 				port.fail();
 			return 0;
