@@ -789,27 +789,46 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 								ready++;
 							}
 
-							if (!ResetEvent(port.m_SelOVL.hEvent))
-								port.fail();
-
 							int flags = 0;
 							if (rd)
 								flags |= EV_RXCHAR;
 							if (wr)
 								flags |= EV_TXEMPTY;
-							if (!SetCommMask(port.m_Comm, flags))
+
+							int[] currentMask = { 0 };
+							if (!GetCommMask(port.m_Comm, currentMask))
 								port.fail();
-							if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
-								if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
-									port.fail();
-								// actually it seems that overlapped
-								// WaitCommEvent never returns true so we never get here
-								ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
+
+							// check if there is no pending WaitCommEvent operation
+							// pointing to port.m_SelOVL OVERLAPPED structure
+							// or if event flags have changed
+							// before starting a new WaitCommEvent operation
+							// pointing to the same OVERLAPPED structure
+
+							boolean startWaitCommEvent = true;
+							if (currentMask[0] == flags) {
+								GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false);
+								int err = GetLastError();
+								startWaitCommEvent = (err != ERROR_IO_INCOMPLETE && err != ERROR_IO_PENDING);
 							} else {
-								// FIXME if the port dies on us what happens
-								if (GetLastError() != ERROR_IO_PENDING)
+								if (!SetCommMask(port.m_Comm, flags))
 									port.fail();
-								waiting.add(port);
+							}
+							if (startWaitCommEvent) {
+								if (!ResetEvent(port.m_SelOVL.hEvent))
+									port.fail();
+								if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
+									if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
+										port.fail();
+									// actually it seems that overlapped
+									// WaitCommEvent never returns true so we never get here
+									ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
+								} else {
+									// FIXME if the port dies on us what happens
+									if (GetLastError() != ERROR_IO_PENDING)
+										port.fail();
+									waiting.add(port);
+								}
 							}
 						} catch (InterruptedException ie) {
 							m_ErrNo = EINTR;
