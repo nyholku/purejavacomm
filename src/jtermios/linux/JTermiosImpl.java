@@ -30,12 +30,17 @@
 
 package jtermios.linux;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
 import java.nio.Buffer;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -666,7 +671,63 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public String getPortNamePattern() {
-		return "^tty.*";
+		// First we have to determine which serial drivers exist and which
+		// prefixes they use
+		final List<String> prefixes = new ArrayList<String>();
+
+		try {
+			BufferedReader drivers = new BufferedReader(new InputStreamReader(
+					new FileInputStream("/proc/tty/drivers"), "US-ASCII"));
+			String line;
+			while ((line = drivers.readLine()) != null) {
+				// /proc/tty/drivers contains the prefix in the second column
+				// and "serial" in the fifth
+
+				String[] parts = line.split(" +");
+				if (parts.length != 5) {
+					continue;
+				}
+
+				if (!"serial".equals(parts[4])) {
+					continue;
+				}
+
+				// Sanity check the prefix
+				if (!parts[1].startsWith("/dev/")) {
+					continue;
+				}
+
+				prefixes.add(parts[1].substring(5));
+			}
+			drivers.close();
+		} catch (IOException e) {
+			log = log && log(1, "failed to read /proc/tty/drivers\n");
+
+			prefixes.add("ttyS");
+			prefixes.add("ttyUSB");
+			prefixes.add("ttyACM");
+		}
+
+		// Now build the pattern from the known prefixes
+
+		StringBuilder pattern = new StringBuilder();
+		
+		pattern.append('^');
+		
+		boolean first = false;
+		for (String prefix : prefixes) {
+			if (!first) {
+				first = true;
+			} else {
+				pattern.append('|');
+			}
+			
+			pattern.append("(");
+			pattern.append(prefix);
+			pattern.append(".+)");
+		}
+
+		return pattern.toString();
 	}
 
 	public List<String> getPortList() {
