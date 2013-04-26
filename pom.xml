@@ -102,7 +102,7 @@
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna</artifactId>
-			<version>3.4.0</version>
+			<version>3.5.1</version>
 		</dependency>
 	</dependencies>
 
