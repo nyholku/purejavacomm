@@ -668,8 +668,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		final List<String> prefixes = new ArrayList<String>();
 
 		try {
-			BufferedReader drivers = new BufferedReader(new InputStreamReader(
-					new FileInputStream("/proc/tty/drivers"), "US-ASCII"));
+			BufferedReader drivers = new BufferedReader(new InputStreamReader(new FileInputStream("/proc/tty/drivers"), "US-ASCII"));
 			String line;
 			while ((line = drivers.readLine()) != null) {
 				// /proc/tty/drivers contains the prefix in the second column
@@ -703,9 +702,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		// Now build the pattern from the known prefixes
 
 		StringBuilder pattern = new StringBuilder();
-		
+
 		pattern.append('^');
-		
+
 		boolean first = false;
 		for (String prefix : prefixes) {
 			if (!first) {
@@ -713,7 +712,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			} else {
 				pattern.append('|');
 			}
-			
+
 			pattern.append("(");
 			pattern.append(prefix);
 			pattern.append(".+)");
@@ -754,22 +753,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 				// found the baudrate from the table
 
-				// in case custom divisor was in use, turn it off first
+				// just in case custom divisor was in use, try to turn it off first
 				serial_struct ss = new serial_struct();
 
 				r = ioctl(fd, TIOCGSERIAL, ss);
-				if (r != 0) {
-					// not every driver supports TIOCGSERIAL, so if it fails, just ignore it
-					if (errno() != EINVAL)
-						return r;
-				} else {
+				if (r == 0) {
 					ss.flags &= ~ASYNC_SPD_MASK;
 					r = ioctl(fd, TIOCSSERIAL, ss);
-					if (r != 0) {
-						// not every driver supports TIOCSSERIAL, so if it fails, just ignore it
-						if (errno() != EINVAL)
-							return r;
-					}
 				}
 
 				// now set the speed with the constant from the table
