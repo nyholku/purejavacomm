@@ -122,8 +122,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		native public void cfmakeraw(termios termios);
 
-		native public int fcntl(int fd, int cmd, int[] arg);
-
 		native public int fcntl(int fd, int cmd, int arg);
 
 		native public int ioctl(int fd, int cmd, int[] arg);
@@ -187,8 +185,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		public int tcdrain(int fd);
 
 		public void cfmakeraw(termios termios);
-
-		public int fcntl(int fd, int cmd, int[] arg);
 
 		public int fcntl(int fd, int cmd, int arg);
 
@@ -515,10 +511,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		Linux_C_lib.termios t = new Linux_C_lib.termios(termios);
 		m_Clib.cfmakeraw(t);
 		t.update(termios);
-	}
-
-	public int fcntl(int fd, int cmd, int[] arg) {
-		return m_Clib.fcntl(fd, cmd, arg);
 	}
 
 	public int fcntl(int fd, int cmd, int arg) {
