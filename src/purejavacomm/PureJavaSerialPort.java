@@ -1004,7 +1004,7 @@ public class PureJavaSerialPort extends SerialPort {
 			flags |= O_NONBLOCK;
 			int fcres = fcntl(fd, F_SETFL, flags);
 			if (fcres != 0) // not much we can do if this fails, so just log it
-				log = log && log(1, "fcntl(%d,%d,%d) returned %d\n", m_FD, F_SETFL, flags, fcres);
+				log = log && log(1, "fcntl(%d,%d,%d) returned %d\n", fd, F_SETFL, flags, fcres);
 
 			if (m_Thread != null)
 				m_Thread.interrupt();
