@@ -379,9 +379,9 @@ public class JTermios {
 	}
 
 	static public int tcsendbreak(int fd, int duration) {
-		log = log && log(5, "> tcsendbreak(%d,%d,%s)\n", fd, duration);
+		log = log && log(5, "> tcsendbreak(%d,%d)\n", fd, duration);
 		int ret = m_Termios.tcsendbreak(fd, duration);
-		log = log && log(3, "< tcsendbreak(%d,%d,%s) => %d\n", fd, duration, ret);
+		log = log && log(3, "< tcsendbreak(%d,%d) => %d\n", fd, duration, ret);
 		return ret;
 	}
 
