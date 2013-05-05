@@ -2,28 +2,28 @@
  * Copyright (c) 2011, Kustaa Nyholm / SpareTimeLabs
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, 
+ * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
- * Redistributions of source code must retain the above copyright notice, this list 
+ * Redistributions of source code must retain the above copyright notice, this list
  * of conditions and the following disclaimer.
- * 
- * Redistributions in binary form must reproduce the above copyright notice, this 
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this
  * list of conditions and the following disclaimer in the documentation and/or other
  * materials provided with the distribution.
- *  
- * Neither the name of the Kustaa Nyholm or SpareTimeLabs nor the names of its 
- * contributors may be used to endorse or promote products derived from this software 
+ *
+ * Neither the name of the Kustaa Nyholm or SpareTimeLabs nor the names of its
+ * contributors may be used to endorse or promote products derived from this software
  * without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
- * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
@@ -291,15 +291,15 @@ public class PureJavaSerialPort extends SerialPort {
 		checkState();
 		// FIXME POSIX does not specify how duration is interpreted
 		// Opengroup POSIX says:
-		// If the terminal is using asynchronous serial data transmission, tcsendbreak() 
-		// shall cause transmission of a continuous stream of zero-valued bits for a specific duration. 
-		// If duration is 0, it shall cause transmission of zero-valued bits for at least 0.25 seconds, 
+		// If the terminal is using asynchronous serial data transmission, tcsendbreak()
+		// shall cause transmission of a continuous stream of zero-valued bits for a specific duration.
+		// If duration is 0, it shall cause transmission of zero-valued bits for at least 0.25 seconds,
 		// and not more than 0.5 seconds. If duration is not 0, it shall send zero-valued bits for an implementation-defined period of time.
 		// From the man page for Linux tcsendbreak:
-		// The effect of a non-zero duration with tcsendbreak() varies. 
-		// SunOS specifies a break of duration*N seconds, 
-		// where N is at least 0.25, and not more than 0.5. Linux, AIX, DU, Tru64 send a break of duration milliseconds. 
-		// FreeBSD and NetBSD and HP-UX and MacOS ignore the value of duration. 
+		// The effect of a non-zero duration with tcsendbreak() varies.
+		// SunOS specifies a break of duration*N seconds,
+		// where N is at least 0.25, and not more than 0.5. Linux, AIX, DU, Tru64 send a break of duration milliseconds.
+		// FreeBSD and NetBSD and HP-UX and MacOS ignore the value of duration.
 		// Under Solaris and Unixware, tcsendbreak() with non-zero duration behaves like tcdrain().
 
 		tcsendbreak(m_FD, duration);
@@ -514,7 +514,11 @@ public class PureJavaSerialPort extends SerialPort {
 			} catch (IllegalStateException e) {
 				m_Termios.set(prev);
 				checkReturnCode(tcsetattr(m_FD, TCSANOW, m_Termios));
-				throw e;
+				if (e instanceof PureJavaIllegalStateException) {
+					throw e;
+				} else {
+					throw new PureJavaIllegalStateException(e);
+				}
 			}
 		}
 	}
@@ -535,48 +539,48 @@ public class PureJavaSerialPort extends SerialPort {
 	 * <p>
 	 * Below is a sketch of minimum necessary to perform a read using raw
 	 * JTermios functionality.
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * 		// import the JTermios functionality like this
 	 * 		import jtermios.*;
 	 * 		import static jtermios.JTermios.*;
-	 * 
+	 *
 	 * 		SerialPort port = ...;
-	 * 
+	 *
 	 * 		// cast the port to PureJavaSerialPort to get access to getNativeFileDescriptor
 	 * 		int FD = ((PureJavaSerialPort) port).getNativeFileDescriptor();
-	 * 
+	 *
 	 * 		// timeout and threshold values
 	 * 		int messageLength = 25; // bytes
 	 * 		int timeout = 200; // msec
-	 * 
+	 *
 	 * 		// to initialize timeout and threshold first read current termios
 	 * 		Termios termios = new Termios();
-	 * 		
+	 *
 	 * 		if (0 != tcgetattr(FD, termios))
 	 * 			errorHandling();
-	 * 
+	 *
 	 * 		// then set VTIME and VMIN, note VTIME in 1/10th of sec and both max 255
-	 * 		termios.c_cc[VTIME] = (byte) ((timeout+99) / 100); 
-	 * 		termios.c_cc[VMIN] = (byte) messageLength;  
-	 * 		
+	 * 		termios.c_cc[VTIME] = (byte) ((timeout+99) / 100);
+	 * 		termios.c_cc[VMIN] = (byte) messageLength;
+	 *
 	 * 		// update termios
 	 * 		if (0 != tcsetattr(FD, TCSANOW, termios))
 	 * 			errorHandling();
-	 * 
+	 *
 	 *      ...
 	 * 		// allocate read buffer
 	 * 		byte[] readBuffer = new byte[messageLength];
 	 *      ...
-	 *      
+	 *
 	 * 		// then perform raw read, not this may block indefinitely
 	 * 		int n = read(FD, readBuffer, messageLength);
 	 * 		if (n < 0)
 	 * 			errorHandling();
 	 * <code>
 	 * </pre>
-	 * 
+	 *
 	 * @return the native OS file descriptor as int
 	 */
 	public int getNativeFileDescriptor() {
@@ -1233,7 +1237,7 @@ public class PureJavaSerialPort extends SerialPort {
 		checkState();
 
 		if (ioctl(m_FD, TIOCMGET, m_ioctl) == -1)
-			throw new IllegalStateException();
+			throw new PureJavaIllegalStateException("ioctl(m_FD, TIOCMGET, m_ioctl) == -1");
 
 		m_ControlLineStates = (m_ioctl[0] & line) + (m_ControlLineStates & ~line);
 	}
@@ -1241,25 +1245,25 @@ public class PureJavaSerialPort extends SerialPort {
 	synchronized private boolean getControlLineState(int line) {
 		checkState();
 		if (ioctl(m_FD, TIOCMGET, m_ioctl) == -1)
-			throw new IllegalStateException();
+			throw new PureJavaIllegalStateException("ioctl(m_FD, TIOCMGET, m_ioctl) == -1");
 		return (m_ioctl[0] & line) != 0;
 	}
 
 	synchronized private void setControlLineState(int line, boolean state) {
 		checkState();
 		if (ioctl(m_FD, TIOCMGET, m_ioctl) == -1)
-			throw new IllegalStateException();
+			throw new PureJavaIllegalStateException("ioctl(m_FD, TIOCMGET, m_ioctl) == -1");
 
 		if (state)
 			m_ioctl[0] |= line;
 		else
 			m_ioctl[0] &= ~line;
 		if (ioctl(m_FD, TIOCMSET, m_ioctl) == -1)
-			throw new IllegalStateException();
+			throw new PureJavaIllegalStateException("ioctl(m_FD, TIOCMSET, m_ioctl) == -1");
 	}
 
 	private void failWithIllegalStateException() {
-		throw new IllegalStateException("File descriptor is " + m_FD + " < 0, maybe closed by previous error condition");
+		throw new PureJavaIllegalStateException("File descriptor is " + m_FD + " < 0, maybe closed by previous error condition");
 	}
 
 	private void checkState() {
@@ -1278,7 +1282,7 @@ public class PureJavaSerialPort extends SerialPort {
 				String msg2 = String.format("close threw %s at class %s line% d", e.getClass().getName(), st.getClassName(), st.getLineNumber());
 				log = log && log(1, "%s\n", msg2);
 			}
-			throw new IllegalStateException(msg);
+			throw new PureJavaIllegalStateException(msg);
 		}
 	}
 
