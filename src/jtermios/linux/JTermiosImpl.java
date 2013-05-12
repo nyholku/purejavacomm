@@ -410,6 +410,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		TIOCM_CAR = 0x00000040;
 		IGNBRK = 0x00000001;
 		BRKINT = 0x00000002;
+		IGNPAR = 0x00000004;
 		PARMRK = 0x00000008;
 		INLCR = 0x00000040;
 		IGNCR = 0x00000080;
