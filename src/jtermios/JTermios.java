@@ -280,7 +280,6 @@ public class JTermios {
 	}
 
 	static { // INSTANTIATION 
-		int path_max;
 		if (Platform.isMac()) {
 			m_Termios = new jtermios.macosx.JTermiosImpl();
 		} else if (Platform.isWindows()) {
