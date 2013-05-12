@@ -108,6 +108,14 @@ public class TestBase {
 		m_Progress = 0;
 	}
 
+	/**
+	 * Sleep a short amount of time to allow hardware feedback, which isn't
+	 * instant
+	 */
+	static protected void sleep() throws InterruptedException {
+		sleep(40);
+	}
+	
 	static protected void sleep(int t) throws InterruptedException {
 		int m = 1000;
 		while (t > 0) {
