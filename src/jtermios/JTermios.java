@@ -107,6 +107,7 @@ public class JTermios {
 	public static int TIOCM_CAR = 0x00000040;
 	public static int IGNBRK = 0x00000001;
 	public static int BRKINT = 0x00000002;
+	public static int IGNPAR = 0x00000004;
 	public static int PARMRK = 0x00000008;
 	public static int INLCR = 0x00000040;
 	public static int IGNCR = 0x00000080;
@@ -279,7 +280,6 @@ public class JTermios {
 	}
 
 	static { // INSTANTIATION 
-		int path_max;
 		if (Platform.isMac()) {
 			m_Termios = new jtermios.macosx.JTermiosImpl();
 		} else if (Platform.isWindows()) {

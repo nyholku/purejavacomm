@@ -31,16 +31,16 @@
 package jtermios.testsuite;
 
 public class TestSuite {
-	public void test1() {
+	public static void main(String[] args) throws Exception {
+		TestBase.init(args);
+		try {
+			System.out.println("JTermios Test Suite");
+			System.out.println("Using port: " + TestBase.getPortName());
+			JTermiosDemo.run();
+			System.out.println("All tests passed OK.");
+		} catch (TestFailedException e) {
+			System.out.println("Test failure");
+			System.exit(1);
+		}
 	}
-
-	private void run() {
-		test1();
-	}
-
-	public void main(String[] args) {
-		TestSuite ts = new TestSuite();
-		ts.run();
-	}
-
 }

@@ -41,7 +41,7 @@ public class Test6 extends TestBase {
 		try {
 			begin("Test6 - threshold + timeout");
 			openPort();
-			m_Port.setSerialPortParams(230000, 8, 1, 0);
+			m_Port.setSerialPortParams(230400, 8, 1, 0);
 			//m_In = purejavacomm.RawStream.getInputStream(m_Port);
 			// receiving thread
 			m_Receiver = new Thread(new Runnable() {
