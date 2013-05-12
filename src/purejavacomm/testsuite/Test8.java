@@ -42,8 +42,7 @@ public class Test8 extends TestBase {
 			int[] stopbits = { SerialPort.STOPBITS_1, SerialPort.STOPBITS_1_5, SerialPort.STOPBITS_2 };
 			int[] databits = { SerialPort.DATABITS_8, SerialPort.DATABITS_7, SerialPort.DATABITS_6, SerialPort.DATABITS_5 };
 			int[] datamask = { 0xFF, 0x7F, 0x3F, 0x1F };
-			System.out.println();		
-			boolean failed = false;
+			System.out.println();
 			int tn = 0;
 			for (int ppi = 0; ppi < parity.length; ppi++) {
 				for (int sbi = 0; sbi < stopbits.length; sbi++) {
@@ -144,11 +143,6 @@ public class Test8 extends TestBase {
 					}
 				}
 			}
-
-			if (failed)
-				fail("Not all modes passed");
-
-			
 		} finally {
 			closePort();
 		}
