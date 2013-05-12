@@ -30,8 +30,6 @@
 
 package jtermios;
 
-import com.sun.jna.Structure;
-
 public class Pollfd {
 	public int fd;
 	public short events;
