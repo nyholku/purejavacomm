@@ -706,10 +706,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		pattern.append('^');
 
-		boolean first = false;
+		boolean first = true;
 		for (String prefix : prefixes) {
-			if (!first) {
-				first = true;
+			if (first) {
+				first = false;
 			} else {
 				pattern.append('|');
 			}
