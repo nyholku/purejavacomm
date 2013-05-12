@@ -1,3 +1,18 @@
+Version 0.0.17
+
+* Ignore error for TIOCGSERIAL/TIOCSSERIAL when setting standard
+  baudrates
+  
+* Improved port enumeration on Linux
+
+* Fixed sendBreak "timeout value is negative" error
+
+* Fixed WinAPI.SetCommBreak mistakenly called CloseHandle on Windows
+
+* Fixed random "port not locked" caused by problem in JTermiosImpl.lock()
+
+* Fixed WaitCommEvent returns an 87: bad parameter, error code on Windows
+
 Version 0.0.16
 
 * Just bumped the version number because the what was supposed to 

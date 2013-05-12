@@ -214,7 +214,7 @@ public class JTermios {
 		int errno();
 
 		int fcntl(int fd, int cmd, int arg);
-
+		
 		int setspeed(int fd, Termios termios, int speed);
 
 		int cfgetispeed(Termios termios);
@@ -309,7 +309,7 @@ public class JTermios {
 		log = log && log(3, "< fcntl(%d, %d, %d) => %d\n", fd, cmd, arg, ret);
 		return ret;
 	}
-
+	
 	static public int cfgetispeed(Termios termios) {
 		log = log && log(5, "> cfgetispeed(%s)\n", termios);
 		int ret = m_Termios.cfgetispeed(termios);
@@ -593,6 +593,9 @@ public class JTermios {
 						buffer.append(", ");
 					}
 					if ((LOG_MASK & (1 << (7))) != 0) {
+						buffer.append("thread id ");
+						buffer.append(Thread.currentThread().getId());
+						buffer.append(", ");
 						buffer.append(Thread.currentThread().getName());
 						buffer.append(", ");
 					}
