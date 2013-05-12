@@ -30,73 +30,17 @@
 
 package jtermios.testsuite;
 
-import static jtermios.JTermios.*;
-import static jtermios.testsuite.TestBase.S;
-import static jtermios.testsuite.TestBase.fail;
-
-import jtermios.FDSet;
-import jtermios.Termios;
-import jtermios.TimeVal;
-
-public class JTermiosDemo {
-
-	public static void run() throws TestFailedException {
-		String port = TestBase.getPortName();
-
-		int fd;
-		S(fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK), "failed to open port");
-
-		Termios opts = new Termios();
-
-		S(tcgetattr(fd, opts));
-
-		opts.c_iflag = IGNBRK | IGNPAR;
-		opts.c_oflag = 0;
-		opts.c_cflag = CLOCAL | CREAD | CS8;
-		opts.c_lflag = 0;
-		
-		opts.c_cc[VMIN] = 0;
-		opts.c_cc[VTIME] = 10;
-
-		cfsetispeed(opts, B9600);
-		cfsetospeed(opts, B9600);
-
-		S(tcsetattr(fd, TCSANOW, opts));
-
-		S(tcflush(fd, TCIOFLUSH));
-
-		final String TEST_STRING = "Not so very long text string";
-		
-		byte[] tx = TEST_STRING.getBytes();
-		byte[] rx = new byte[tx.length];
-		int l = tx.length;
-		S(write(fd, tx, l), "write() failed ");
-
-		FDSet rdset = newFDSet();
-		FD_ZERO(rdset);
-		FD_SET(fd, rdset);
-
-		TimeVal tout = new TimeVal();
-		tout.tv_sec = 10;
-
-		byte buffer[] = new byte[1024];
-
-		while (l > 0) {
-			int s;
-			S(s = select(fd + 1, rdset, null, null, tout), "select() failed ");
-			if (s == 0) {
-				fail("Timeout (no dongle connected?)");
-			} else {
-				int m;
-				S(m = read(fd, buffer, l), "read() failed ");
-				System.arraycopy(buffer, 0, rx, rx.length - l, m);
-				l -= m;
-			}
+public class TestSuite {
+	public static void main(String[] args) throws Exception {
+		TestBase.init(args);
+		try {
+			System.out.println("JTermios Test Suite");
+			System.out.println("Using port: " + TestBase.getPortName());
+			JTermiosDemo.run();
+			System.out.println("All tests passed OK.");
+		} catch (TestFailedException e) {
+			System.out.println("Test failure");
+			System.exit(1);
 		}
-
-		if (!new String(rx).equals(TEST_STRING)) {
-			fail("Didn't receive what we expected (is \"%s\", should be \"%s\")", new String(rx), TEST_STRING);
-		}
-		S(close(fd));
 	}
 }
