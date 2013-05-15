@@ -31,71 +31,46 @@
 package jtermios.testsuite;
 
 import static jtermios.JTermios.*;
-import static jtermios.windows.WinAPI.*;
-
-import java.util.List;
+import static jtermios.testsuite.TestBase.S;
+import static jtermios.testsuite.TestBase.fail;
 
 import jtermios.FDSet;
 import jtermios.Termios;
 import jtermios.TimeVal;
 
 public class JTermiosDemo {
-	private static void fail(String msg) {
-		System.out.println("Fail: " + msg);
-		System.exit(0);
-	}
 
-	public static void main(String[] args) {
-		System.out.println("JTermio simple loopback demo");
-		List<String> portlist = getPortList();
-		String port = "COM5:";
-		for (String pname : portlist) {
-			System.out.println("Found port " + pname);
-			port = pname;
-		}
+	public static void run() throws TestFailedException {
+		String port = TestBase.getPortName();
 
-		//port = "/dev/tty.usbserial-FTOXM3NX";
-		int fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
-		if (fd == -1)
-			fail("Could not open " + port);
-
-		fcntl(fd, F_SETFL, 0);
+		int fd;
+		S(fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK), "failed to open port");
 
 		Termios opts = new Termios();
 
-		tcgetattr(fd, opts);
+		S(tcgetattr(fd, opts));
 
-		opts.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-
-		opts.c_cflag |= (CLOCAL | CREAD);
-		opts.c_cflag &= ~PARENB;
-		opts.c_cflag |= CSTOPB;
-		opts.c_cflag &= ~CSIZE;
-		opts.c_cflag |= CS8;
-
-		opts.c_oflag &= ~OPOST;
-
-		opts.c_iflag &= ~INPCK;
-		opts.c_iflag &= ~(IXON | IXOFF | IXANY);
+		opts.c_iflag = IGNBRK | IGNPAR;
+		opts.c_oflag = 0;
+		opts.c_cflag = CLOCAL | CREAD | CS8;
+		opts.c_lflag = 0;
+		
 		opts.c_cc[VMIN] = 0;
 		opts.c_cc[VTIME] = 10;
 
 		cfsetispeed(opts, B9600);
 		cfsetospeed(opts, B9600);
 
-		tcsetattr(fd, TCSANOW, opts);
+		S(tcsetattr(fd, TCSANOW, opts));
 
-		tcflush(fd, TCIOFLUSH);
+		S(tcflush(fd, TCIOFLUSH));
 
-		byte[] tx = "Not so very long text string".getBytes();
+		final String TEST_STRING = "Not so very long text string";
+		
+		byte[] tx = TEST_STRING.getBytes();
 		byte[] rx = new byte[tx.length];
 		int l = tx.length;
-		int n = write(fd, tx, l);
-		if (n < 0) {
-			System.out.println("write() failed ");
-			System.exit(0);
-		}
-		System.out.println("Transmitted '" + new String(tx) + "' len=" + n);
+		S(write(fd, tx, l), "write() failed ");
 
 		FDSet rdset = newFDSet();
 		FD_ZERO(rdset);
@@ -107,21 +82,21 @@ public class JTermiosDemo {
 		byte buffer[] = new byte[1024];
 
 		while (l > 0) {
-			int s = select(fd + 1, rdset, null, null, tout);
-			if (s < 0) {
-				System.out.println("select() failed ");
-				System.exit(0);
+			int s;
+			S(s = select(fd + 1, rdset, null, null, tout), "select() failed ");
+			if (s == 0) {
+				fail("Timeout (no dongle connected?)");
+			} else {
+				int m;
+				S(m = read(fd, buffer, l), "read() failed ");
+				System.arraycopy(buffer, 0, rx, rx.length - l, m);
+				l -= m;
 			}
-			int m = read(fd, buffer, l);
-			if (m < 0) {
-				System.out.println("read() failed ");
-				System.exit(0);
-			}
-			System.arraycopy(buffer, 0, rx, rx.length - l, m);
-			l -= m;
 		}
 
-		System.out.println("Received    '" + new String(rx) + "'");
-		int ec = close(fd);
+		if (!new String(rx).equals(TEST_STRING)) {
+			fail("Didn't receive what we expected (is \"%s\", should be \"%s\")", new String(rx), TEST_STRING);
+		}
+		S(close(fd));
 	}
 }

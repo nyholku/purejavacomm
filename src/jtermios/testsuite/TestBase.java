@@ -27,80 +27,29 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package purejavacomm.testsuite;
+package jtermios.testsuite;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Enumeration;
-import java.util.Random;
+import static jtermios.JTermios.errno;
 
-import purejavacomm.CommPortIdentifier;
-import purejavacomm.NoSuchPortException;
-import purejavacomm.SerialPort;
+import jtermios.JTermios;
 
 public class TestBase {
-	static class TestFailedException extends Exception {
-
-	}
-
 	protected static volatile String m_TestPortName;
-	protected static volatile SerialPort m_Port;
-	private  static volatile long m_T0;
-	protected static volatile OutputStream m_Out;
-	protected static volatile InputStream m_In;
-	protected static volatile int[] m_SyncSema4 = { 0 };
 	protected static int m_Tab;
 	protected static int m_Progress;
+	private static volatile long m_T0;
 
-	protected static void sync(int N) throws InterruptedException {
-		synchronized (m_SyncSema4) {
-			m_SyncSema4[0]++;
-			if (m_SyncSema4[0] < N) {
-				m_SyncSema4.wait();
-			} else {
-				m_SyncSema4[0] = 0;
-				m_SyncSema4.notifyAll();
-			}
+	public static void S(int result) throws TestFailedException {
+		S(result, null);
+	}
+	
+	public static void S(int result, String msg) throws TestFailedException {
+		if (result == -1) {
+			fail(msg == null ? "Operation failed with errno %d"
+					 : msg + " (errno %d)", errno());
 		}
 	}
-
-	static protected void openPort() throws Exception {
-		try {
-			CommPortIdentifier portid = CommPortIdentifier.getPortIdentifier(m_TestPortName);
-			m_Port = (SerialPort) portid.open("PureJavaCommTestSuite", 1000);
-			m_Out = m_Port.getOutputStream();
-			m_In = m_Port.getInputStream();
-			drain(m_In);
-		} catch (NoSuchPortException e) {
-			fail("could no open port '%s'\n", m_TestPortName);
-		}
-	}
-
-	static protected void closePort() {
-		if (m_Port != null) {
-			try {
-				m_Out.flush();
-				m_Port.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			finally {
-				m_Port = null;
-			}
-		}
-	}
-
-	static protected void drain(InputStream ins) throws Exception {
-		sleep(100);
-		int n;
-		while ((n = ins.available()) > 0) {
-			for (int i = 0; i < n; ++i)
-				ins.read();
-			sleep(100);
-		}
-	}
-
+	
 	static void begin(String name) {
 		System.out.printf("%-46s", name);
 		m_Tab = 46;
@@ -108,14 +57,6 @@ public class TestBase {
 		m_Progress = 0;
 	}
 
-	/**
-	 * Sleep a short amount of time to allow hardware feedback, which isn't
-	 * instant
-	 */
-	static protected void sleep() throws InterruptedException {
-		sleep(40);
-	}
-	
 	static protected void sleep(int t) throws InterruptedException {
 		int m = 1000;
 		while (t > 0) {
@@ -136,7 +77,6 @@ public class TestBase {
 		System.out.println();
 		System.out.println("------------------------------------------------------------");
 		throw new TestFailedException();
-
 	}
 
 	static void finishedOK() {
@@ -152,26 +92,17 @@ public class TestBase {
 
 	static public void init(String[] args) {
 		m_TestPortName = "cu.usbserial-FTOXM3NX";
-		if (args.length > 0)
-			m_TestPortName = args[0];
-		Enumeration e = CommPortIdentifier.getPortIdentifiers();
-		boolean found = false;
-		String last = null;
-		while (e.hasMoreElements()) {
-			CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
-			if (portid.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-				if (portid.getName().equals(m_TestPortName))
-					found = true;
-				last = portid.getName();
+		if (args.length > 0) {
+			m_TestPortName = args[0];			
+		}
+		else {
+			for (String port : JTermios.getPortList()) {
+				m_TestPortName = port;
 			}
 		}
-		if (!found)
-			m_TestPortName = last;
-
 	}
 
 	static public String getPortName() {
 		return m_TestPortName;
-
 	}
 }

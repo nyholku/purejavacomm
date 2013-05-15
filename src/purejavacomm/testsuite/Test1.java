@@ -40,7 +40,8 @@ public class Test1 extends TestBase {
 			openPort();
 			m_Port.setRTS(false);
 			m_Port.setDTR(false);
-
+			sleep();
+			
 			m_Port.notifyOnCTS(true);
 			m_Port.notifyOnRingIndicator(true);
 			m_Port.notifyOnCarrierDetect(true);
@@ -66,7 +67,7 @@ public class Test1 extends TestBase {
 			for (int i = 0; i < N; i++) {
 				m_Port.setRTS((i & 1) != 0);
 				m_Port.setDTR((i & 2) != 0);
-				sleep(40);
+				sleep();
 			}
 			if (counts[SerialPortEvent.CTS] != N - 1)
 				fail("CTS loopback failed, expected %d toggles, got %d", N - 1, counts[SerialPortEvent.CTS]);
