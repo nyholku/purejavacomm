@@ -38,7 +38,7 @@ public class Test8 extends TestBase {
 		try {
 			begin("Test8 - parity etc");
 			openPort();
-			int[] parity = { SerialPort.PARITY_NONE, SerialPort.PARITY_ODD, SerialPort.PARITY_EVEN };
+			int[] parity = { SerialPort.PARITY_NONE, SerialPort.PARITY_ODD, SerialPort.PARITY_EVEN, SerialPort.PARITY_MARK, SerialPort.PARITY_SPACE };
 			int[] stopbits = { SerialPort.STOPBITS_1, SerialPort.STOPBITS_1_5, SerialPort.STOPBITS_2 };
 			int[] databits = { SerialPort.DATABITS_8, SerialPort.DATABITS_7, SerialPort.DATABITS_6, SerialPort.DATABITS_5 };
 			int[] datamask = { 0xFF, 0x7F, 0x3F, 0x1F };

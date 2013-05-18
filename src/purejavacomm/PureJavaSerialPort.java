@@ -482,6 +482,17 @@ public class PureJavaSerialPort extends SerialPort {
 						fc |= PARODD;
 						fi &= ~(INPCK | ISTRIP);
 						break;
+					case SerialPort.PARITY_MARK:
+						fc |= PARENB;
+						fc |= CMSPAR;
+						fc |= PARODD;
+						fi &= ~(INPCK | ISTRIP);
+						break;
+					case SerialPort.PARITY_SPACE:
+						fc |= PARENB;
+						fc |= CMSPAR;
+						fi &= ~(INPCK | ISTRIP);
+						break;
 					default:
 						throw new UnsupportedCommOperationException("parity = " + parity);
 				}
