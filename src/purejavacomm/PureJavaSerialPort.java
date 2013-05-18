@@ -458,6 +458,18 @@ public class PureJavaSerialPort extends SerialPort {
 					case SerialPort.STOPBITS_1:
 						sb = 1;
 						break;
+					case SerialPort.STOPBITS_1_5:
+						// This setting must have been copied from the Win32 API and
+						// hasn't been properly thought through. 1.5 stop bits are
+						// only valid with 5 data bits and replace the 2 stop bits
+						// in this mode. This is a feature of the 16550 and even
+						// documented on MSDN
+						// As nobody is aware of course, we silently use 1.5 and 2
+						// stop bits interchangeably (just as the hardware does)
+						// Many linux drivers follow this convention and termios
+						// can't even differ between 1.5 and 2 stop bits 
+						sb = 2;
+						break;
 					case SerialPort.STOPBITS_2:
 						sb = 2;
 						break;

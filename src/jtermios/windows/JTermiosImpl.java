@@ -665,7 +665,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			} else
 				dcb.Parity = NOPARITY;
 
-			dcb.StopBits = (c_cflag & CSTOPB) != 0 ? TWOSTOPBITS : ONESTOPBIT;
+			dcb.StopBits = (c_cflag & CSTOPB) != 0 ? ((csize == CS5) ? ONE5STOPBITS : TWOSTOPBITS) : ONESTOPBIT;
 			dcb.XonChar = tios.c_cc[VSTART]; // In theory these could change but they only get updated if the baudrate/char size changes so this could be a time bomb 
 			dcb.XoffChar = tios.c_cc[VSTOP]; // In practice in PJC these are never changed so updating on the first pass is enough
 			dcb.ErrorChar = 0;
