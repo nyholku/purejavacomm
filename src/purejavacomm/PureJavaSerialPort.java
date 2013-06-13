@@ -539,48 +539,48 @@ public class PureJavaSerialPort extends SerialPort {
 	 * <p>
 	 * Below is a sketch of minimum necessary to perform a read using raw
 	 * JTermios functionality.
-	 *
+	 * 
 	 * <pre>
 	 * <code>
 	 * 		// import the JTermios functionality like this
 	 * 		import jtermios.*;
 	 * 		import static jtermios.JTermios.*;
-	 *
+	 * 
 	 * 		SerialPort port = ...;
-	 *
+	 * 
 	 * 		// cast the port to PureJavaSerialPort to get access to getNativeFileDescriptor
 	 * 		int FD = ((PureJavaSerialPort) port).getNativeFileDescriptor();
-	 *
+	 * 
 	 * 		// timeout and threshold values
 	 * 		int messageLength = 25; // bytes
 	 * 		int timeout = 200; // msec
-	 *
+	 * 
 	 * 		// to initialize timeout and threshold first read current termios
 	 * 		Termios termios = new Termios();
-	 *
+	 * 
 	 * 		if (0 != tcgetattr(FD, termios))
 	 * 			errorHandling();
-	 *
+	 * 
 	 * 		// then set VTIME and VMIN, note VTIME in 1/10th of sec and both max 255
 	 * 		termios.c_cc[VTIME] = (byte) ((timeout+99) / 100);
 	 * 		termios.c_cc[VMIN] = (byte) messageLength;
-	 *
+	 * 
 	 * 		// update termios
 	 * 		if (0 != tcsetattr(FD, TCSANOW, termios))
 	 * 			errorHandling();
-	 *
+	 * 
 	 *      ...
 	 * 		// allocate read buffer
 	 * 		byte[] readBuffer = new byte[messageLength];
 	 *      ...
-	 *
+	 * 
 	 * 		// then perform raw read, not this may block indefinitely
 	 * 		int n = read(FD, readBuffer, messageLength);
 	 * 		if (n < 0)
 	 * 			errorHandling();
 	 * <code>
 	 * </pre>
-	 *
+	 * 
 	 * @return the native OS file descriptor as int
 	 */
 	public int getNativeFileDescriptor() {
@@ -1112,8 +1112,11 @@ public class PureJavaSerialPort extends SerialPort {
 			e.printStackTrace();
 		}
 
-		checkReturnCode(ioctl(m_FD, TIOCMGET, m_ioctl));
-		m_ControlLineStates = m_ioctl[0];
+		int res = ioctl(m_FD, TIOCMGET, m_ioctl);
+		if (res == 0)
+			m_ControlLineStates = m_ioctl[0];
+		else
+			log = log && log(1, "ioctl(TIOCMGET) returned %d, errno %d\n", res, errno());
 
 		String nudgekey = "purejavacomm.usenudgepipe";
 		if (System.getProperty(nudgekey) == null || Boolean.getBoolean(nudgekey)) {
