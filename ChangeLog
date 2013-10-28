@@ -1,3 +1,14 @@
+Version 0.0.19
+
+* Ignore TIOCMGET fail on port open to be compatible Linux virtual ports
+
+Version 0.0.18
+
+* Lots of source code clean up by Colin Leitner, thanks.
+
+* Added support for mark and space parity.
+
+
 Version 0.0.17
 
 * Ignore error for TIOCGSERIAL/TIOCSSERIAL when setting standard
@@ -15,7 +26,7 @@ Version 0.0.17
 
 Version 0.0.16
 
-* Just bumped the version number because the what was supposed to 
+* Just bumped the version number because what was supposed to 
   be release 0.0.15 actually reported version number 0.0.15.rc2.
   
   No code changes.

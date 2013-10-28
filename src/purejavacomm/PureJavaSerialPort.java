@@ -458,6 +458,18 @@ public class PureJavaSerialPort extends SerialPort {
 					case SerialPort.STOPBITS_1:
 						sb = 1;
 						break;
+					case SerialPort.STOPBITS_1_5:
+						// This setting must have been copied from the Win32 API and
+						// hasn't been properly thought through. 1.5 stop bits are
+						// only valid with 5 data bits and replace the 2 stop bits
+						// in this mode. This is a feature of the 16550 and even
+						// documented on MSDN
+						// As nobody is aware of course, we silently use 1.5 and 2
+						// stop bits interchangeably (just as the hardware does)
+						// Many linux drivers follow this convention and termios
+						// can't even differ between 1.5 and 2 stop bits 
+						sb = 2;
+						break;
 					case SerialPort.STOPBITS_2:
 						sb = 2;
 						break;
@@ -506,6 +518,15 @@ public class PureJavaSerialPort extends SerialPort {
 				if (tcsetattr(m_FD, TCSANOW, m_Termios) != 0)
 					throw new UnsupportedCommOperationException();
 
+				// termios(3) tells us, that tcsetattr succeeds if any change
+				// has been made, not all of them. We'll have to read them back
+				// and check the result
+				Termios changed = new Termios();
+				if (tcgetattr(m_FD, changed) == -1)
+					throw new UnsupportedCommOperationException();
+				if (!changed.equals(m_Termios))
+					throw new UnsupportedCommOperationException();
+				
 				// finally everything went ok, so we can update our settings
 				m_BaudRate = baudRate;
 				m_Parity = parity;
