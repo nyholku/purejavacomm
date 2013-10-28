@@ -1,13 +1,15 @@
-Version 0.0.19
+Version 0.0.18
+
+* Fixed problems in the Windows backend that rendered it dysfunctional
 
 * Ignore TIOCMGET fail on port open to be compatible Linux virtual ports
-
-Version 0.0.18
 
 * Lots of source code clean up by Colin Leitner, thanks.
 
 * Added support for mark and space parity.
 
+* Added support for 1.5 stop bits 
+  No hardware actually supports it but now you don't get an exception
 
 Version 0.0.17
 
