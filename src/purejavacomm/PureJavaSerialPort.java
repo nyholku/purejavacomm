@@ -359,8 +359,8 @@ public class PureJavaSerialPort extends SerialPort {
 	synchronized public void enableReceiveTimeout(int value) throws UnsupportedCommOperationException {
 		if (value < 0)
 			throw new IllegalArgumentException("threshold" + value + " < 0 ");
-		if ((value + 99) / 100 > 255)
-			throw new UnsupportedCommOperationException("threshold" + value + " too large ");
+		if (value > 25500)
+			throw new UnsupportedCommOperationException("threshold" + value + " > 25500 ");
 
 		checkState();
 		synchronized (m_ThresholdTimeoutLock) {
@@ -373,7 +373,7 @@ public class PureJavaSerialPort extends SerialPort {
 	@Override
 	synchronized public void enableReceiveFraming(int arg0) throws UnsupportedCommOperationException {
 		checkState();
-		throw new UnsupportedCommOperationException();
+		throw new UnsupportedCommOperationException("receive framing not supported/implemented");
 	}
 
 	private void thresholdOrTimeoutChanged() { // only call if you hold the lock
@@ -516,16 +516,16 @@ public class PureJavaSerialPort extends SerialPort {
 				m_Termios.c_iflag = fi;
 
 				if (tcsetattr(m_FD, TCSANOW, m_Termios) != 0)
-					throw new UnsupportedCommOperationException();
+					throw new UnsupportedCommOperationException("tcsetattr failed");
 
 				// termios(3) tells us, that tcsetattr succeeds if any change
 				// has been made, not all of them. We'll have to read them back
 				// and check the result
 				Termios changed = new Termios();
 				if (tcgetattr(m_FD, changed) == -1)
-					throw new UnsupportedCommOperationException();
+					throw new UnsupportedCommOperationException("tcgetattr failed");
 				if (!changed.equals(m_Termios))
-					throw new UnsupportedCommOperationException();
+					throw new UnsupportedCommOperationException("tcgetattr read back did not match tcsetattr");
 				
 				// finally everything went ok, so we can update our settings
 				m_BaudRate = baudRate;

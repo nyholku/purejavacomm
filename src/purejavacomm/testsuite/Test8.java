@@ -137,7 +137,7 @@ public class Test8 extends TestBase {
 								fail("did not receive all 256 chars, got %d", n);
 							finishedOK();
 						} catch (UnsupportedCommOperationException e) {
-							finishedOK(" NOT SUPPORTED");
+							finishedOK(" NOT SUPPORTED "+e.getMessage());
 						}
 						// sleep(1);
 					}

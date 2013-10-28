@@ -165,7 +165,7 @@ public class CommPortIdentifier {
 	}
 
 	public CommPort open(java.io.FileDescriptor fd) throws UnsupportedCommOperationException {
-		throw new UnsupportedCommOperationException();
+		throw new UnsupportedCommOperationException("open from file descriptor not supported");
 	}
 
 	public String getName() {

@@ -34,7 +34,4 @@ public class UnsupportedCommOperationException extends Exception {
 	public UnsupportedCommOperationException(String msg) {
 		super(msg);
 	}
-
-	public UnsupportedCommOperationException() {
-	}
 }
