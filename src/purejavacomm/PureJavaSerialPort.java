@@ -465,22 +465,26 @@ public class PureJavaSerialPort extends SerialPort {
 						throw new UnsupportedCommOperationException("stopBits = " + stopBits);
 				}
 
-				int fi = m_Termios.c_iflag;
-				int fc = m_Termios.c_cflag;
+				int fi = m_Termios.c_iflag & ~(INPCK | ISTRIP);
+				int fc = m_Termios.c_cflag & ~(PARENB | CMSPAR | PARODD);
 				switch (parity) {
 					case SerialPort.PARITY_NONE:
-						fc &= ~PARENB;
-						fi &= ~(INPCK | ISTRIP);
 						break;
 					case SerialPort.PARITY_EVEN:
 						fc |= PARENB;
-						fc &= ~PARODD;
-						fi &= ~(INPCK | ISTRIP);
 						break;
 					case SerialPort.PARITY_ODD:
 						fc |= PARENB;
 						fc |= PARODD;
-						fi &= ~(INPCK | ISTRIP);
+						break;
+					case SerialPort.PARITY_MARK:
+						fc |= PARENB;
+						fc |= CMSPAR;
+						fc |= PARODD;
+						break;
+					case SerialPort.PARITY_SPACE:
+						fc |= PARENB;
+						fc |= CMSPAR;
 						break;
 					default:
 						throw new UnsupportedCommOperationException("parity = " + parity);
