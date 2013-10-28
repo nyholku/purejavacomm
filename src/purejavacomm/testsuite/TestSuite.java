@@ -42,13 +42,13 @@ public class TestSuite {
 		try {
 			System.out.println("PureJavaComm Test Suite");
 			System.out.println("Using port: " + TestBase.getPortName());
-//			Test1.run();
-//			Test2.run(19200);
-//			Test3.run();
-//			Test4.run();
-//			Test5.run();
-//			Test6.run();
-//			Test7.run();
+			Test1.run();
+			Test2.run(19200);
+			Test3.run();
+			Test4.run();
+			Test5.run();
+			Test6.run();
+			Test7.run();
 			Test8.run();
 			Test9.run();
 			Test10.run();
