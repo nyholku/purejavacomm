@@ -250,6 +250,7 @@ public class WinAPI {
 	public static final int FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
 	public static final int FILE_FLAG_OPEN_NO_RECALL = 0x00100000;
 	public static final int FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000;
+	public static final int ERROR_OPERATION_ABORTED = 995;
 	public static final int ERROR_IO_INCOMPLETE = 996;
 	public static final int ERROR_IO_PENDING = 997;
 	public static final int ERROR_BROKEN_PIPE = 109;
