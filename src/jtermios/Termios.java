@@ -30,6 +30,8 @@
 
 package jtermios;
 
+import java.util.Arrays;
+
 final public class Termios {
 	public int c_iflag;
 	public int c_oflag;
@@ -45,7 +47,46 @@ final public class Termios {
 		c_lflag=s.c_lflag;
 		System.arraycopy(s.c_cc,0,c_cc,0,c_cc.length);
 		c_ispeed=s.c_ispeed;
-		c_ospeed=s.c_ospeed;
-		
+		c_ospeed=s.c_ospeed;	
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(c_cc);
+		result = prime * result + c_cflag;
+		result = prime * result + c_iflag;
+		result = prime * result + c_ispeed;
+		result = prime * result + c_lflag;
+		result = prime * result + c_oflag;
+		result = prime * result + c_ospeed;
+		return result;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Termios other = (Termios) obj;
+		if (!Arrays.equals(c_cc, other.c_cc))
+			return false;
+		if (c_cflag != other.c_cflag)
+			return false;
+		if (c_iflag != other.c_iflag)
+			return false;
+		if (c_ispeed != other.c_ispeed)
+			return false;
+		if (c_lflag != other.c_lflag)
+			return false;
+		if (c_oflag != other.c_oflag)
+			return false;
+		if (c_ospeed != other.c_ospeed)
+			return false;
+		return true;
 	}
 }
