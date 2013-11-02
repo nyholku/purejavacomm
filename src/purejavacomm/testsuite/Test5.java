@@ -56,7 +56,7 @@ public class Test5 extends TestBase {
 							fail("read did not time out as expected, read returned %d > 0", n);
 						if (dT < 1000 - 10)
 							fail("read timed out early, expected 1000 msec, got %d msec", dT);
-						if (dT > 1020)
+						if (dT > 1100)
 							fail("read timed out with suspicious delay, expected 1000 msec, got %d msec", dT);
 					} catch (InterruptedException e) {
 					} catch (Exception e) {
