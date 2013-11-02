@@ -50,7 +50,7 @@ public class TestSuite {
 			Test5.run();
 			Test6.run();
 			Test7.run();
-			Test8.run();
+			Test8.run(!(args.length > 1 && args[1].equals("limited")));
 			Test9.run();
 			Test10.run();
 			Test11.run();

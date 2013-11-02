@@ -29,19 +29,47 @@
  */
 package purejavacomm.testsuite;
 
-import java.util.Arrays;
-
 import purejavacomm.*;
 
 public class Test8 extends TestBase {
+	
+	// To allow us to run this test with limited hardware, we use two sets of
+	// tests. The limited set includes only 8 bits, 1 stop bit and none/even/odd
+	// parity.
+	private static final int LIMITED_PARITY[] = { SerialPort.PARITY_NONE, SerialPort.PARITY_ODD, SerialPort.PARITY_EVEN };
+	private static final int LIMITED_STOPBITS[] = { SerialPort.STOPBITS_1 };
+	private static final int LIMITED_DATABITS[] = { SerialPort.DATABITS_8 };
+	private static final int LIMITED_DATAMASK[] = { 0xFF };
+
+	private static final int FULL_PARITY[] = { SerialPort.PARITY_NONE, SerialPort.PARITY_ODD, SerialPort.PARITY_EVEN, SerialPort.PARITY_MARK, SerialPort.PARITY_SPACE };
+	private static final int FULL_STOPBITS[] = { SerialPort.STOPBITS_1, SerialPort.STOPBITS_1_5, SerialPort.STOPBITS_2 };
+	private static final int FULL_DATABITS[] = { SerialPort.DATABITS_8, SerialPort.DATABITS_7, SerialPort.DATABITS_6, SerialPort.DATABITS_5 };
+	private static final int FULL_DATAMASK[] = { 0xFF, 0x7F, 0x3F, 0x1F };
+
+	
 	static void run() throws Exception {
+		run(true);
+	}
+	
+	static void run(boolean allModes) throws Exception {
 		try {
 			begin("Test8 - parity etc");
 			openPort();
-			int[] parity = { SerialPort.PARITY_NONE, SerialPort.PARITY_ODD, SerialPort.PARITY_EVEN, SerialPort.PARITY_MARK, SerialPort.PARITY_SPACE };
-			int[] stopbits = { SerialPort.STOPBITS_1, SerialPort.STOPBITS_1_5, SerialPort.STOPBITS_2 };
-			int[] databits = { SerialPort.DATABITS_8, SerialPort.DATABITS_7, SerialPort.DATABITS_6, SerialPort.DATABITS_5 };
-			int[] datamask = { 0xFF, 0x7F, 0x3F, 0x1F };
+			final int[] parity;
+			final int[] stopbits;
+			final int[] databits;
+			final int[] datamask;
+			if (allModes) {
+				parity = FULL_PARITY;
+				stopbits = FULL_STOPBITS;
+				databits = FULL_DATABITS;
+				datamask = FULL_DATAMASK;
+			} else {
+				parity = LIMITED_PARITY;
+				stopbits = LIMITED_STOPBITS;
+				databits = LIMITED_DATABITS;
+				datamask = LIMITED_DATAMASK;				
+			}
 			System.out.println();
 			int tn = 0;
 			for (int ppi = 0; ppi < parity.length; ppi++) {
