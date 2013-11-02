@@ -30,10 +30,8 @@
 
 package purejavacomm.testsuite;
 
-import com.sun.jna.Native;
-
 public class TestSuite {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		//Native.setProtected(false);
 		TestBase.init(args);
 		//jtermios.JTermios.JTermiosLogging.setLogMask(255);
@@ -60,8 +58,7 @@ public class TestSuite {
 			System.out.println("All tests passed OK.");
 		} catch (TestBase.TestFailedException e) {
 			System.out.println("Test failure");
-		} catch (Exception e) {
-			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 }
