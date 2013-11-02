@@ -154,20 +154,6 @@ public class TestBase {
 		m_TestPortName = "cu.usbserial-FTOXM3NX";
 		if (args.length > 0)
 			m_TestPortName = args[0];
-		Enumeration e = CommPortIdentifier.getPortIdentifiers();
-		boolean found = false;
-		String last = null;
-		while (e.hasMoreElements()) {
-			CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
-			if (portid.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-				if (portid.getName().equals(m_TestPortName))
-					found = true;
-				last = portid.getName();
-			}
-		}
-		if (!found)
-			m_TestPortName = last;
-
 	}
 
 	static public String getPortName() {
