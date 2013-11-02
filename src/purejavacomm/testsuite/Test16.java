@@ -49,6 +49,21 @@ public class Test16 extends TestBase {
 			
 			openPort();
 
+			// Check ownership of the id of our test port first
+			{
+				CommPortIdentifier id = CommPortIdentifier
+						.getPortIdentifier(m_Port);
+				if (id == null) {
+					fail("No id for this serial port");
+				}
+
+				if (id.getCurrentOwner() == null
+						|| !id.getCurrentOwner().equals(APPLICATION_NAME)) {
+					fail("Wrong or missing owner for this serial port (got \"%s\", expected \"%s\")",
+							id.getCurrentOwner(), APPLICATION_NAME);
+				}
+			}
+			
 			//first call to enumerate port identifiers
 			cpiEnum = CommPortIdentifier.getPortIdentifiers();
 			
@@ -74,7 +89,7 @@ public class Test16 extends TestBase {
 			}
 			
 			//these should be exactly the same
-			if (checkOwnerName == null || !checkOwnerName.equals(origOwnerName)) {
+			if (checkOwnerName != origOwnerName && !checkOwnerName.equals(origOwnerName)) {
 				fail("Owner name incorrectly changed simply by reenumerating ports." + origOwnerName + " vs. " + checkOwnerName);
 			}
 			else {

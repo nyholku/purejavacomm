@@ -43,6 +43,8 @@ public class TestBase {
 	static class TestFailedException extends Exception {
 
 	}
+	
+	public static final String APPLICATION_NAME = "PureJavaCommTestSuite";
 
 	protected static volatile String m_TestPortName;
 	protected static volatile SerialPort m_Port;
@@ -68,7 +70,7 @@ public class TestBase {
 	static protected void openPort() throws Exception {
 		try {
 			CommPortIdentifier portid = CommPortIdentifier.getPortIdentifier(m_TestPortName);
-			m_Port = (SerialPort) portid.open("PureJavaCommTestSuite", 1000);
+			m_Port = (SerialPort) portid.open(APPLICATION_NAME, 1000);
 			m_Out = m_Port.getOutputStream();
 			m_In = m_Port.getInputStream();
 			drain(m_In);
