@@ -103,7 +103,7 @@ public class CommPortIdentifier {
 					jtermios.JTermios.close(fd);
 					return new CommPortIdentifier(portName, PORT_SERIAL, null);
 				}
-				if (errno() == EBUSY) // exists but busy, cannot throw anything here, so return a port if for it
+				if (errno() != ENOENT) // exists but couldn't open. cannot throw anything here, so return a port for it
 					return new CommPortIdentifier(portName, PORT_SERIAL, null);
 			}
 			throw new NoSuchPortException();
