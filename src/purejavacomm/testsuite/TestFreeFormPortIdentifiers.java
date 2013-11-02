@@ -38,7 +38,7 @@ public class TestFreeFormPortIdentifiers extends TestBase {
 		// Must return an identifier
 
 		try {
-			CommPortIdentifier.getPortIdentifier(m_TestPortName);
+			CommPortIdentifier.getPortIdentifier(getPortName());
 		} catch (NoSuchPortException nspe) {
 			fail("Couldn't obtain identifier for device path");
 		}
