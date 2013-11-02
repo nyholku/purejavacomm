@@ -42,6 +42,7 @@ public class TestSuite {
 			System.out.println("Using port: " + TestBase.getPortName());
 			TestFreeFormPortIdentifiers.testMissingPortInCommPortIdentifier();
 			TestFreeFormPortIdentifiers.testDevicePathInCommPortIdentifier();
+			TestFreeFormPortIdentifiers.testDevicePathToInvalidTTYInCommPortIdentifier();
 			Test1.run();
 			Test2.run(19200);
 			Test3.run();

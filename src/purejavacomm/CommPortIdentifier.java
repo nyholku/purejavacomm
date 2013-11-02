@@ -39,6 +39,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import jtermios.Termios;
+
 public class CommPortIdentifier {
 	public static final int PORT_SERIAL = 1;
 	public static final int PORT_PARALLEL = 2;
@@ -97,14 +99,23 @@ public class CommPortIdentifier {
 
 				// check if we can open a port with the given name
 				int fd = jtermios.JTermios.open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK);
-				if (fd != -1) { // yep, it exists, so close it and create a port id object for it
-					// FIXME this does not detect if the port name is invalid device name
-					// but is valid and existing filename
-					jtermios.JTermios.close(fd);
+				if (fd != -1) {
+					// yep, it exists, now check to see if it's really a serial
+					// port
+					if (tcgetattr(fd, new Termios()) != -1 || errno() != ENOTTY) {
+						jtermios.JTermios.close(fd);
+						return new CommPortIdentifier(portName, PORT_SERIAL,
+								null);
+					} else {
+						// Not a serial port, or we can't access it
+						jtermios.JTermios.close(fd);
+					}
+				} else if (errno() != ENOENT) {
+					// exists but couldn't open. cannot throw anything here, so
+					// return a port for it. Might not be a TTY after all, but
+					// no way to check that without opening it
 					return new CommPortIdentifier(portName, PORT_SERIAL, null);
 				}
-				if (errno() != ENOENT) // exists but couldn't open. cannot throw anything here, so return a port for it
-					return new CommPortIdentifier(portName, PORT_SERIAL, null);
 			}
 			throw new NoSuchPortException();
 		}

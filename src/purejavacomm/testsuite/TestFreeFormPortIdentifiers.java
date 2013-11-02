@@ -1,5 +1,7 @@
 package purejavacomm.testsuite;
 
+import java.io.File;
+
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.NoSuchPortException;
 
@@ -33,12 +35,31 @@ public class TestFreeFormPortIdentifiers extends TestBase {
 	public static void testDevicePathInCommPortIdentifier() throws Exception {
 		begin("TestDevicePath - getPortIdentifier on device path");
 
-		// Must throw NoSuchPortException
+		// Must return an identifier
 
 		try {
 			CommPortIdentifier.getPortIdentifier(m_TestPortName);
 		} catch (NoSuchPortException nspe) {
 			fail("Couldn't obtain identifier for device path");
+		}
+
+		finishedOK();
+	}
+	
+	public static void testDevicePathToInvalidTTYInCommPortIdentifier() throws Exception {
+		begin("TestDevicePathToInvalidTTY - getPortIdentifier on invalid device");
+
+		// Must throw NoSuchPortException
+
+		File tempFile = File.createTempFile("pjc", null);
+		tempFile.deleteOnExit();
+		
+		try {
+			CommPortIdentifier.getPortIdentifier(tempFile.getAbsolutePath());
+
+			fail("Got an identifier for an invalid device");
+		} catch (NoSuchPortException nspe) {
+			// All good
 		}
 
 		finishedOK();

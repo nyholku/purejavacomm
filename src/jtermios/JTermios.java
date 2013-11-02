@@ -102,6 +102,7 @@ public class JTermios {
 	public static int EROFS = 30;
 	public static int ENOTSUP = 45;
 	public static int EBUSY = 16;
+	public static int ENOTTY = 25;
 	// termios.h stuff
 	public static int TIOCM_RNG = 0x00000080;
 	public static int TIOCM_CAR = 0x00000040;
