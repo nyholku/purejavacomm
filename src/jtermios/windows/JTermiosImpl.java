@@ -798,8 +798,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 							if (port.m_WaitPending) {
 								if (!SetCommMask(port.m_Comm, 0))
 									port.fail();
-								if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false) && GetLastError() != ERROR_OPERATION_ABORTED)
-									port.fail() ;
+								GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false) ;
 								port.m_WaitPending = false;
 							}
 
