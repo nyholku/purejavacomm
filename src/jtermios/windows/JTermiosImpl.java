@@ -154,7 +154,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				if (m_Comm != null) {
 					ResetEvent(m_SelOVL.hEvent);
 
-					if (!CancelIo(m_Comm))
+					if (!CancelIoEx(m_Comm,null))
 						log = log && log(1, "CancelIo() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
 					if (!PurgeComm(m_Comm, PURGE_TXABORT + PURGE_TXCLEAR + PURGE_RXABORT + PURGE_RXCLEAR))
 						log = log && log(1, "PurgeComm() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
