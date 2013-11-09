@@ -36,6 +36,8 @@ import java.util.List;
 
 import com.sun.jna.*;
 import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.win32.StdCallLibrary;
+
 import static jtermios.JTermios.JTermiosLogging.*;
 
 /**
@@ -127,7 +129,7 @@ public class WinAPI {
 	public static HANDLE INVALID_HANDLE_VALUE = new HANDLE(Pointer.createConstant(Pointer.SIZE == 8 ? -1 : 0xFFFFFFFFL));
 	public static HANDLE NULL = new HANDLE(Pointer.createConstant(0));
 
-	public interface Windows_kernel32_lib extends Library {
+	public interface Windows_kernel32_lib extends StdCallLibrary {
 		HANDLE CreateFileW(WString name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template);
 
 		HANDLE CreateFileA(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template);
