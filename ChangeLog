@@ -27,9 +27,8 @@ Thanks for Colin Leitner for contributing following!
 * Removed port detection feature from the TestBase. It's been preventing a
   proper test setup
   
-
-Let the test suite return an exit value of 1 on failure
-Version 0.0.18
+* Let the test suite return an exit value of 1 on failure
+  Version 0.0.18
 
 * Fixed problems in the Windows backend that rendered it dysfunctional
 
