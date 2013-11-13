@@ -72,9 +72,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public int fcntl(int fd, int cmd, int arg);
 
-		public int ioctl(int fd, int cmd, int[] arg);
-
-		public int ioctl(int fd, int cmd, NativeLong[] arg);
+		public int ioctl(int fd, NativeLong cmd, NativeLong[] arg);
 
 		public int open(String path, int flags);
 
@@ -99,7 +97,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
 
 		public int poll(pollfd[] fds, int nfds, int timeout);
-		
+
 		public int poll(int[] fds, int nfds, int timeout);
 
 		public int tcflush(int fd, int qs);
@@ -330,27 +328,29 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		pollfd[] pfds = new pollfd[fds.length];
 		for (int i = 0; i < nfds; i++)
 			pfds[i] = new pollfd(fds[i]);
-        int ret = m_Clib.poll(pfds, nfds, timeout);
-        for(int i = 0; i < nfds; i++)
-            fds[i].revents = pfds[i].revents;
+		int ret = m_Clib.poll(pfds, nfds, timeout);
+		for (int i = 0; i < nfds; i++)
+			fds[i].revents = pfds[i].revents;
 		return ret;
 	}
-	
-	public int poll(int fds[], int nfds, int timeout) {
-        return m_Clib.poll(fds, nfds, timeout);
-	}
 
+	public int poll(int fds[], int nfds, int timeout) {
+		return m_Clib.poll(fds, nfds, timeout);
+	}
 
 	public FDSet newFDSet() {
 		return new FDSetImpl();
 	}
 
 	public int ioctl(int fd, int cmd, int[] data) {
-		return m_Clib.ioctl(fd, cmd, data);
+		NativeLong[] dataL = { new NativeLong(data[0]) };
+		int res = m_Clib.ioctl(fd, new NativeLong(0xFFFFFFFFL & cmd), dataL);
+		data[0] = dataL[0].intValue();
+		return res;
 	}
 
 	public int ioctl(int fd, int cmd, NativeLong[] data) {
-		return m_Clib.ioctl(fd, cmd, data);
+		return m_Clib.ioctl(fd, new NativeLong(0xFFFFFFFFL & cmd), data);
 	}
 
 	public List<String> getPortList() {
