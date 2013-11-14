@@ -1,3 +1,13 @@
+Version 0.0.20
+
+* Fixed a bug that caused control (CTS,RTS etc) to throw an exception with JNA 4.0.0
+
+* Reverted the use of CancelIoEx as it is not available on Windows XP
+
+* Re-worked and simplified file handle closing logic in Windows to prevent hangups
+
+* Added tests to test suite for successful closing of ports 
+ 
 Version 0.0.19
 
 * Changed to the use of CancelIoEx for canceling all I/O in close() to prevent 
