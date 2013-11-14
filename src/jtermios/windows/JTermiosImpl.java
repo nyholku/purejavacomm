@@ -32,7 +32,6 @@ package jtermios.windows;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -66,15 +65,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		volatile int[] m_RdErr = { 0 };
 		volatile int m_RdN[] = { 0 };
 		volatile OVERLAPPED m_RdOVL = new OVERLAPPED();
+		volatile HANDLE m_ReadCancelObject;
+		volatile HANDLE[] m_ReadWaitObjects = new HANDLE[2];
 		volatile Memory m_WrBuffer = new Memory(2048);
 		volatile COMSTAT m_WrStat = new COMSTAT();
 		volatile int[] m_WrErr = { 0 };
 		volatile int m_WrN[] = { 0 };
 		volatile int m_WritePending;
 		volatile OVERLAPPED m_WrOVL = new OVERLAPPED();
+		volatile HANDLE m_WriteCancelObject;
+		volatile HANDLE[] m_WriteWaitObjects = new HANDLE[2];
 		volatile boolean m_WaitPending;
 		volatile int m_SelN[] = { 0 };
-		volatile HANDLE m_CancelWaitSema4;
+		volatile HANDLE WaitCommEventCancelObject;
 		volatile OVERLAPPED m_SelOVL = new OVERLAPPED();
 		volatile IntByReference m_EventFlags = new IntByReference();
 		volatile Termios m_Termios = new Termios();
@@ -123,7 +126,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			}
 		}
 
-		public Port() {
+		public void open(String filename, int flags) throws Fail {
 			synchronized (JTermiosImpl.this) {
 				m_FD = -1;
 				for (int i = 0; i < m_PortFDs.length; ++i) {
@@ -131,10 +134,58 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						m_FD = i;
 						m_PortFDs[i] = true;
 						m_OpenPorts.put(m_FD, this);
-						m_CancelWaitSema4 = CreateEventA(null, false, false, null);
-						if (m_CancelWaitSema4 == null)
-							throw new RuntimeException("Unexpected failure of CreateEvent() call");
+						m_OpenFlags = flags;
+
+						if (!filename.startsWith("\\\\"))
+							filename = "\\\\.\\" + filename;
+
+						m_Comm = CreateFileW(new WString(filename), GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
+
+						if (INVALID_HANDLE_VALUE == m_Comm) {
+							if (GetLastError() == ERROR_FILE_NOT_FOUND)
+								m_ErrNo = ENOENT;
+							else
+								m_ErrNo = EBUSY;
+							fail();
+						}
+
+						if (!SetupComm(m_Comm, (int) m_RdBuffer.size(), (int) m_WrBuffer.size()))
+							fail(); // FIXME what would be appropriate error code here
+
+						cfmakeraw(m_Termios);
+						cfsetispeed(m_Termios, B9600);
+						cfsetospeed(m_Termios, B9600);
+						m_Termios.c_cc[VTIME] = 0;
+						m_Termios.c_cc[VMIN] = 0;
+						updateFromTermios(this);
+
+						WaitCommEventCancelObject = CreateEventA(null, false, false, null);
+						if (WaitCommEventCancelObject == INVALID_HANDLE_VALUE)
+							fail();
+
+						m_ReadCancelObject = CreateEventA(null, true, false, null);
+						if (m_ReadCancelObject == INVALID_HANDLE_VALUE)
+							fail();
+						m_ReadWaitObjects[1] = m_ReadCancelObject;
+
+						m_WriteCancelObject = CreateEventA(null, true, false, null);
+						if (m_WriteCancelObject == INVALID_HANDLE_VALUE)
+							fail();
+						m_WriteWaitObjects[1] = m_WriteCancelObject;
+
+						m_RdOVL.writeField("hEvent", CreateEventA(null, true, false, null));
+						if (m_RdOVL.hEvent == INVALID_HANDLE_VALUE)
+							fail();
+
+						m_WrOVL.writeField("hEvent", CreateEventA(null, true, false, null));
+						if (m_WrOVL.hEvent == INVALID_HANDLE_VALUE)
+							fail();
+
+						m_SelOVL.writeField("hEvent", CreateEventA(null, true, false, null));
+						if (m_SelOVL.hEvent == INVALID_HANDLE_VALUE)
+							fail();
 						return;
+
 					}
 				}
 				throw new RuntimeException("Too many ports open");
@@ -149,41 +200,55 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 					m_FD = -1;
 				}
 
-				if (m_CancelWaitSema4 != null)
-					SetEvent(m_CancelWaitSema4);
 				if (m_Comm != null) {
-					ResetEvent(m_SelOVL.hEvent);
-
-					if (!CancelIoEx(m_Comm,null))
-						log = log && log(1, "CancelIo() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
-					if (!PurgeComm(m_Comm, PURGE_TXABORT + PURGE_TXCLEAR + PURGE_RXABORT + PURGE_RXCLEAR))
-						log = log && log(1, "PurgeComm() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
-
-					GetOverlappedResult(m_Comm, m_RdOVL, m_RdN, true);
-					GetOverlappedResult(m_Comm, m_WrOVL, m_WrN, true);
-					GetOverlappedResult(m_Comm, m_SelOVL, m_SelN, true);
+//					ResetEvent(m_SelOVL.hEvent);
+//					if (!CancelIo(m_Comm))
+//						log = log && log(1, "CancelIo() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
+//
+//					if (!PurgeComm(m_Comm, PURGE_TXABORT + PURGE_TXCLEAR + PURGE_RXABORT + PURGE_RXCLEAR))
+//						log = log && log(1, "PurgeComm() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
+//
+//					GetOverlappedResult(m_Comm, m_RdOVL, m_RdN, true);
+//					GetOverlappedResult(m_Comm, m_WrOVL, m_WrN, true);
+//					GetOverlappedResult(m_Comm, m_SelOVL, m_SelN, true);
 				}
 
 				HANDLE h; // / 'hEvent' might never have been 'read' so read it
 				// to this var first
 
+				if (m_ReadCancelObject != null)
+					SetEvent(m_ReadCancelObject);
 				synchronized (m_RdBuffer) {
 					h = (HANDLE) m_RdOVL.readField("hEvent");
 					m_RdOVL = null;
 					if (h != null && !h.equals(NULL) && !h.equals(INVALID_HANDLE_VALUE))
 						CloseHandle(h);
+
+					if (m_ReadCancelObject != null && m_ReadCancelObject != NULL && m_ReadCancelObject != INVALID_HANDLE_VALUE)
+						CloseHandle(m_ReadCancelObject);
+					m_ReadCancelObject = null;
 				}
 
+				if (m_WriteCancelObject != null)
+					SetEvent(m_WriteCancelObject);
 				synchronized (m_WrBuffer) {
 					h = (HANDLE) m_WrOVL.readField("hEvent");
 					m_WrOVL = null;
 
 					if (h != null && !h.equals(NULL) && !h.equals(INVALID_HANDLE_VALUE))
 						CloseHandle(h);
+
+					if (m_WriteCancelObject != null && m_WriteCancelObject != NULL && m_WriteCancelObject != INVALID_HANDLE_VALUE)
+						CloseHandle(m_WriteCancelObject);
+					m_ReadCancelObject = null;
 				}
 
-				// Ensure that select() is through before releasing the m_SelOVL
+				if (WaitCommEventCancelObject != null)
+					SetEvent(WaitCommEventCancelObject);
 				waitUnlock();
+				if (WaitCommEventCancelObject != null && WaitCommEventCancelObject != NULL && WaitCommEventCancelObject != INVALID_HANDLE_VALUE)
+					CloseHandle(WaitCommEventCancelObject);
+				WaitCommEventCancelObject = null;
 
 				h = (HANDLE) m_SelOVL.readField("hEvent");
 				m_SelOVL = null;
@@ -193,7 +258,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				if (m_Comm != null && m_Comm != NULL && m_Comm != INVALID_HANDLE_VALUE)
 					CloseHandle(m_Comm);
 				m_Comm = null;
-
 			}
 		}
 
@@ -276,47 +340,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public int open(String filename, int flags) {
 		Port port = new Port();
-		port.m_OpenFlags = flags;
 		try {
-			if (!filename.startsWith("\\\\"))
-				filename = "\\\\.\\" + filename;
-
-			port.m_Comm = CreateFileW(new WString(filename), GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
-
-			if (INVALID_HANDLE_VALUE == port.m_Comm) {
-				if (GetLastError() == ERROR_FILE_NOT_FOUND)
-					m_ErrNo = ENOENT;
-				else
-					m_ErrNo = EBUSY;
-				port.fail();
-			}
-
-			if (!SetupComm(port.m_Comm, (int) port.m_RdBuffer.size(), (int) port.m_WrBuffer.size()))
-				port.fail(); // FIXME what would be appropriate error code here
-
-			cfmakeraw(port.m_Termios);
-			cfsetispeed(port.m_Termios, B9600);
-			cfsetospeed(port.m_Termios, B9600);
-			port.m_Termios.c_cc[VTIME] = 0;
-			port.m_Termios.c_cc[VMIN] = 0;
-			updateFromTermios(port);
-
-			port.m_RdOVL.writeField("hEvent", CreateEventA(null, true, false, null));
-			if (port.m_RdOVL.hEvent == INVALID_HANDLE_VALUE)
-				port.fail();
-
-			port.m_WrOVL.writeField("hEvent", CreateEventA(null, true, false, null));
-			if (port.m_WrOVL.hEvent == INVALID_HANDLE_VALUE)
-				port.fail();
-
-			port.m_SelOVL.writeField("hEvent", CreateEventA(null, true, false, null));
-			if (port.m_SelOVL.hEvent == INVALID_HANDLE_VALUE)
-				port.fail();
-
+			port.open(filename, flags);
 			return port.m_FD;
-		} catch (Exception f) {
-			if (port != null)
-				port.close();
+		} catch (Fail f) {
+			port.close();
 			return -1;
 		}
 
@@ -438,7 +466,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				if (!ReadFile(port.m_Comm, port.m_RdBuffer, length, port.m_RdN, port.m_RdOVL)) {
 					if (GetLastError() != ERROR_IO_PENDING)
 						port.fail();
-					if (WaitForSingleObject(port.m_RdOVL.hEvent, INFINITE) != WAIT_OBJECT_0)
+					port.m_ReadWaitObjects[0] = port.m_RdOVL.hEvent;
+					if (WaitForMultipleObjects(2, port.m_ReadWaitObjects, false, INFINITE) != WAIT_OBJECT_0)
 						port.fail();
 					if (!GetOverlappedResult(port.m_Comm, port.m_RdOVL, port.m_RdN, true))
 						port.fail();
@@ -461,8 +490,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			try {
 				if (port.m_WritePending > 0) {
 					while (true) {
-						int res = WaitForSingleObject(port.m_WrOVL.hEvent, INFINITE);
-						if (res == WAIT_TIMEOUT) {
+						port.m_WriteWaitObjects[0] = port.m_WrOVL.hEvent;
+
+						int res = WaitForMultipleObjects(2, port.m_WriteWaitObjects, false, INFINITE);
+						if (res == WAIT_TIMEOUT) { // Hmmm, can this ever happen, why we have that here
 							clearCommErrors(port);
 							log = log && log(1, "write pending, cbInQue %d cbOutQue %d\n", port.m_COMSTAT.cbInQue, port.m_COMSTAT.cbOutQue);
 							continue;
@@ -798,7 +829,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 							if (port.m_WaitPending) {
 								if (!SetCommMask(port.m_Comm, 0))
 									port.fail();
-								GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false) ;
+								GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false);
 								port.m_WaitPending = false;
 							}
 
@@ -841,7 +872,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						int i = 0;
 						for (Port port : waiting) {
 							wobj[i++] = port.m_SelOVL.hEvent;
-							wobj[i++] = port.m_CancelWaitSema4;
+							wobj[i++] = port.WaitCommEventCancelObject;
 						}
 						int tout = timeout != null ? (int) (timeout.tv_sec * 1000 + timeout.tv_usec / 1000) : INFINITE;
 						// int res = WaitForSingleObject(wobj[0], tout);
