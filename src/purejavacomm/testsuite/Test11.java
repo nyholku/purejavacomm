@@ -31,16 +31,53 @@ package purejavacomm.testsuite;
 
 import java.io.IOException;
 
+import purejavacomm.PureJavaSerialPort;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class Test11 extends TestBase {
-	static volatile boolean m_ReadThreadRunning;
+	static volatile boolean m_ThreadRunning;
+
+	static volatile boolean m_ExitViaException;
 
 	static void run() throws Exception {
 
 		try {
-			begin("Test11 - exit from blocking read ");
+			begin("Test11 - exit from blocking read/write ");
+			// interrupting blocking read  test -------------------------
+			openPort();
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
+
+			m_Port.disableReceiveTimeout();
+			m_Port.disableReceiveThreshold();
+
+			Thread thread = new Thread(new Runnable() {
+				public void run() {
+					m_ThreadRunning = true;
+					byte[] rxbuffer = new byte[1];
+					try {
+						int rxn = m_In.read(rxbuffer, 0, rxbuffer.length);
+					} catch (Exception e) {
+						m_ExitViaException = true;
+					}
+					m_ThreadRunning = false;
+
+				}
+			});
+
+			m_ThreadRunning = false;
+			m_ExitViaException = false;
+			thread.start();
+			while (!m_ThreadRunning)
+				Thread.sleep(10);
+			m_Port.close();// do not closePort() because flushing may block
+			m_Port = null;
+			Thread.sleep(1000);
+			if (!m_ExitViaException)
+				fail("closing failed to interrupt a blocking read()");
+
+			// interrupting blocking write test -------------------------
 			openPort();
 
 			m_Out = m_Port.getOutputStream();
@@ -48,29 +85,46 @@ public class Test11 extends TestBase {
 
 			m_Port.disableReceiveTimeout();
 			m_Port.disableReceiveThreshold();
-
-			final byte[] rxbuffer = new byte[1];
-
-			Thread rxthread = new Thread(new Runnable() {
+			thread = new Thread(new Runnable() {
 				public void run() {
-					m_ReadThreadRunning = true;
+					final byte[] txbuffer = new byte[4 * 1024];
+					m_ThreadRunning = true;
 					try {
-						int rxn = m_In.read(rxbuffer, 0, rxbuffer.length);
-					} catch (IOException e) {
+						while (true)
+							m_Out.write(txbuffer, 0, txbuffer.length);
+					} catch (Exception e) {
+						m_ExitViaException = true;
 					}
-					m_ReadThreadRunning = false;
-
+					m_ThreadRunning = false;
 				}
 			});
 
-			m_ReadThreadRunning = false;
-			rxthread.start();
-			while (!m_ReadThreadRunning)
+			m_ThreadRunning = false;
+			m_ExitViaException = false;
+			thread.start();
+			while (!m_ThreadRunning)
 				Thread.sleep(10);
-			closePort();
-			Thread.sleep(1000);
-			if (m_ReadThreadRunning)
-				fail("closing failed to interrupt a blocking read()");
+			m_Port.close(); // do not closePort() because flushing may block
+			m_Port = null;
+			Thread.sleep(10);
+			if (!m_ExitViaException)
+				fail("closing failed to interrupt a blocking write()");
+
+			Thread.sleep(4000); // the port maybe busy if previously written data has not been transmitted so we need to wait before continuing testing
+			// interrupting the internal thread -------------------------
+			openPort();
+			m_Port.addEventListener(new SerialPortEventListener() {
+				public void serialEvent(SerialPortEvent event) {
+				}
+			});
+			m_Port.notifyOnDataAvailable(true);
+
+			m_Port.disableReceiveTimeout();
+			m_Port.disableReceiveThreshold();
+			m_Port.close();
+			if (((PureJavaSerialPort) m_Port).isInternalThreadRunning())
+				fail("internal thread failed to stop");
+			m_Port = null;
 			finishedOK();
 		} finally {
 			closePort();

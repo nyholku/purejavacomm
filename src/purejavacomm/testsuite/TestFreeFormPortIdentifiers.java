@@ -17,7 +17,7 @@ import purejavacomm.NoSuchPortException;
 public class TestFreeFormPortIdentifiers extends TestBase {
 
 	public static void testMissingPortInCommPortIdentifier() throws Exception {
-		begin("TestMissingPort - getPortIdentifier on missing port");
+		begin("TestMissingPort"); //  - getPortIdentifier on missing port
 
 		// Must throw NoSuchPortException
 
@@ -33,7 +33,7 @@ public class TestFreeFormPortIdentifiers extends TestBase {
 	}
 	
 	public static void testDevicePathInCommPortIdentifier() throws Exception {
-		begin("TestDevicePath - getPortIdentifier on device path");
+		begin("TestDevicePath "); // - getPortIdentifier on device path");
 
 		// Must return an identifier
 
@@ -47,7 +47,7 @@ public class TestFreeFormPortIdentifiers extends TestBase {
 	}
 	
 	public static void testDevicePathToInvalidTTYInCommPortIdentifier() throws Exception {
-		begin("TestDevicePathToInvalidTTY - getPortIdentifier on invalid device");
+		begin("TestDevicePathToInvalidTTY");// - getPortIdentifier on invalid device");
 
 		// Must throw NoSuchPortException
 

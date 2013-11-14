@@ -32,11 +32,11 @@ package purejavacomm.testsuite;
 
 public class TestSuite {
 	public static void main(String[] args) throws Exception {
-		//Native.setProtected(false);
+		// Native.setProtected(false);
 		TestBase.init(args);
-		//jtermios.JTermios.JTermiosLogging.setLogMask(255);
-		//System.setProperty("purejavacomm.usepoll", "true");
-		//System.setProperty("purejavacomm.rawreadmode", "true");
+		// jtermios.JTermios.JTermiosLogging.setLogMask(255);
+		// System.setProperty("purejavacomm.usepoll", "true");
+		// System.setProperty("purejavacomm.rawreadmode", "true");
 		try {
 			System.out.println("PureJavaComm Test Suite");
 			System.out.println("Using port: " + TestBase.getPortName());
