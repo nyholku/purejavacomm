@@ -1313,5 +1313,11 @@ public class PureJavaSerialPort extends SerialPort {
 			throw new PureJavaIllegalStateException(msg);
 		}
 	}
+	/**
+	 * This is not part of the PureJavaComm API, this is purely for testing, do not depend on this
+	 */
+	public boolean isInternalThreadRunning() {
+		return m_ThreadRunning;
+	}
 
 }
