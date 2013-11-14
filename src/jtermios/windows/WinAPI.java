@@ -148,8 +148,6 @@ public class WinAPI {
 
 		boolean CancelIo(HANDLE hFile);
 
-		boolean CancelIoEx(HANDLE hFile, OVERLAPPED lpOverlapped);
-
 		boolean CloseHandle(HANDLE hFile);
 
 		boolean ClearCommError(HANDLE hFile, int[] n, COMSTAT s);
@@ -588,13 +586,6 @@ public class WinAPI {
 		log = log && log(5, "> CancelIo(%s)\n", hFile);
 		boolean res = m_K32lib.CancelIo(hFile);
 		log = log && log(4, "< CancelIo(%s) => %s\n", hFile, res);
-		return res;
-	}
-
-	static public boolean CancelIoEx(HANDLE hFile, OVERLAPPED ovrlp) {
-		log = log && log(5, "> CancelIoEx(%s,%s)\n", hFile, ref(ovrlp));
-		boolean res = m_K32lib.CancelIoEx(hFile, ovrlp);
-		log = log && log(4, "< CancelIoEx(%s,%s) => %s\n", hFile, ref(ovrlp), res);
 		return res;
 	}
 
