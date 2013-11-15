@@ -1,13 +1,14 @@
 Version 0.0.20
 
-* Fixed a bug that caused control (CTS,RTS etc) to throw an exception with JNA 4.0.0
+* Fixed a bug that caused setting of control lines (CTS,RTS etc) to throw an exception with JNA 4.0.0 on Mac OS X
 
 * Reverted the use of CancelIoEx as it is not available on Windows XP
 
-* Re-worked and simplified file handle closing logic in Windows to prevent hangups
+* Re-worked and simplified file handle closing logic in Windows to prevent hangups and work around the lack of CancelIoEx 
 
-* Added tests to test suite for successful closing of ports 
+* Added tests to the test suite for successful closing of ports 
  
+
 Version 0.0.19
 
 * Changed to the use of CancelIoEx for canceling all I/O in close() to prevent 
@@ -15,7 +16,7 @@ Version 0.0.19
   
 * Ignore all errors when trying to clear pending wait in select()
 
-Thanks for Colin Leitner for contributing following! 
+  Thanks for Colin Leitner for contributing following! 
 
 * Handle free form device paths correctly, by returning a
   CommPortIdentifier for any existing device path, even if opening that
@@ -51,6 +52,7 @@ Thanks for Colin Leitner for contributing following!
 * Added support for 1.5 stop bits 
   No hardware actually supports it but now you don't get an exception
 
+
 Version 0.0.17
 
 * Ignore error for TIOCGSERIAL/TIOCSSERIAL when setting standard
@@ -66,6 +68,7 @@ Version 0.0.17
 
 * Fixed WaitCommEvent returns an 87: bad parameter, error code on Windows
 
+
 Version 0.0.16
 
 * Just bumped the version number because what was supposed to 
@@ -73,12 +76,14 @@ Version 0.0.16
   
   No code changes.
   
+
 Version 0.0.15
 
 * Improved the Windows back end ie fixed bugs revealed by the 
   changes in the front end that were done to improve Linux
   performance.
   
+
 Version 0.0.14 *** EXPERIMENTAL ***
 
 * More re-factoring to improve read performance and code
@@ -96,6 +101,7 @@ Version 0.0.14 *** EXPERIMENTAL ***
   ie 25.5 seconds. An attempt to set a too large value will 
   result in UnsupportedCommOperationException.
 
+
 Version 0.0.13 *** EXPERIMENTAL ***
 
 * Removed some debugging output from SerialPort.close() that
@@ -107,6 +113,7 @@ Version 0.0.13 *** EXPERIMENTAL ***
   system this maybe a critical resource. To disable
   the use of the pipe set 'purejavacomm.usenudgepipe' to 'false'
   
+
 Version 0.0.12 *** EXPERIMENTAL ***
 
 * This version includes a major re-factoring of receive timeout and
@@ -150,6 +157,7 @@ Version 0.0.12 *** EXPERIMENTAL ***
   
 * Number of potential multithreading issues fixed
 
+
 Version 0.0.11 
 
 * Moved over to JNA DiretMapping in Linux back end to squeeze
@@ -188,10 +196,12 @@ Version 0.0.11
   
 * Fixed checkReturnCode() to return the correct class/line where the error code was checked  
 
+
 Version 0.0.10
 
 * Fixed a missing field in getFieldOrder() for Linux 
  
+
 Version 0.0.9
 
 * Added support for JNA 3.5.0 which require getFieldOrder() for all Struct derived classes
@@ -199,6 +209,7 @@ Version 0.0.9
 * Changed Linux backend to ignore EINVAL error in ioctl/TIOCGSERIAL/TIOCSSERIAL calls
   as all USB CDC ACM ack USB/Serial Dongles don't support it
   
+
 Version 0.0.8
 
 -  Mostly thanks to Alexander Salgado 
@@ -230,6 +241,7 @@ Version 0.0.7
   we try to turn of custom divisor using TIOCGSERIAL, but if it fails we just ignore it
   
 - related to above logging for JTermiosImpl.setspeed() was improved to help debugging
+
 
 Version 0.0.6
 
