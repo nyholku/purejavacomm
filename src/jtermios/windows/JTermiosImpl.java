@@ -200,21 +200,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 					m_FD = -1;
 				}
 
-				if (m_Comm != null) {
-//					ResetEvent(m_SelOVL.hEvent);
-//					if (!CancelIo(m_Comm))
-//						log = log && log(1, "CancelIo() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
-//
-//					if (!PurgeComm(m_Comm, PURGE_TXABORT + PURGE_TXCLEAR + PURGE_RXABORT + PURGE_RXCLEAR))
-//						log = log && log(1, "PurgeComm() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
-//
-//					GetOverlappedResult(m_Comm, m_RdOVL, m_RdN, true);
-//					GetOverlappedResult(m_Comm, m_WrOVL, m_WrN, true);
-//					GetOverlappedResult(m_Comm, m_SelOVL, m_SelN, true);
-				}
 
-				HANDLE h; // / 'hEvent' might never have been 'read' so read it
-				// to this var first
+				HANDLE h; // / 'hEvent' might never have been 'read' so read it to this var first
 
 				if (m_ReadCancelObject != null)
 					SetEvent(m_ReadCancelObject);
