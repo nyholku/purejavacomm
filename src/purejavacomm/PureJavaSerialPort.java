@@ -518,14 +518,9 @@ public class PureJavaSerialPort extends SerialPort {
 				if (tcsetattr(m_FD, TCSANOW, m_Termios) != 0)
 					throw new UnsupportedCommOperationException("tcsetattr failed");
 
-				// termios(3) tells us, that tcsetattr succeeds if any change
-				// has been made, not all of them. We'll have to read them back
-				// and check the result
-				Termios changed = new Termios();
-				if (tcgetattr(m_FD, changed) == -1)
-					throw new UnsupportedCommOperationException("tcgetattr failed");
-				if (!changed.equals(m_Termios))
-					throw new UnsupportedCommOperationException("tcgetattr read back did not match tcsetattr");
+				// Even if termios(3) tells us that tcsetattr succeeds if any change
+				// has been made, not necessary all of them  we cannot check them by reading back
+				// and checking the result as not every driver/OS playes by the rules
 				
 				// finally everything went ok, so we can update our settings
 				m_BaudRate = baudRate;
