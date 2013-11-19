@@ -4,11 +4,13 @@ Version 0.0.21
 
 Version 0.0.20
 
-* Fixed a bug that caused setting of control lines (CTS,RTS etc) to throw an exception with JNA 4.0.0 on Mac OS X
+* Fixed a bug that caused setting of control lines (CTS,RTS etc) 
+  to throw an exception with JNA 4.0.0 on Mac OS X
 
 * Reverted the use of CancelIoEx as it is not available on Windows XP
 
-* Re-worked and simplified file handle closing logic in Windows to prevent hangups and work around the lack of CancelIoEx 
+* Re-worked and simplified file handle closing logic in Windows
+  to prevent hangups and work around the lack of CancelIoEx 
 
 * Added tests to the test suite for successful closing of ports 
  
