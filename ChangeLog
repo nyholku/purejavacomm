@@ -1,3 +1,7 @@
+Version 0.0.21
+
+* Reverted the overzealous checking for successful tcsetattr
+
 Version 0.0.20
 
 * Fixed a bug that caused setting of control lines (CTS,RTS etc) to throw an exception with JNA 4.0.0 on Mac OS X
