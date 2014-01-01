@@ -32,7 +32,7 @@ package purejavacomm.testsuite;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Random;
 
 import purejavacomm.*;
@@ -43,9 +43,9 @@ public class PureJavaCommDemo {
 		try {
 			System.out.println("PureJavaCommDemo");
 			CommPortIdentifier portid = null;
-			Enumeration e = CommPortIdentifier.getPortIdentifiers();
-			while (e.hasMoreElements()) {
-				portid = (CommPortIdentifier) e.nextElement();
+			Iterator<CommPortIdentifier> e = CommPortIdentifier.getPortIdentifiers();
+			while (e.hasNext()) {
+				portid = (CommPortIdentifier) e.next();
 				System.out.println("found " + portid.getName());
 			}
 			if (portid != null) {

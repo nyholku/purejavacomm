@@ -30,6 +30,7 @@
 package purejavacomm.testsuite;
 
 import java.util.Enumeration;
+import java.util.Iterator;
 
 import purejavacomm.CommPortIdentifier;
 
@@ -38,7 +39,7 @@ public class Test16 extends TestBase {
 	@SuppressWarnings("unchecked")
 	static void run() throws Exception {
 
-		Enumeration<CommPortIdentifier> cpiEnum;
+		Iterator<CommPortIdentifier> cpiEnum;
 		
 		String origOwnerName = null;
 		String checkOwnerName = null;
@@ -68,8 +69,8 @@ public class Test16 extends TestBase {
 			cpiEnum = CommPortIdentifier.getPortIdentifiers();
 			
 			//get original owner name
-			while (cpiEnum.hasMoreElements()) {
-				CommPortIdentifier cpi = cpiEnum.nextElement();
+			while (cpiEnum.hasNext()) {
+				CommPortIdentifier cpi = cpiEnum.next();
 				if (cpi.getName().equals(getPortName())) {
 					origOwnerName = cpi.getCurrentOwner();
 					break;
@@ -80,8 +81,8 @@ public class Test16 extends TestBase {
 			cpiEnum = CommPortIdentifier.getPortIdentifiers();
 
 			//get owner name again
-			while (cpiEnum.hasMoreElements()) {
-				CommPortIdentifier cpi = cpiEnum.nextElement();
+			while (cpiEnum.hasNext()) {
+				CommPortIdentifier cpi = cpiEnum.next();
 				if (cpi.getName().equals(getPortName())) {
 					checkOwnerName = cpi.getCurrentOwner();
 					break;
