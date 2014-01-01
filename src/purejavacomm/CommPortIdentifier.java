@@ -33,7 +33,6 @@ package purejavacomm;
 // FIXME no mechanism to warn about duplicate port names
 import static jtermios.JTermios.*;
 
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -86,9 +85,9 @@ public class CommPortIdentifier {
 				if (portid.getName().equals(portName))
 					return portid;
 			if (ENUMERATE) { // enumerating ports takes time, lets see if we can avoid it
-				Enumeration e = getPortIdentifiers();
-				while (e.hasMoreElements()) {
-					CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
+				Iterator<CommPortIdentifier> e = getPortIdentifiers();
+				while (e.hasNext()) {
+					CommPortIdentifier portid = (CommPortIdentifier) e.next();
 					if (portid.getName().equals(portName))
 						return portid;
 				}
@@ -187,31 +186,21 @@ public class CommPortIdentifier {
 		return m_PortType;
 	}
 
-	public static Enumeration getPortIdentifiers() {
+	public static Iterator<CommPortIdentifier> getPortIdentifiers() {
 		synchronized (m_Mutex) {
-
-			return new Enumeration() {
-				List<CommPortIdentifier> m_PortIDs;
-				{ // insert the  'addPortName' ports to the dynamic port list
-					m_PortIDs = new LinkedList<CommPortIdentifier>();
-					for (CommPortIdentifier portid : m_PortIdentifiers.values())
-						m_PortIDs.add(portid);
-					// and now add the PureSerialPorts
-					List<String> pureports = getPortList();
-					if (pureports != null)
-						for (String name : pureports)
-							m_PortIDs.add(new CommPortIdentifier(name, PORT_SERIAL, null));
-				}
-				Iterator<CommPortIdentifier> m_Iterator = m_PortIDs.iterator();
-
-				public boolean hasMoreElements() {
-					return m_Iterator != null ? m_Iterator.hasNext() : false;
-				}
-
-				public Object nextElement() {
-					return m_Iterator.next();
-				};
-			};
+			List<CommPortIdentifier> m_PortIDs;
+			{ // insert the  'addPortName' ports to the dynamic port list
+				m_PortIDs = new LinkedList<CommPortIdentifier>();
+				for (CommPortIdentifier portid : m_PortIdentifiers.values())
+					m_PortIDs.add(portid);
+				// and now add the PureSerialPorts
+				List<String> pureports = getPortList();
+				if (pureports != null)
+					for (String name : pureports)
+						m_PortIDs.add(new CommPortIdentifier(name, PORT_SERIAL, null));
+			}
+			Iterator<CommPortIdentifier> m_Iterator = m_PortIDs.iterator();
+			return m_Iterator;
 		}
 	}
 
