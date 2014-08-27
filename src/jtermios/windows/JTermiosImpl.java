@@ -1117,7 +1117,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		Pattern p = JTermios.getPortNamePattern(this);
 		char[] buffer;
 		int size = 0;
-		for (size = 16 * 1024; size < 256 * 1024; size *= 2) {
+		for (size = 16 * 1024; size < 1024 * 1024; size *= 2) {
 			buffer = new char[size];
 			int res = QueryDosDeviceW(null, buffer, buffer.length);
 			if (res > 0) { //
