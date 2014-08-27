@@ -3,9 +3,11 @@ Version 0.0.22
 * Windows backend increased QueryDosDevice buffer max size to 
   1 mega chars to support systems with thousands of COM ports
 
+
 Version 0.0.21
 
 * Reverted the overzealous checking for successful tcsetattr
+
 
 Version 0.0.20
 
@@ -50,7 +52,9 @@ Version 0.0.19
   proper test setup
   
 * Let the test suite return an exit value of 1 on failure
-  Version 0.0.18
+  
+  
+ Version 0.0.18
 
 * Fixed problems in the Windows backend that rendered it dysfunctional
 
