@@ -1,4 +1,7 @@
-Test
+Version 0.0.22
+
+* Windows backend increased QueryDosDevice buffer max size to 
+  1 mega chars to support systems with thousands of COM ports
 
 Version 0.0.21
 
