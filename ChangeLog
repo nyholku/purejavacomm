@@ -1,3 +1,11 @@
+Version 0.0.24
+
+* All backends now uses JNA Direct Mapping for less CPU
+  loading and faster operation. 
+  
+  Contributed by Pete Loveall.
+  
+  
 Version 0.0.23
 
 * Windows backend now uses JNA Direct Mapping for less CPU
