@@ -31,8 +31,6 @@ package jtermios.solaris;
 
 import java.io.File;
 
-import java.nio.Buffer;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -40,19 +38,16 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import jtermios.FDSet;
-
 import jtermios.JTermios;
 import jtermios.Pollfd;
 import jtermios.Termios;
 import jtermios.TimeVal;
 import jtermios.solaris.JTermiosImpl.Solaris_C_lib.pollfd;
 
-import com.sun.jna.Library;
+import com.sun.jna.Platform;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Structure;
-import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.NativeLongByReference;
 
 import static jtermios.JTermios.*;
 import static jtermios.JTermios.JTermiosLogging.log;
@@ -60,8 +55,58 @@ import static jtermios.JTermios.JTermiosLogging.log;
 public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	private static String DEVICE_DIR_PATH = "/dev/term/";
-	static Solaris_C_lib m_Clib = (Solaris_C_lib) Native.loadLibrary("c", Solaris_C_lib.class);
+	static Solaris_C_lib_DirectMapping m_ClibDM;
+        static Solaris_C_lib m_Clib;
+        static {
+            Native.register(Solaris_C_lib_DirectMapping.class, Platform.C_LIBRARY_NAME);
+            m_ClibDM = new Solaris_C_lib_DirectMapping();
+            m_Clib = m_ClibDM;
+        }
 
+	public static class Solaris_C_lib_DirectMapping implements Solaris_C_lib {
+		native public int pipe(int[] fds);
+
+		native public int tcdrain(int fd);
+
+		native public int fcntl(int fd, int cmd, int[] arg);
+
+		native public int fcntl(int fd, int cmd, int arg);
+
+		native public int ioctl(int fd, int cmd, int[] arg);
+
+		native public int open(String path, int flags);
+
+		native public int close(int fd);
+
+		native public int tcgetattr(int fd, termios termios);
+
+		native public int tcsetattr(int fd, int cmd, termios termios);
+
+		native public int cfsetispeed(termios termios, NativeLong i);
+
+		native public int cfsetospeed(termios termios, NativeLong i);
+
+		native public NativeLong cfgetispeed(termios termios);
+
+		native public NativeLong cfgetospeed(termios termios);
+
+		native public NativeLong write(int fd, ByteBuffer buffer, NativeLong count);
+
+		native public NativeLong read(int fd, ByteBuffer buffer, NativeLong count);
+
+		native public int select(int n, int[] read, int[] write, int[] error, timeval timeout);
+
+		native public int poll(pollfd[] fds, int nfds, int timeout);
+		
+		native public int poll(int[] fds, int nfds, int timeout);
+
+		native public int tcflush(int fd, int qs);
+
+		native public void perror(String msg);
+
+		native public int tcsendbreak(int fd, int duration);
+        }
+        
 	public interface Solaris_C_lib extends com.sun.jna.Library {
 		public int pipe(int[] fds);
 

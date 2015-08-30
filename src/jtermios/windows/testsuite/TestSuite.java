@@ -32,7 +32,7 @@ package jtermios.windows.testsuite;
 
 import static jtermios.windows.WinAPI.CBR_1200;
 import static jtermios.windows.WinAPI.CloseHandle;
-import static jtermios.windows.WinAPI.CreateEvent; 
+import static jtermios.windows.WinAPI.CreateEvent;
 import static jtermios.windows.WinAPI.CreateFile;
 import static jtermios.windows.WinAPI.ERROR_IO_INCOMPLETE;
 import static jtermios.windows.WinAPI.ERROR_IO_PENDING;
