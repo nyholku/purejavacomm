@@ -32,8 +32,8 @@ package jtermios.windows.testsuite;
 
 import static jtermios.windows.WinAPI.CBR_1200;
 import static jtermios.windows.WinAPI.CloseHandle;
-import static jtermios.windows.WinAPI.CreateEvent; 
-import static jtermios.windows.WinAPI.CreateFile;
+import static jtermios.windows.WinAPI.CreateEventA;
+import static jtermios.windows.WinAPI.CreateFileA;
 import static jtermios.windows.WinAPI.ERROR_IO_INCOMPLETE;
 import static jtermios.windows.WinAPI.ERROR_IO_PENDING;
 import static jtermios.windows.WinAPI.FILE_FLAG_OVERLAPPED;
@@ -74,7 +74,7 @@ public class TestSuite {
 		System.out.println("A contorted loopback test with overlapped IO for WinAPI");
 
 		String COM = "COM5:";
-		HANDLE hComm = CreateFile(COM, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
+		HANDLE hComm = CreateFileA(COM, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
 
 		check(SetupComm(hComm, 2048, 2048), "SetupComm ");
 
@@ -106,11 +106,11 @@ public class TestSuite {
 		Memory rxm = new Memory(tlen);
 
 		OVERLAPPED osReader = new OVERLAPPED();
-		osReader.writeField("hEvent", CreateEvent(null, true, false, null));
+		osReader.writeField("hEvent", CreateEventA(null, true, false, null));
 		check(osReader.hEvent != null, "CreateEvent/osReader");
 
 		OVERLAPPED osWriter = new OVERLAPPED();
-		osWriter.writeField("hEvent", CreateEvent(null, true, false, null));
+		osWriter.writeField("hEvent", CreateEventA(null, true, false, null));
 		check(osWriter.hEvent != null, "CreateEvent/osWriter");
 
 		boolean first = true;

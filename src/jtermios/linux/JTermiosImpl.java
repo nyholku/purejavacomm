@@ -30,6 +30,8 @@
 
 package jtermios.linux;
 
+import com.sun.jna.*;
+import com.sun.jna.Native;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,26 +53,26 @@ import jtermios.JTermios;
 import jtermios.Pollfd;
 import jtermios.Termios;
 import jtermios.TimeVal;
-import jtermios.JTermios.JTermiosInterface;
 import jtermios.linux.JTermiosImpl.Linux_C_lib.pollfd;
 import jtermios.linux.JTermiosImpl.Linux_C_lib.serial_struct;
 
-import com.sun.jna.Library;
-import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
-import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.NativeLongByReference;
 
 import static jtermios.JTermios.*;
 import static jtermios.JTermios.JTermiosLogging.log;
 
 public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static String DEVICE_DIR_PATH = "/dev/";
-	private static final boolean IS64B = NativeLong.SIZE == 8;
-	static Linux_C_lib_DirectMapping m_ClibDM = new Linux_C_lib_DirectMapping();
-	static Linux_C_lib m_Clib = m_ClibDM;
+	private static final boolean IS64B = Platform.is64Bit();
+	static Linux_C_lib_DirectMapping m_ClibDM;
+        static Linux_C_lib m_Clib;
+        static {
+            Native.register(Linux_C_lib_DirectMapping.class, Platform.C_LIBRARY_NAME);
+            m_ClibDM = new Linux_C_lib_DirectMapping();
+            m_Clib = m_ClibDM;
+        }
 
 	private final static int TIOCGSERIAL = 0x0000541E;
 	private final static int TIOCSSERIAL = 0x0000541F;
@@ -165,14 +167,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		native public void perror(String msg);
 
 		native public int tcsendbreak(int fd, int duration);
-
-		static {
-			try {
-				Native.register("c");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	public interface Linux_C_lib extends com.sun.jna.Library {
