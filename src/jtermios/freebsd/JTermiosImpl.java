@@ -36,10 +36,7 @@
 package jtermios.freebsd;
 
 import com.sun.jna.*;
-import com.sun.jna.Native;
 import java.io.File;
-
-import java.nio.Buffer;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;

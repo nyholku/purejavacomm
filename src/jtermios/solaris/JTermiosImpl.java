@@ -31,8 +31,6 @@ package jtermios.solaris;
 
 import java.io.File;
 
-import java.nio.Buffer;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -40,7 +38,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import jtermios.FDSet;
-
 import jtermios.JTermios;
 import jtermios.Pollfd;
 import jtermios.Termios;
