@@ -88,16 +88,16 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		volatile int m_c_iflag = -1;
 		volatile int m_c_oflag = -1;
 
-		synchronized public void fail() throws Fail {
-			int err = GetLastError();
-			Memory buffer = new Memory(2048);
-			int res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, null, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, (int) buffer.size(), null);
-
-			log = log && log(1, "fail() %s, Windows GetLastError()= %d, %s\n", lineno(1), err, buffer.getString(0));
-
+		synchronized public void fail(Exception e) throws Fail {
+			Fail f;
+                        if (e instanceof LastErrorException && ((LastErrorException)e).getErrorCode() != Native.getLastError())
+                            // GetLastError has changed since the e was thrown.  Tell us that.
+                            f = (Fail) new Fail().initCause(new RuntimeException(e.getMessage() + " getLastError=" + Native.getLastError()));
+                        else
+                            f = (Fail) new Fail().initCause(e);
 			// FIXME here convert from Windows error code to 'posix' error code
+                        f.setStackTrace(e.getStackTrace());
 
-			Fail f = new Fail();
 			throw f;
 		}
 
@@ -137,18 +137,23 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						if (!filename.startsWith("\\\\"))
 							filename = "\\\\.\\" + filename;
 
-						m_Comm = CreateFile(filename, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
+                                                try {
+                                                    m_Comm = CreateFile(filename, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
 
-						if (INVALID_HANDLE_VALUE == m_Comm) {
-							if (GetLastError() == ERROR_FILE_NOT_FOUND)
-								m_ErrNo = ENOENT;
-							else
-								m_ErrNo = EBUSY;
-							fail();
-						}
+                                                    if (INVALID_HANDLE_VALUE == m_Comm) {
+                                                        m_ErrNo = EBUSY;
+							throw new LastErrorException(0);
+                                                    }
+                                                } catch (LastErrorException lee) {
+                                                    fail(lee);
+                                                }
 
-						if (!SetupComm(m_Comm, (int) m_RdBuffer.size(), (int) m_WrBuffer.size()))
-							fail(); // FIXME what would be appropriate error code here
+                                                try {
+                                                    if (!SetupComm(m_Comm, (int) m_RdBuffer.size(), (int) m_WrBuffer.size()))
+                                                            throw new LastErrorException(0); // FIXME what would be appropriate error code here
+                                                } catch (LastErrorException lee) {
+                                                    fail(lee);
+                                                }
 
 						cfmakeraw(m_Termios);
 						cfsetispeed(m_Termios, B9600);
@@ -157,31 +162,35 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						m_Termios.c_cc[VMIN] = 0;
 						updateFromTermios(this);
 
-						WaitCommEventCancelObject = CreateEvent(null, false, false, null);
-						if (WaitCommEventCancelObject == INVALID_HANDLE_VALUE)
-							fail();
+                                                try {
+                                                    WaitCommEventCancelObject = CreateEvent(null, false, false, null);
+                                                    if (WaitCommEventCancelObject == INVALID_HANDLE_VALUE)
+                                                            throw new LastErrorException(0);
 
-						m_ReadCancelObject = CreateEvent(null, true, false, null);
-						if (m_ReadCancelObject == INVALID_HANDLE_VALUE)
-							fail();
-						m_ReadWaitObjects[1] = m_ReadCancelObject;
+                                                    m_ReadCancelObject = CreateEvent(null, true, false, null);
+                                                    if (m_ReadCancelObject == INVALID_HANDLE_VALUE)
+                                                            throw new LastErrorException(0);
+                                                    m_ReadWaitObjects[1] = m_ReadCancelObject;
 
-						m_WriteCancelObject = CreateEvent(null, true, false, null);
-						if (m_WriteCancelObject == INVALID_HANDLE_VALUE)
-							fail();
-						m_WriteWaitObjects[1] = m_WriteCancelObject;
+                                                    m_WriteCancelObject = CreateEvent(null, true, false, null);
+                                                    if (m_WriteCancelObject == INVALID_HANDLE_VALUE)
+                                                            throw new LastErrorException(0);
+                                                    m_WriteWaitObjects[1] = m_WriteCancelObject;
 
-						m_RdOVL.writeField("hEvent", CreateEvent(null, true, false, null));
-						if (m_RdOVL.hEvent == INVALID_HANDLE_VALUE)
-							fail();
+                                                    m_RdOVL.writeField("hEvent", CreateEvent(null, true, false, null));
+                                                    if (m_RdOVL.hEvent == INVALID_HANDLE_VALUE)
+                                                            throw new LastErrorException(0);
 
-						m_WrOVL.writeField("hEvent", CreateEvent(null, true, false, null));
-						if (m_WrOVL.hEvent == INVALID_HANDLE_VALUE)
-							fail();
+                                                    m_WrOVL.writeField("hEvent", CreateEvent(null, true, false, null));
+                                                    if (m_WrOVL.hEvent == INVALID_HANDLE_VALUE)
+                                                            throw new LastErrorException(0);
 
-						m_SelOVL.writeField("hEvent", CreateEvent(null, true, false, null));
-						if (m_SelOVL.hEvent == INVALID_HANDLE_VALUE)
-							fail();
+                                                    m_SelOVL.writeField("hEvent", CreateEvent(null, true, false, null));
+                                                    if (m_SelOVL.hEvent == INVALID_HANDLE_VALUE)
+                                                            throw new LastErrorException(0);
+                                                } catch (LastErrorException lee) {
+                                                    fail(lee);
+                                                }
 						return;
 
 					}
@@ -297,10 +306,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		try {
 			synchronized (port.m_WrBuffer) {
 				if (!FlushFileBuffers(port.m_Comm))
-					port.fail();
+					throw new LastErrorException(0);
 				return 0;
 			}
-		} catch (Fail f) {
+		} catch (LastErrorException f) {
+                        f.printStackTrace();
 			return -1;
 		}
 	}
@@ -329,6 +339,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			port.open(filename, flags);
 			return port.m_FD;
 		} catch (Fail f) {
+                        f.printStackTrace();
 			port.close();
 			return -1;
 		}
@@ -382,8 +393,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 				if (length == 0)
 					return 0;
-
-				int error;
 
 				if ((port.m_OpenFlags & O_NONBLOCK) != 0) {
 					clearCommErrors(port);
@@ -446,21 +455,31 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				}
 
 				if (!ResetEvent(port.m_RdOVL.hEvent))
-					port.fail();
+					throw new LastErrorException(0);
 
-				if (!ReadFile(port.m_Comm, port.m_RdBuffer, length, port.m_RdN, port.m_RdOVL)) {
-					if (GetLastError() != ERROR_IO_PENDING)
-						port.fail();
-					port.m_ReadWaitObjects[0] = port.m_RdOVL.hEvent;
-					if (WaitForMultipleObjects(2, port.m_ReadWaitObjects, false, INFINITE) != WAIT_OBJECT_0)
-						port.fail();
-					if (!GetOverlappedResult(port.m_Comm, port.m_RdOVL, port.m_RdN, true))
-						port.fail();
-				}
+                                try
+                                {
+                                    if (!ReadFile(port.m_Comm, port.m_RdBuffer, length, port.m_RdN, port.m_RdOVL))
+                                        // Should never get here so tell us
+                                        throw new LastErrorException(0);
+                                    port.m_RdBuffer.read(0, buffer, 0, port.m_RdN[0]);
+                                    return port.m_RdN[0];
+                                } catch (LastErrorException lee) {
+                                    if (lee.getErrorCode() == 0)
+                                        System.err.println("ReadFile returned false but GetLastError==0");
+                                    else if (lee.getErrorCode() != ERROR_IO_PENDING)
+                                        port.fail(lee);
+                                }
+                                port.m_ReadWaitObjects[0] = port.m_RdOVL.hEvent;
+                                if (WaitForMultipleObjects(2, port.m_ReadWaitObjects, false, INFINITE) != WAIT_OBJECT_0)
+                                        throw new LastErrorException(0);
+                                if (!GetOverlappedResult(port.m_Comm, port.m_RdOVL, port.m_RdN, true))
+                                        throw new LastErrorException(0);
 
 				port.m_RdBuffer.read(0, buffer, 0, port.m_RdN[0]);
 				return port.m_RdN[0];
-			} catch (Fail ie) {
+			} catch (Exception ie) {
+                                ie.printStackTrace();
 				return -1;
 			}
 		}
@@ -484,7 +503,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 							continue;
 						}
 						if (!GetOverlappedResult(port.m_Comm, port.m_WrOVL, port.m_WrN, false))
-							port.fail();
+							throw new LastErrorException(0);
 						if (port.m_WrN[0] != port.m_WritePending) // I exptect this is never going to happen, if it does
 							new RuntimeException("Windows OVERLAPPED WriteFile failed to write all, tried to write " + port.m_WritePending + " but got " + port.m_WrN[0]);
 						break;
@@ -493,30 +512,33 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				}
 				if ((port.m_OpenFlags & O_NONBLOCK) != 0) {
 					if (!ClearCommError(port.m_Comm, port.m_WrErr, port.m_WrStat))
-						port.fail();
+						throw new LastErrorException(0);
 					int room = (int) port.m_WrBuffer.size() - port.m_WrStat.cbOutQue;
 					if (length > room)
 						length = room;
 				}
 
-				int old_flag;
-
 				if (!ResetEvent(port.m_WrOVL.hEvent))
-					port.fail();
+					throw new LastErrorException(0);
 
 				if (length > port.m_WrBuffer.size())
 					length = (int) port.m_WrBuffer.size();
 				port.m_WrBuffer.write(0, buffer, 0, length); // copy from buffer to Memory
-				boolean ok = WriteFile(port.m_Comm, port.m_WrBuffer, length, port.m_WrN, port.m_WrOVL);
+                                try {
+        				if (!WriteFile(port.m_Comm, port.m_WrBuffer, length, port.m_WrN, port.m_WrOVL))
+                                            // Should never get here so tell us
+                                            throw new LastErrorException(0);
+                                } catch (LastErrorException lee) {
+                                    if (lee.getErrorCode() == 0)
+                                        System.err.println("ReadFile returned false but GetLastError==0");
+                                    else if (lee.getErrorCode() != ERROR_IO_PENDING)
+                                        port.fail(lee);
+                                    port.m_WritePending = length;
+                                }
 
-				if (!ok) {
-					if (GetLastError() != ERROR_IO_PENDING)
-						port.fail();
-					port.m_WritePending = length;
-				}
-				// 
-				return length; // port.m_WrN[0];
-			} catch (Fail f) {
+                                return length; // port.m_WrN[0];
+			} catch (Exception f) {
+                                f.printStackTrace();
 				return -1;
 			}
 		}
@@ -537,22 +559,23 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		try {
 			if (queue == TCIFLUSH) {
 				if (!PurgeComm(port.m_Comm, PURGE_RXABORT))
-					port.fail();
+					throw new LastErrorException(0);
 			} else if (queue == TCOFLUSH) {
 				if (!PurgeComm(port.m_Comm, PURGE_TXABORT))
-					port.fail();
+					throw new LastErrorException(0);
 			} else if (queue == TCIOFLUSH) {
 				if (!PurgeComm(port.m_Comm, PURGE_TXABORT))
-					port.fail();
+					throw new LastErrorException(0);
 				if (!PurgeComm(port.m_Comm, PURGE_RXABORT))
-					port.fail();
+					throw new LastErrorException(0);
 			} else {
 				m_ErrNo = ENOTSUP;
 				return -1;
 			}
 
 			return 0;
-		} catch (Fail f) {
+		} catch (LastErrorException f) {
+                        f.printStackTrace();
 			return -1;
 		}
 	}
@@ -582,12 +605,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			return -1;
 		try {
 			if (!SetCommBreak(port.m_Comm))
-				port.fail();
+				throw new LastErrorException(0);
 			nanoSleep(duration * 250000000L);
 			if (!ClearCommBreak(port.m_Comm))
-				port.fail();
+				throw new LastErrorException(0);
 			return 0;
-		} catch (Fail f) {
+		} catch (Exception f) {
+                        f.printStackTrace();
 			return -1;
 		}
 	}
@@ -621,7 +645,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		if (c_speed != port.m_c_speed || c_cflag != port.m_c_cflag || c_iflag != port.m_c_iflag || c_oflag != port.m_c_oflag) {
 			DCB dcb = port.m_DCB;
 			if (!GetCommState(port.m_Comm, dcb))
-				port.fail();
+				throw new LastErrorException(0);
 
 			dcb.DCBlength = dcb.size();
 			dcb.BaudRate = c_speed;
@@ -699,7 +723,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			dcb.EofChar = tios.c_cc[VEOF];
 
 			if (!SetCommState(port.m_Comm, dcb))
-				port.fail();
+				throw new LastErrorException(0);
 
 			port.m_c_speed = c_speed;
 			port.m_c_cflag = c_cflag;
@@ -744,7 +768,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				touts.ReadTotalTimeoutMultiplier = 0;
 			}
 			if (!SetCommTimeouts(port.m_Comm, port.m_Timeouts))
-				port.fail();
+				throw new LastErrorException(0);
 			port.m_VMIN = vmin;
 			port.m_VTIME = vtime;
 			log = log && log(2, "vmin %d vtime %d ReadIntervalTimeout %d ReadTotalTimeoutConstant %d ReadTotalTimeoutMultiplier %d\n", vmin, vtime, touts.ReadIntervalTimeout, touts.ReadTotalTimeoutConstant, touts.ReadTotalTimeoutMultiplier);
@@ -771,7 +795,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private void clearCommErrors(Port port) throws Fail {
 		synchronized (port.m_COMSTAT) {
 			if (!ClearCommError(port.m_Comm, port.m_ClearErr, port.m_COMSTAT))
-				port.fail();
+				throw new LastErrorException(0);
 		}
 	}
 
@@ -813,13 +837,14 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 							if (port.m_WaitPending) {
 								if (!SetCommMask(port.m_Comm, 0))
-									port.fail();
-								GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false);
+									throw new LastErrorException(0);
+								if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
+                                                                        throw new LastErrorException(0);
 								port.m_WaitPending = false;
 							}
 
 							if (!ResetEvent(port.m_SelOVL.hEvent))
-								port.fail();
+								throw new LastErrorException(0);
 
 							int flags = 0;
 							if (rd)
@@ -828,21 +853,22 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 								flags |= EV_TXEMPTY;
 
 							if (!SetCommMask(port.m_Comm, flags))
-								port.fail();
+								throw new LastErrorException(0);
 
-							if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL)) {
-								if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
-									port.fail();
-								// actually it seems that overlapped
-								// WaitCommEvent never returns true so we never get here
-								ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
-							} else {
-								// FIXME if the port dies on us what happens
-								if (GetLastError() != ERROR_IO_PENDING)
-									port.fail();
-								waiting.add(port);
-								port.m_WaitPending = true;
-							}
+                                                        try {
+                                                            if (WaitCommEvent(port.m_Comm, port.m_EventFlags, port.m_SelOVL))
+                                                                    // Should never get here
+                                                                    throw new java.lang.IllegalStateException("WaitCommEvent returned true in overlapped mode");
+                                                            else
+                                                                    throw new LastErrorException(0);
+                                                        } catch (LastErrorException lee) {
+                                                            if (lee.getErrorCode() == 0)
+                                                                System.err.println("ReadFile returned false but GetLastError==0");
+                                                            else if (lee.getErrorCode() != ERROR_IO_PENDING)
+                                                                port.fail(lee);
+                                                        }
+                                                        waiting.add(port);
+                                                        port.m_WaitPending = true;
 						} catch (InterruptedException ie) {
 							m_ErrNo = EINTR;
 							return -1;
@@ -871,7 +897,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 								int[] mask = { 0 };
 
 								if (!GetCommMask(port.m_Comm, mask))
-									port.fail();
+									throw new LastErrorException(0);
 								if (port.m_COMSTAT.cbInQue > 0 && ((mask[0] & EV_RXCHAR) != 0)) {
 									FD_SET(port.m_FD, readfds);
 									log = log && log(1, "missed EV_RXCHAR event\n");
@@ -895,7 +921,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 							}
 							Port port = waiting.get(i);
 							if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
-								port.fail();
+								throw new LastErrorException(0);
 
 							ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
 							port.m_WaitPending = false;
@@ -1030,19 +1056,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 					port.MSR &= ~TIOCM_DTR;
 
 				if (!EscapeCommFunction(port.m_Comm, ((a & TIOCM_DTR) != 0) ? SETDTR : CLRDTR))
-					port.fail();
+					throw new LastErrorException(0);
 
 				if ((a & TIOCM_RTS) != 0)
 					port.MSR |= TIOCM_RTS;
 				else
 					port.MSR &= ~TIOCM_RTS;
 				if (!EscapeCommFunction(port.m_Comm, ((a & TIOCM_RTS) != 0) ? SETRTS : CLRRTS))
-					port.fail();
+					throw new LastErrorException(0);
 				return 0;
 			} else if (cmd == TIOCMGET) {
 				int[] stat = { 0 };
 				if (!GetCommModemStatus(port.m_Comm, stat))
-					port.fail();
+					throw new LastErrorException(0);
 				int s = stat[0];
 				int a = arg[0];
 				if ((s & MS_RLSD_ON) != 0)
