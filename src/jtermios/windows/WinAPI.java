@@ -98,13 +98,13 @@ public class WinAPI {
         private static WaitMultiple m_K32libWM;
         static {
             // Moved to static per JNA recommendations
+            // This had to be separated out for Direct Mapping (no non-primative arrays)
+            m_K32libWM = (WaitMultiple) Native.loadLibrary("kernel32", WaitMultiple.class, com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS);
             // Added com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS so we don't mix/match WString and String
             Native.register(Windows_kernel32_lib_Direct.class, NativeLibrary.getInstance("kernel32", com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS));
             m_K32libDM = new Windows_kernel32_lib_Direct();
             m_K32lib = m_K32libDM;
             // m_K32lib = (Windows_kernel32_lib) Native.loadLibrary("kernel32", Windows_kernel32_lib.class, com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS);
-            // This had to be separated out for Direct Mapping (no non-primative arrays)
-            m_K32libWM = (WaitMultiple) Native.loadLibrary("kernel32", WaitMultiple.class, com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS);
         }
 
 	public static class HANDLE extends PointerType {
@@ -140,130 +140,122 @@ public class WinAPI {
 	public static HANDLE NULL = new HANDLE(Pointer.createConstant(0));
 
 	public static class Windows_kernel32_lib_Direct implements Windows_kernel32_lib {
-		native public HANDLE CreateFile(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template);
+		native public HANDLE CreateFile(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template) throws LastErrorException;
 
-		native public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn, Pointer lpOverlapped);
+		native public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn, Pointer lpOverlapped) throws LastErrorException;
 
-		native public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, OVERLAPPED lpOverlapped);
+		native public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, OVERLAPPED lpOverlapped) throws LastErrorException;
 
-		native public boolean ReadFile(HANDLE hFile, byte[] buf, int rdn, int[] nrd, Pointer lpOverlapped);
+		native public boolean ReadFile(HANDLE hFile, byte[] buf, int rdn, int[] nrd, Pointer lpOverlapped) throws LastErrorException;
 
-		native public boolean ReadFile(HANDLE hFile, Pointer lpBuffer, int rdn, int[] nrd, OVERLAPPED lpOverlapped);
+		native public boolean ReadFile(HANDLE hFile, Pointer lpBuffer, int rdn, int[] nrd, OVERLAPPED lpOverlapped) throws LastErrorException;
 
-		native public boolean FlushFileBuffers(HANDLE hFile);
+		native public boolean FlushFileBuffers(HANDLE hFile) throws LastErrorException;
 
-		native public boolean PurgeComm(HANDLE hFile, int qmask);
+		native public boolean PurgeComm(HANDLE hFile, int qmask) throws LastErrorException;
 
-		native public boolean CancelIo(HANDLE hFile);
+		native public boolean CancelIo(HANDLE hFile) throws LastErrorException;
 
 		native public boolean CloseHandle(HANDLE hFile);
 
-		native public boolean ClearCommError(HANDLE hFile, int[] n, COMSTAT s);
+		native public boolean ClearCommError(HANDLE hFile, int[] n, COMSTAT s) throws LastErrorException;
 
-		native public boolean SetCommMask(HANDLE hFile, int dwEvtMask);
+		native public boolean SetCommMask(HANDLE hFile, int dwEvtMask) throws LastErrorException;
 
-		native public boolean GetCommMask(HANDLE hFile, int[] dwEvtMask);
+		native public boolean GetCommMask(HANDLE hFile, int[] dwEvtMask) throws LastErrorException;
 
-		native public boolean GetCommState(HANDLE hFile, DCB dcb);
+		native public boolean GetCommState(HANDLE hFile, DCB dcb) throws LastErrorException;
 
-		native public boolean SetCommState(HANDLE hFile, DCB dcb);
+		native public boolean SetCommState(HANDLE hFile, DCB dcb) throws LastErrorException;
 
-		native public boolean SetCommTimeouts(HANDLE hFile, COMMTIMEOUTS tout);
+		native public boolean SetCommTimeouts(HANDLE hFile, COMMTIMEOUTS tout) throws LastErrorException;
 
-		native public boolean SetupComm(HANDLE hFile, int dwInQueue, int dwOutQueue);
+		native public boolean SetupComm(HANDLE hFile, int dwInQueue, int dwOutQueue) throws LastErrorException;
 
-		native public boolean SetCommBreak(HANDLE hFile);
+		native public boolean SetCommBreak(HANDLE hFile) throws LastErrorException;
 
-		native public boolean ClearCommBreak(HANDLE hFile);
+		native public boolean ClearCommBreak(HANDLE hFile) throws LastErrorException;
 
-		native public boolean GetCommModemStatus(HANDLE hFile, int[] stat);
+		native public boolean GetCommModemStatus(HANDLE hFile, int[] stat) throws LastErrorException;
 
-		native public boolean EscapeCommFunction(HANDLE hFile, int func);
+		native public boolean EscapeCommFunction(HANDLE hFile, int func) throws LastErrorException;
 
-		native public HANDLE CreateEvent(SECURITY_ATTRIBUTES lpEventAttributes, boolean bManualReset, boolean bInitialState, String lpName);
+		native public HANDLE CreateEvent(SECURITY_ATTRIBUTES lpEventAttributes, boolean bManualReset, boolean bInitialState, String lpName) throws LastErrorException;
 
 		native public boolean ResetEvent(HANDLE hEvent);
 
 		native public boolean SetEvent(HANDLE hEvent);
 
-		// Note lpEvtMask must be IntByRerence when WaitCommEvent is overlapped
-		native public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, OVERLAPPED lpOverlapped);
+		native public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, OVERLAPPED lpOverlapped) throws LastErrorException;
 
-		native public boolean WaitCommEvent(HANDLE hFile, int[] lpEvtMask, OVERLAPPED lpOverlapped);
+		native public int WaitForSingleObject(HANDLE hHandle, int dwMilliseconds) throws LastErrorException;
 
-		native public int WaitForSingleObject(HANDLE hHandle, int dwMilliseconds);
+		native public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait) throws LastErrorException;
 
-		native public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait);
 
-		native public int FormatMessage(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
-
-		native public int QueryDosDevice(String name, byte[] buffer, int bsize);
+		native public int QueryDosDevice(String name, byte[] buffer, int bsize) throws LastErrorException;
 
 	}
         
         public interface WaitMultiple extends StdCallLibrary {
-		public int WaitForMultipleObjects(int nCount, HANDLE[] lpHandles, boolean bWaitAll, int dwMilliseconds);
+		public int WaitForMultipleObjects(int nCount, HANDLE[] lpHandles, boolean bWaitAll, int dwMilliseconds) throws LastErrorException;
         }
 
         public interface Windows_kernel32_lib extends StdCallLibrary {
-		public HANDLE CreateFile(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template);
+		public HANDLE CreateFile(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template) throws LastErrorException;
 
-		public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn, Pointer lpOverlapped);
+		public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn, Pointer lpOverlapped) throws LastErrorException;
 
-		public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, OVERLAPPED lpOverlapped);
+		public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, OVERLAPPED lpOverlapped) throws LastErrorException;
 
-		public boolean ReadFile(HANDLE hFile, byte[] buf, int rdn, int[] nrd, Pointer lpOverlapped);
+		public boolean ReadFile(HANDLE hFile, byte[] buf, int rdn, int[] nrd, Pointer lpOverlapped) throws LastErrorException;
 
-		public boolean ReadFile(HANDLE hFile, Pointer lpBuffer, int rdn, int[] nrd, OVERLAPPED lpOverlapped);
+		public boolean ReadFile(HANDLE hFile, Pointer lpBuffer, int rdn, int[] nrd, OVERLAPPED lpOverlapped) throws LastErrorException;
 
-		public boolean FlushFileBuffers(HANDLE hFile);
+		public boolean FlushFileBuffers(HANDLE hFile) throws LastErrorException;
 
-		public boolean PurgeComm(HANDLE hFile, int qmask);
+		public boolean PurgeComm(HANDLE hFile, int qmask) throws LastErrorException;
 
-		public boolean CancelIo(HANDLE hFile);
+		public boolean CancelIo(HANDLE hFile) throws LastErrorException;
 
 		public boolean CloseHandle(HANDLE hFile);
 
-		public boolean ClearCommError(HANDLE hFile, int[] n, COMSTAT s);
+		public boolean ClearCommError(HANDLE hFile, int[] n, COMSTAT s) throws LastErrorException;
 
-		public boolean SetCommMask(HANDLE hFile, int dwEvtMask);
+		public boolean SetCommMask(HANDLE hFile, int dwEvtMask) throws LastErrorException;
 
-		public boolean GetCommMask(HANDLE hFile, int[] dwEvtMask);
+		public boolean GetCommMask(HANDLE hFile, int[] dwEvtMask) throws LastErrorException;
 
-		public boolean GetCommState(HANDLE hFile, DCB dcb);
+		public boolean GetCommState(HANDLE hFile, DCB dcb) throws LastErrorException;
 
-		public boolean SetCommState(HANDLE hFile, DCB dcb);
+		public boolean SetCommState(HANDLE hFile, DCB dcb) throws LastErrorException;
 
-		public boolean SetCommTimeouts(HANDLE hFile, COMMTIMEOUTS tout);
+		public boolean SetCommTimeouts(HANDLE hFile, COMMTIMEOUTS tout) throws LastErrorException;
 
-		public boolean SetupComm(HANDLE hFile, int dwInQueue, int dwOutQueue);
+		public boolean SetupComm(HANDLE hFile, int dwInQueue, int dwOutQueue) throws LastErrorException;
 
-		public boolean SetCommBreak(HANDLE hFile);
+		public boolean SetCommBreak(HANDLE hFile) throws LastErrorException;
 
-		public boolean ClearCommBreak(HANDLE hFile);
+		public boolean ClearCommBreak(HANDLE hFile) throws LastErrorException;
 
-		public boolean GetCommModemStatus(HANDLE hFile, int[] stat);
+		public boolean GetCommModemStatus(HANDLE hFile, int[] stat) throws LastErrorException;
 
-		public boolean EscapeCommFunction(HANDLE hFile, int func);
+		public boolean EscapeCommFunction(HANDLE hFile, int func) throws LastErrorException;
 
-		public HANDLE CreateEvent(SECURITY_ATTRIBUTES lpEventAttributes, boolean bManualReset, boolean bInitialState, String lpName);
+		public HANDLE CreateEvent(SECURITY_ATTRIBUTES lpEventAttributes, boolean bManualReset, boolean bInitialState, String lpName) throws LastErrorException;
 
 		public boolean ResetEvent(HANDLE hEvent);
 
 		public boolean SetEvent(HANDLE hEvent);
 
-		// Note lpEvtMask must be IntByRerence when WaitCommEvent is overlapped
-		public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, OVERLAPPED lpOverlapped);
+		public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, OVERLAPPED lpOverlapped) throws LastErrorException;
 
-		public boolean WaitCommEvent(HANDLE hFile, int[] lpEvtMask, OVERLAPPED lpOverlapped);
+		public int WaitForSingleObject(HANDLE hHandle, int dwMilliseconds) throws LastErrorException;
 
-		public int WaitForSingleObject(HANDLE hHandle, int dwMilliseconds);
+		public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait) throws LastErrorException;
 
-		public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait);
 
-		public int FormatMessage(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
-
-		public int QueryDosDevice(String name, byte[] buffer, int bsize);
+		public int QueryDosDevice(String name, byte[] buffer, int bsize) throws LastErrorException;
 
 	}
 
@@ -761,7 +753,9 @@ public class WinAPI {
 
 	static public boolean WaitCommEvent(HANDLE hFile, int[] lpEvtMask) {
 		log = log && log(5, "> WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask[0], null);
-		boolean res = m_K32lib.WaitCommEvent(hFile, lpEvtMask, null);
+                IntByReference brlpEvtMask = new IntByReference(lpEvtMask[0]);
+		boolean res = m_K32lib.WaitCommEvent(hFile, brlpEvtMask, null);
+                lpEvtMask[0] = brlpEvtMask.getValue();
 		log = log && log(4, "< WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask[0], null, res);
 		return res;
 	}
@@ -794,12 +788,6 @@ public class WinAPI {
 		return res;
 	}
 
-	static public int FormatMessage(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list) {
-		log = log && log(5, "> FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s)\n", flags, src, msgId, langId, dst, sze, va_list);
-		int res = m_K32lib.FormatMessage(flags, src, msgId, langId, dst, sze, va_list);
-		log = log && log(4, "< FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s) => %d\n", flags, src, msgId, langId, dst, sze, va_list, res);
-		return res;
-	}
 
 	static public int QueryDosDevice(String name, byte[] buffer, int bsize) {
 		log = log && log(5, "> QueryDosDeviceA(%s, %s, %d)\n", name, buffer, bsize);
