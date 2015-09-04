@@ -1,3 +1,12 @@
+Version 0.0.25
+
+* Fixed some issues on Windows backend that sometimes
+  caused problems on Windows.
+  
+  This version requires Java 1.7 or higher. 
+  
+  Contributed by Pete Loveall.
+  
 Version 0.0.24
 
 * All backends now uses JNA Direct Mapping for less CPU

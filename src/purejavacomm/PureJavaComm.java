@@ -3,7 +3,7 @@ package purejavacomm;
 public class PureJavaComm {
 	// change this if you modify the code and re-distribute
 	public static String getVersion() {
-		return "0.0.24";
+		return "0.0.25";
 	}
 
 	// change this is if you fork the project
