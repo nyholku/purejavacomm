@@ -185,14 +185,10 @@ public class JTermios {
 	public static int B230400 = 230400;
 	// poll.h stuff
 	public static short POLLIN = 0x0001;
-	public static int POLLIN_IN = 0x0001; // for use with poll(int[]...)
-	public static int POLLIN_OUT = 0x0001; // for use with poll(int[]...)
 	//public static short POLLRDNORM = 0x0040; // Not Linux
 	//public static short POLLRDBAND = 0x0080; // Not Linux
 	public static short POLLPRI = 0x0002;
 	public static short POLLOUT = 0x0004;
-	public static int POLLOUT_IN = 0x0004; // for use with poll(int[]...)
-	public static int POLLOUT_OUT = 0x0004; // for use with poll(int[]...)
 	//public static short POLLWRNORM = 0x0004; // Not Linux
 	//public static short POLLWRBAND = 0x0100; // Not Linux
 	public static short POLLERR = 0x0008;
@@ -207,7 +203,19 @@ public class JTermios {
 	// reference to single arc/os specific implementation
 	private static JTermiosInterface m_Termios;
 
+        public interface FDSet {
+                public void FD_SET(int fd);
+
+                public void FD_CLR(int fd);
+
+                public boolean FD_ISSET(int fd);
+
+                public void FD_ZERO();
+        }
+
 	public interface JTermiosInterface {
+                public FDSet newFDSet();
+
 		int pipe(int[] fds);
 
 		void shutDown();
@@ -250,25 +258,15 @@ public class JTermios {
 
 		int select(int n, FDSet read, FDSet write, FDSet error, TimeVal timeout);
 
+		int poll(Pollfd[] fds, int nfds, int timeout);
+
 		/**
 		 * poll() on Windows has not been implemented and while implemented on
 		 * Mac OS X, does not work for devices.
 		 */
-		int poll(Pollfd[] fds, int nfds, int timeout);
-
-		int poll(int[] fds, int nfds, int timeout);
-
+                boolean canPoll();
+                
 		void perror(String msg);
-
-		FDSet newFDSet();
-
-		void FD_SET(int fd, FDSet set);
-
-		void FD_CLR(int fd, FDSet set);
-
-		boolean FD_ISSET(int fd, FDSet set);
-
-		void FD_ZERO(FDSet set);
 
 		List<String> getPortList();
 
@@ -447,13 +445,10 @@ public class JTermios {
 		log = log && log(3, "< poll(%s,%d,%d) => %d\n", log(fds, 8), nfds, timeout, ret);
 		return ret;
 	}
-
-	static public int poll(int[] fds, int nfds, int timeout) {
-		log = log && log(5, "> poll(%s,%d,%d)\n", log(fds, 8), nfds, timeout);
-		int ret = m_Termios.poll(fds, nfds, timeout);
-		log = log && log(3, "< poll(%s,%d,%d) => %d\n", log(fds, 8), nfds, timeout, ret);
-		return ret;
-	}
+        
+        static public boolean canPoll() {
+            return m_Termios.canPoll();
+        }
 
 	static public int pipe(int[] fds) {
 		log = log && log(5, "> pipe([%d,%d,%d])\n", fds.length, fds[0], fds[1]);
@@ -471,19 +466,24 @@ public class JTermios {
 	}
 
 	static public void FD_SET(int fd, FDSet set) {
-		m_Termios.FD_SET(fd, set);
+            if (set != null)
+		set.FD_SET(fd);
 	}
 
 	static public void FD_CLR(int fd, FDSet set) {
-		m_Termios.FD_CLR(fd, set);
+            if (set != null)
+		set.FD_CLR(fd);
 	}
 
 	static public boolean FD_ISSET(int fd, FDSet set) {
-		return m_Termios.FD_ISSET(fd, set);
+            if (set == null)
+                return false;
+            return set.FD_ISSET(fd);
 	}
 
 	static public void FD_ZERO(FDSet set) {
-		m_Termios.FD_ZERO(set);
+            if (set != null)
+		set.FD_ZERO();
 	}
 
 	static public List<String> getPortList() {
@@ -501,7 +501,7 @@ public class JTermios {
 	}
 
 	public static class JTermiosLogging {
-		private static int LOG_MASK = 0;
+		private static int LOG_MASK = 1;
 		public static boolean log = false;
 
 		static { // initialization 

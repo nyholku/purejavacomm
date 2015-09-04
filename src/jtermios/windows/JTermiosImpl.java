@@ -39,7 +39,6 @@ import com.sun.jna.ptr.IntByReference;
 import static jtermios.JTermios.*;
 import static jtermios.JTermios.JTermiosLogging.*;
 import jtermios.*;
-import jtermios.windows.WinAPI.*;
 import static jtermios.windows.WinAPI.*;
 import static jtermios.windows.WinAPI.DCB.*;
 
@@ -261,10 +260,25 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	}
 
-	static private class FDSetImpl extends FDSet {
+	static private class FDSetImpl implements FDSet {
 		static final int FD_SET_SIZE = 256; // Windows supports max 255 serial ports so this is enough
 		static final int NFBBITS = 32;
 		int[] bits = new int[(FD_SET_SIZE + NFBBITS - 1) / NFBBITS];
+                public void FD_CLR(int fd) {
+                        bits[fd / NFBBITS] &= ~(1 << (fd % NFBBITS));
+                }
+
+                public boolean FD_ISSET(int fd) {
+                        return (bits[fd / NFBBITS] & (1 << (fd % NFBBITS))) != 0;
+                }
+
+                public void FD_SET(int fd) {
+                        bits[fd / NFBBITS] |= 1 << (fd % NFBBITS);
+                }
+
+                public void FD_ZERO() {
+                        java.util.Arrays.fill(bits, 0);
+                }
 	}
 
 	public JTermiosImpl() {
@@ -956,10 +970,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		return -1;
 	}
 
-	public int poll(int fds[], int nfds, int timeout) {
-		m_ErrNo = EINVAL;
-		return -1;
-	}
+        public boolean canPoll() {
+            return false;
+        }
 
 	public void perror(String msg) {
 		if (msg != null && msg.length() > 0)
@@ -1009,34 +1022,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public FDSet newFDSet() {
 		return new FDSetImpl();
-	}
-
-	public void FD_CLR(int fd, FDSet set) {
-		if (set == null)
-			return;
-		FDSetImpl p = (FDSetImpl) set;
-		p.bits[fd / FDSetImpl.NFBBITS] &= ~(1 << (fd % FDSetImpl.NFBBITS));
-	}
-
-	public boolean FD_ISSET(int fd, FDSet set) {
-		if (set == null)
-			return false;
-		FDSetImpl p = (FDSetImpl) set;
-		return (p.bits[fd / FDSetImpl.NFBBITS] & (1 << (fd % FDSetImpl.NFBBITS))) != 0;
-	}
-
-	public void FD_SET(int fd, FDSet set) {
-		if (set == null)
-			return;
-		FDSetImpl p = (FDSetImpl) set;
-		p.bits[fd / FDSetImpl.NFBBITS] |= 1 << (fd % FDSetImpl.NFBBITS);
-	}
-
-	public void FD_ZERO(FDSet set) {
-		if (set == null)
-			return;
-		FDSetImpl p = (FDSetImpl) set;
-		java.util.Arrays.fill(p.bits, 0);
 	}
 
 	public int ioctl(int fd, int cmd, int[] arg) {
