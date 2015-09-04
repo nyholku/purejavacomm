@@ -34,15 +34,11 @@ package purejavacomm;
 import java.io.*;
 import java.util.*;
 
-import com.sun.jna.Platform;
-
 import jtermios.*;
 
 import static jtermios.JTermios.JTermiosLogging.*;
 
 import static jtermios.JTermios.*;
-
-import com.sun.jna.Platform;
 
 public class PureJavaSerialPort extends SerialPort {
 	final boolean USE_POLL;
@@ -693,7 +689,7 @@ public class PureJavaSerialPort extends SerialPort {
 				// this stuff is just cached/precomputed stuff to make read() faster
 				private int im_VTIME = -1;
 				private int im_VMIN = -1;
-				private int[] im_ReadPollFD;
+				private final jtermios.Pollfd[] im_ReadPollFD = new Pollfd[]{new Pollfd(), new Pollfd()};
 				private byte[] im_Nudge;
 				private FDSet im_ReadFDSet;
 				private TimeVal im_ReadTimeVal;
@@ -708,11 +704,10 @@ public class PureJavaSerialPort extends SerialPort {
 				{ // initialized block instead of construct in anonymous class
 					im_ReadFDSet = newFDSet();
 					im_ReadTimeVal = new TimeVal();
-					im_ReadPollFD = new int[4];
-					im_ReadPollFD[0] = m_FD;
-					im_ReadPollFD[1] = POLLIN_IN;
-					im_ReadPollFD[2] = m_PipeRdFD;
-					im_ReadPollFD[3] = POLLIN_IN;
+					im_ReadPollFD[0].fd = m_FD;
+					im_ReadPollFD[0].events = POLLIN;
+					im_ReadPollFD[1].fd = m_PipeRdFD;
+					im_ReadPollFD[1].events = POLLIN;
 					im_PollFDn = m_HaveNudgePipe ? 2 : 1;
 					im_Nudge = new byte[1];
 				}
@@ -858,12 +853,12 @@ public class PureJavaSerialPort extends SerialPort {
 								if (n < 0 || m_FD < 0) // the port closed while we were blocking in poll
 									throw new IOException();
 
-								if ((im_ReadPollFD[3] & POLLIN_OUT) != 0)
+								if ((im_ReadPollFD[1].revents & POLLIN) != 0)
 									jtermios.JTermios.read(m_PipeRdFD, im_Nudge, 1);
-								int re = im_ReadPollFD[1];
+								int re = im_ReadPollFD[0].revents;
 								if ((re & POLLNVAL_OUT) != 0)
 									throw new IOException();
-								dataAvailable = (re & POLLIN_OUT) != 0;
+								dataAvailable = (re & POLLIN) != 0;
 
 							} else { // this is a bit slower but then again it is unlikely
 								// this gets executed in a low horsepower system
@@ -1062,7 +1057,7 @@ public class PureJavaSerialPort extends SerialPort {
 		super();
 
 		boolean usepoll = false;
-		if (Platform.isLinux()) {
+		if (JTermios.canPoll()) {
 			String key1 = "purejavacomm.use_poll";
 			String key2 = "purejavacomm.usepoll";
 			if (System.getProperty(key1) != null) {
@@ -1159,14 +1154,14 @@ public class PureJavaSerialPort extends SerialPort {
 					TimeVal timeout = null;
 					FDSet rset = null;
 					FDSet wset = null;
-					int[] pollfd = null;
+					jtermios.Pollfd[] pollfd = null;
 					byte[] nudge = null;
 
 					if (USE_POLL) {
-						pollfd = new int[4];
+						pollfd = new Pollfd[]{new Pollfd(), new Pollfd()};
 						nudge = new byte[1];
-						pollfd[0] = m_FD;
-						pollfd[2] = m_PipeRdFD;
+						pollfd[0].fd = m_FD;
+						pollfd[1].fd = m_PipeRdFD;
 					} else {
 						rset = newFDSet();
 						wset = newFDSet();
@@ -1185,35 +1180,35 @@ public class PureJavaSerialPort extends SerialPort {
 
 						if (read || write || (!pollCtrlLines && m_HaveNudgePipe)) {
 							if (USE_POLL) {
-								int e = 0;
+								short e = 0;
 								if (read)
-									e |= POLLIN_IN;
+									e |= POLLIN;
 								if (write)
-									e |= POLLOUT_IN;
-								pollfd[1] = e;
-								pollfd[3] = POLLIN_IN;
+									e |= POLLOUT;
+								pollfd[0].events = e;
+								pollfd[1].events = POLLIN;
 								if (m_HaveNudgePipe)
 									n = poll(pollfd, 2, -1);
 								else
 									n = poll(pollfd, 1, TIMEOUT);
 
-								int re = pollfd[3];
+								int re = pollfd[1].revents;
 
-								if ((re & POLLNVAL_OUT) != 0) {
+								if ((re & POLLNVAL) != 0) {
 									log = log && log(1, "poll() returned POLLNVAL, errno %d\n", errno());
 									break;
 								}
 
-								if ((re & POLLIN_OUT) != 0)
+								if ((re & POLLIN) != 0)
 									read(m_PipeRdFD, nudge, 1);
 
-								re = pollfd[1];
-								if ((re & POLLNVAL_OUT) != 0) {
+								re = pollfd[0].revents;
+								if ((re & POLLNVAL) != 0) {
 									log = log && log(1, "poll() returned POLLNVAL, errno %d\n", errno());
 									break;
 								}
-								read = read && (re & POLLIN_OUT) != 0;
-								write = write && (re & POLLOUT_OUT) != 0;
+								read = read && (re & POLLIN) != 0;
+								write = write && (re & POLLOUT) != 0;
 							} else {
 								FD_ZERO(rset);
 								FD_ZERO(wset);

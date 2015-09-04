@@ -34,7 +34,6 @@ import static jtermios.JTermios.*;
 import static jtermios.testsuite.TestBase.S;
 import static jtermios.testsuite.TestBase.fail;
 
-import jtermios.FDSet;
 import jtermios.Termios;
 import jtermios.TimeVal;
 
