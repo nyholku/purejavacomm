@@ -287,24 +287,20 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
             );
         }
 
-        @Override
         public void FD_SET(int fd) {
             fd_array[fd / NFBBITS].setValue(fd_array[fd / NFBBITS].longValue() & (1L << (fd % NFBBITS)));
         }
 
-        @Override
         public boolean FD_ISSET(int fd) {
             return (fd_array[fd / NFBBITS].longValue() & (1L << (fd % NFBBITS))) != 0;
         }
 
-        @Override
         public void FD_ZERO() {
             for (NativeLong fd : fd_array) {
                 fd.setValue(0L);
             }
         }
 
-        @Override
         public void FD_CLR(int fd) {
             fd_array[fd / NFBBITS].setValue(fd_array[fd / NFBBITS].longValue() & ~(1L << (fd % NFBBITS)));
         }
