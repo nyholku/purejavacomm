@@ -30,11 +30,7 @@
 package jtermios.solaris;
 
 import com.sun.jna.*;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -608,7 +604,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     }
 
     public int poll(Pollfd fds[], int nfds, int timeout) {
-        Objects.requireNonNull(fds, "fds must be non-null");
         if (nfds <= 0 || nfds > fds.length) {
             throw new java.lang.IllegalArgumentException("nfds " + nfds + " must be <= fds.length " + fds.length);
         }
