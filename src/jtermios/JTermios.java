@@ -37,6 +37,8 @@ import java.util.regex.Pattern;
 
 import com.sun.jna.Platform;
 import com.sun.jna.Structure;
+import com.sun.jna.IntegerType;
+import java.util.*;
 
 /**
  * JTermios provides a limited cross platform unix termios type interface to
@@ -254,7 +256,7 @@ public class JTermios {
 
 		int read(int fd, byte[] buffer, int len);
 
-		int ioctl(int fd, int cmd, int[] data);
+		int ioctl(int fd, int cmd, int... data);
 
 		int select(int n, FDSet read, FDSet write, FDSet error, TimeVal timeout);
 
@@ -271,6 +273,45 @@ public class JTermios {
 		List<String> getPortList();
 
 		public String getPortNamePattern();
+                
+            static public final class ioctl_cmd {
+                public final int command;
+                public final int arglength;
+                public final boolean isout;
+
+                public ioctl_cmd(int cmd) {
+                    command = cmd;
+                    int inout = cmd & 0xe0000000;
+                    if (inout == 0x2000000) {
+                        isout = false;
+                        arglength = 0;
+                        return;
+                    }
+                    isout = ((inout & 0x4000000) == 0x4000000);
+                    arglength = (cmd & 0x1fff0000) >> 16;
+                    if (arglength != 4 && arglength != 8)
+                        throw new IllegalArgumentException("ioctl command argument illegal length -> " + arglength);
+                }
+
+                public Object getArg(int... data) {
+                    if (arglength == 0 || data == null || data.length == 0)
+                        return null;
+
+                    if (data.length > 1)
+                        throw new java.lang.IllegalArgumentException("Only data length of 1 allowed.");
+                    if (isout) {
+                        if (arglength == 4)
+                            return new com.sun.jna.ptr.IntByReference(data[0]);
+                        else
+                            return new com.sun.jna.ptr.LongByReference(data[0]);
+                    } else {
+                        if (arglength == 4)
+                            return Integer.valueOf(data[0]);
+                        else
+                            return Long.valueOf(data[0]);
+                    }
+                }
+            }
 	}
 
 	public void shutdown() {
@@ -412,13 +453,13 @@ public class JTermios {
 		return ret;
 	}
 
-	static public int ioctl(int fd, int cmd, int[] data) {
-		log = log && log(5, "> ioctl(%d,%d,[%08X])\n", fd, cmd, data[0]);
+	static public int ioctl(int fd, int cmd, int... data) {
+		log = log && log(5, "> ioctl(%d,%d,[%08X])\n", fd, cmd, Arrays.toString(data));
 		int ret = m_Termios.ioctl(fd, cmd, data);
-		log = log && log(3, "< ioctl(%d,%d,[%08X]) => %d\n", fd, cmd, data[0], ret);
+		log = log && log(3, "< ioctl(%d,%d,[%08X]) => %d\n", fd, cmd, Arrays.toString(data), ret);
 		return ret;
 	}
-
+        
 	private static String toString(int n, FDSet fdset) {
 		StringBuffer s = new StringBuffer("[");
 		for (int fd = 0; fd < n; fd++)
