@@ -34,10 +34,10 @@ package purejavacomm;
 import java.io.*;
 import java.util.*;
 
+import com.sun.jna.Native;
+
 import jtermios.*;
-
 import static jtermios.JTermios.JTermiosLogging.*;
-
 import static jtermios.JTermios.*;
 
 public class PureJavaSerialPort extends SerialPort {
@@ -717,6 +717,7 @@ public class PureJavaSerialPort extends SerialPort {
 					checkState();
 					if (ioctl(m_FD, FIONREAD, im_Available) < 0) {
 						PureJavaSerialPort.this.close();
+						System.out.println(Native.getLastError());
 						throw new IOException();
 					}
 					return im_Available[0];
