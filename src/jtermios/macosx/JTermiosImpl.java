@@ -301,7 +301,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
         public NativeLong c_oflag;
         public NativeLong c_cflag;
         public NativeLong c_lflag;
-        public byte[] c_cc = new byte[32];
+        public byte[] c_cc = new byte[20];
         public NativeLong c_ispeed;
         public NativeLong c_ospeed;
 
@@ -326,7 +326,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
             c_oflag.setValue(t.c_oflag);
             c_cflag.setValue(t.c_cflag);
             c_lflag.setValue(t.c_lflag);
-            System.arraycopy(t.c_cc, 0, c_cc, 0, t.c_cc.length);
+            System.arraycopy(t.c_cc, 0, c_cc, 0, Math.min(t.c_cc.length, c_cc.length));
             c_ispeed.setValue(t.c_ispeed);
             c_ospeed.setValue(t.c_ospeed);
         }
@@ -336,7 +336,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
             t.c_oflag = c_oflag.intValue();
             t.c_cflag = c_cflag.intValue();
             t.c_lflag = c_lflag.intValue();
-            System.arraycopy(c_cc, 0, t.c_cc, 0, t.c_cc.length);
+            System.arraycopy(c_cc, 0, t.c_cc, 0, Math.min(t.c_cc.length, c_cc.length));
             t.c_ispeed = c_ispeed.intValue();
             t.c_ospeed = c_ospeed.intValue();
         }
