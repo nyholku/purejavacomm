@@ -49,10 +49,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     private static String DEVICE_DIR_PATH = "/dev/";
     static C_lib_DirectMapping m_ClibDM;
     static C_lib m_Clib;
-    static NonDirectCLib m_ClibND;
+//    static NonDirectCLib m_ClibND;
 
     static {
-        m_ClibND = (NonDirectCLib) Native.loadLibrary(Platform.C_LIBRARY_NAME, NonDirectCLib.class);
+//        m_ClibND = (NonDirectCLib) Native.loadLibrary(Platform.C_LIBRARY_NAME, NonDirectCLib.class);
         Native.register(C_lib_DirectMapping.class, NativeLibrary.getInstance(Platform.C_LIBRARY_NAME));
         m_ClibDM = new C_lib_DirectMapping();
         m_Clib = m_ClibDM;
@@ -165,6 +165,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
         native public void perror(String msg);
 
         native public int tcsendbreak(int fd, int duration);
+
+        native public int select(int n, fd_set read, fd_set write, fd_set error, timeval timeout);
+
     }
 
     public interface C_lib extends com.sun.jna.Library {
@@ -205,15 +208,15 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
         public int tcsendbreak(int fd, int duration);
 
-    }
-
-    public interface NonDirectCLib extends com.sun.jna.Library {
-
         public int select(int n, fd_set read, fd_set write, fd_set error, timeval timeout);
 
-        public int poll(pollfd.ByReference pfds, int nfds, int timeout);
     }
 
+//    public interface NonDirectCLib extends com.sun.jna.Library {
+//
+//        public int poll(pollfd.ByReference pfds, int nfds, int timeout);
+//    }
+//
     static public class timeval extends Structure {
 
         public NativeLong tv_sec;
@@ -539,7 +542,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
             tout = new timeval(timeout);
         }
 
-        return m_ClibND.select(nfds, (fd_set) rfds, (fd_set) wfds, (fd_set) efds, tout);
+        return m_Clib.select(nfds, (fd_set) rfds, (fd_set) wfds, (fd_set) efds, tout);
     }
 
     public int poll(Pollfd fds[], int nfds, int timeout) {
