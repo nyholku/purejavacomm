@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 import com.sun.jna.Platform;
 import com.sun.jna.Structure;
 import com.sun.jna.IntegerType;
+import com.sun.jna.Native;
 import java.util.*;
 
 /**
@@ -216,6 +217,32 @@ public class JTermios {
         }
 
 	public interface JTermiosInterface {
+                public static class NativeSize extends IntegerType {
+
+                    /**
+                     *
+                     */
+                    private static final long serialVersionUID = 2398288011955445078L;
+                    /**
+                     * Size of a size_t integer, in bytes.
+                     */
+                    public static int SIZE = Native.SIZE_T_SIZE;//Platform.is64Bit() ? 8 : 4;
+
+                    /**
+                     * Create a zero-valued Size.
+                     */
+                    public NativeSize() {
+                        this(SIZE);
+                    }
+
+                    /**
+                     * Create a Size with the given value.
+                     */
+                    public NativeSize(long value) {
+                        super(SIZE, value);
+                    }
+                }
+
                 public FDSet newFDSet();
 
 		int pipe(int[] fds);
@@ -287,10 +314,10 @@ public class JTermios {
                         arglength = 0;
                         return;
                     }
-                    isout = ((inout & 0x4000000) == 0x4000000);
+                    isout = ((inout & 0x40000000) == 0x40000000);
                     arglength = (cmd & 0x1fff0000) >> 16;
                     if (arglength != 4 && arglength != 8)
-                        throw new IllegalArgumentException("ioctl command argument illegal length -> " + arglength);
+                        throw new IllegalArgumentException("ioctl command " + cmd + " argument length illegal -> " + arglength);
                 }
 
                 public Object getArg(int... data) {

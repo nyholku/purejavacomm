@@ -59,71 +59,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		m_Clib = m_ClibDM;
 	}
 
-	private final static int TIOCGSERIAL = 0x0000541E;
-	private final static int TIOCSSERIAL = 0x0000541F;
-
-	private final static int ASYNC_SPD_MASK = 0x00001030;
-	private final static int ASYNC_SPD_CUST = 0x00000030;
-
-	private final static int[] m_BaudRates = { //
-	50, 0000001, //
-			75, 0000002, //
-			110, 0000003, //
-			134, 0000004, //
-			150, 0000005, //
-			200, 0000006, //
-			300, 0000007, //
-			600, 0000010, //
-			1200, 0000011, //
-			1800, 0000012, //
-			2400, 0000013, //
-			4800, 0000014, //
-			9600, 0000015, //
-			19200, 0000016, //
-			38400, 0000017, //
-			57600, 0010001, //
-			115200, 0010002, //
-			230400, 0010003, //
-			460800, 0010004, //
-			500000, 0010005, //
-			576000, 0010006, //
-			921600, 0010007, //
-			1000000, 0010010, //
-			1152000, 0010011, //
-			1500000, 0010012, //
-			2000000, 0010013, //
-			2500000, 0010014, //
-			3000000, 0010015, //
-			3500000, 0010016, //
-			4000000, 0010017 //
-	};
-
-	public static class NativeSize extends IntegerType {
-
-		/**
-         *
-         */
-		private static final long serialVersionUID = 2398288011955445078L;
-		/**
-		 * Size of a size_t integer, in bytes.
-		 */
-		public static int SIZE = Native.SIZE_T_SIZE;//Platform.is64Bit() ? 8 : 4;
-
-		/**
-		 * Create a zero-valued Size.
-		 */
-		public NativeSize() {
-			this(0);
-		}
-
-		/**
-		 * Create a Size with the given value.
-		 */
-		public NativeSize(long value) {
-			super(SIZE, value);
-		}
-	}
-
 	public static class C_lib_DirectMapping implements C_lib {
 
 		native public int pipe(int[] fds);
@@ -272,7 +207,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	static public class fd_set extends Structure implements FDSet {
 
-		private final static int NFBBITS = Integer.SIZE * 8;
+		private final static int NFBBITS = Integer.SIZE;
 		public int fd_count = 1024;
 		public int[] fd_array = new int[fd_count / NFBBITS];
 
@@ -351,112 +286,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	public JTermiosImpl() {
 		log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
-
-		//linux/serial.h stuff
-		FIONREAD = 0x541B; // Looked up manually
-		//fcntl.h stuff
-		O_RDWR = 0x00000002;
-		O_NONBLOCK = 0x00000800;
-		O_NOCTTY = 0x00000100;
-		O_NDELAY = 0x00000800;
-		F_GETFL = 0x00000003;
-		F_SETFL = 0x00000004;
-		//errno.h stuff
-		EAGAIN = 11;
-		EACCES = 13;
-		EEXIST = 17;
-		EINTR = 4;
-		EINVAL = 22;
-		EIO = 5;
-		EISDIR = 21;
-		ELOOP = 40;
-		EMFILE = 24;
-		ENAMETOOLONG = 36;
-		ENFILE = 23;
-		ENOENT = 2;
-		ENOSR = 63;
-		ENOSPC = 28;
-		ENOTDIR = 20;
-		ENXIO = 6;
-		EOVERFLOW = 75;
-		EROFS = 30;
-		ENOTSUP = 95;
-		//termios.h stuff
-		TIOCM_RNG = 0x00000080;
-		TIOCM_CAR = 0x00000040;
-		IGNBRK = 0x00000001;
-		BRKINT = 0x00000002;
-		IGNPAR = 0x00000004;
-		PARMRK = 0x00000008;
-		INLCR = 0x00000040;
-		IGNCR = 0x00000080;
-		ICRNL = 0x00000100;
-		ECHONL = 0x00000040;
-		IEXTEN = 0x00008000;
-		CLOCAL = 0x00000800;
-		OPOST = 0x00000001;
-		VSTART = 0x00000008;
-		TCSANOW = 0x00000000;
-		VSTOP = 0x00000009;
-		VMIN = 0x00000006;
-		VTIME = 0x00000005;
-		VEOF = 0x00000004;
-		TIOCMGET = 0x00005415;
-		TIOCM_CTS = 0x00000020;
-		TIOCM_DSR = 0x00000100;
-		TIOCM_RI = 0x00000080;
-		TIOCM_CD = 0x00000040;
-		TIOCM_DTR = 0x00000002;
-		TIOCM_RTS = 0x00000004;
-		ICANON = 0x00000002;
-		ECHO = 0x00000008;
-		ECHOE = 0x00000010;
-		ISIG = 0x00000001;
-		TIOCMSET = 0x00005418;
-		IXON = 0x00000400;
-		IXOFF = 0x00001000;
-		IXANY = 0x00000800;
-		CRTSCTS = 0x80000000;
-		TCSADRAIN = 0x00000001;
-		INPCK = 0x00000010;
-		ISTRIP = 0x00000020;
-		CSIZE = 0x00000030;
-		TCIFLUSH = 0x00000000;
-		TCOFLUSH = 0x00000001;
-		TCIOFLUSH = 0x00000002;
-		CS5 = 0x00000000;
-		CS6 = 0x00000010;
-		CS7 = 0x00000020;
-		CS8 = 0x00000030;
-		CSTOPB = 0x00000040;
-		CREAD = 0x00000080;
-		PARENB = 0x00000100;
-		PARODD = 0x00000200;
-		B0 = 0;
-		B50 = 1;
-		B75 = 2;
-		B110 = 3;
-		B134 = 4;
-		B150 = 5;
-		B200 = 6;
-		B300 = 7;
-		B600 = 8;
-		B1200 = 9;
-		B1800 = 10;
-		B2400 = 11;
-		B4800 = 12;
-		B9600 = 13;
-		B19200 = 14;
-		B38400 = 15;
-		B57600 = 4097;
-		B115200 = 4098;
-		B230400 = 4099;
-		//poll.h stuff
-		POLLIN = 0x0001;
-		POLLPRI = 0x0002;
-		POLLOUT = 0x0004;
-		POLLERR = 0x0008;
-		POLLNVAL = 0x0020;
 	}
 
 	public int errno() {

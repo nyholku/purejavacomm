@@ -1024,7 +1024,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		return new FDSetImpl();
 	}
 
-	public int ioctl(int fd, int cmd, int[] arg) {
+	public int ioctl(int fd, int cmd, int... arg) {
 		Port port = getPort(fd);
 		if (port == null)
 			return -1;
