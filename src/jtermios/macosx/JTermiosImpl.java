@@ -31,6 +31,7 @@
 package jtermios.macosx;
 
 import com.sun.jna.*;
+import com.sun.jna.ptr.*;
 import java.io.File;
 
 import java.util.*;
@@ -49,10 +50,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static String DEVICE_DIR_PATH = "/dev/";
 	static C_lib_DirectMapping m_ClibDM;
 	static C_lib m_Clib;
-	static NonDirectCLib m_ClibND;
+//	static NonDirectCLib m_ClibND;
 
 	static {
-		m_ClibND = (NonDirectCLib) Native.loadLibrary(Platform.C_LIBRARY_NAME, NonDirectCLib.class);
+//		m_ClibND = (NonDirectCLib) Native.loadLibrary(Platform.C_LIBRARY_NAME, NonDirectCLib.class);
 		Native.register(C_lib_DirectMapping.class, NativeLibrary.getInstance(Platform.C_LIBRARY_NAME));
 		m_ClibDM = new C_lib_DirectMapping();
 		m_Clib = m_ClibDM;
@@ -133,7 +134,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		native public int fcntl(int fd, int cmd, int arg);
 
-		//native public int ioctl(int fd, NativeLong cmd, int[] arg);
+		native public int ioctl(int fd, NativeLong cmd);
+
+		native public int ioctl(int fd, NativeLong cmd, int arg);
+
+		native public int ioctl(int fd, NativeLong cmd, IntByReference arg);
 
 		native public int open(String path, int flags);
 
@@ -175,6 +180,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		public int fcntl(int fd, int cmd, int arg);
 
+		public int ioctl(int fd, NativeLong cmd);
+
+		public int ioctl(int fd, NativeLong cmd, int arg);
+
+		public int ioctl(int fd, NativeLong cmd, IntByReference arg);
+
 		public int open(String path, int flags);
 
 		public int close(int fd);
@@ -205,12 +216,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	}
 
-	public interface NonDirectCLib extends com.sun.jna.Library {
-
-		public int ioctl(int fd, NativeLong cmd, NativeLong[] arg);
-
-		//       public int poll(pollfd.ByReference pfds, int nfds, int timeout);
-	}
+//	public interface NonDirectCLib extends com.sun.jna.Library {
+//
+//		public int ioctl(int fd, NativeLong cmd, NativeLong[] arg);
+//
+//		//       public int poll(pollfd.ByReference pfds, int nfds, int timeout);
+//	}
 
 	static public class timeval extends Structure {
 
@@ -553,11 +564,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		return new fd_set();
 	}
 
-	public int ioctl(int fd, int cmd, int[] data) {
-		NativeLong[] dataL = { new NativeLong(data[0]) };
-		int res = m_ClibND.ioctl(fd, new NativeLong(0xFFFFFFFFL & cmd), dataL);
-		data[0] = dataL[0].intValue();
-		return res;
+	public int ioctl(int fd, int cmd, int... data) {
+                // At this time, all ioctl commands we have defined are either no parameter or 4 byte parameter.
+                ioctl_cmd tcmd = new ioctl_cmd(cmd);
+                Object arg = tcmd.getArg(data);
+                if (arg == null)
+                    return m_Clib.ioctl(fd, new NativeLong(0xFFFFFFFFL & cmd));
+                int res;
+                if (arg instanceof IntByReference) {
+                    res = m_Clib.ioctl(fd, new NativeLong(0xFFFFFFFFL & cmd), (IntByReference) arg);
+                    data[0] = ((IntByReference) arg).getValue();
+                    return res;
+                }
+                return m_Clib.ioctl(fd, new NativeLong(0xFFFFFFFFL & cmd), (Integer) arg);
 	}
 
 	public List<String> getPortList() {

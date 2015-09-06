@@ -628,7 +628,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
         return new fd_set();
     }
 
-    public int ioctl(int fd, int cmd, int[] data) {
+    public int ioctl(int fd, int cmd, int... data) {
         return m_Clib.ioctl(fd, cmd, data);
     }
 
