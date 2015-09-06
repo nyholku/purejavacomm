@@ -161,10 +161,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
         native public NativeSize read(int fd, byte[] buffer, NativeSize count);
 
-        native public long write(int fd, byte[] buffer, long count);
-
-        native public long read(int fd, byte[] buffer, long count);
-
         native public int tcflush(int fd, int qs);
 
         native public void perror(String msg);
