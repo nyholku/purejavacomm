@@ -554,7 +554,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     }
 
     public int ioctl(int fd, int cmd, int[] data) {
-        return m_Clib.ioctl(fd, new NativeLong(cmd), data);
+        return m_Clib.ioctl(fd, new NativeLong(0xFFFFFFFFL & cmd), data);
     }
 
 	public List<String> getPortList() {
