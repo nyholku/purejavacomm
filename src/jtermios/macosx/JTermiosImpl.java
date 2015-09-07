@@ -210,7 +210,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		@Override
 		protected List getFieldOrder() {
 			return Arrays.asList(//
-					"fd_count",//
+// per http://www.opensource.apple.com/source/xnu/xnu-1456.1.26/bsd/sys/_structs.h					"fd_count",//
 					"fd_array"//
 			);
 		}
