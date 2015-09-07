@@ -101,32 +101,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
                 4000000, 0010017 //
             };
 
-    public static class NativeSize extends IntegerType {
-
-        /**
-         *
-         */
-        private static final long serialVersionUID = 2398288011955445078L;
-        /**
-         * Size of a size_t integer, in bytes.
-         */
-        public static int SIZE = Native.SIZE_T_SIZE;//Platform.is64Bit() ? 8 : 4;
-
-        /**
-         * Create a zero-valued Size.
-         */
-        public NativeSize() {
-            this(0);
-        }
-
-        /**
-         * Create a Size with the given value.
-         */
-        public NativeSize(long value) {
-            super(SIZE, value);
-        }
-    }
-
     public static class C_lib_DirectMapping implements C_lib {
 
         native public int pipe(int[] fds);
@@ -628,9 +602,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
         return new fd_set();
     }
 
-    public int ioctl(int fd, int cmd, int[] data) {
+    public int ioctl(int fd, int cmd, int... data) {
         return m_Clib.ioctl(fd, cmd, data);
-    }
+                }
 
     // This ioctl is Linux specific, so keep it private for now
     private int ioctl(int fd, int cmd, serial_struct data) {
