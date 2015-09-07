@@ -68,11 +68,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
         native public int fcntl(int fd, int cmd, int arg);
 
-        native public int ioctl(int fd, int cmd);
-
-        native public int ioctl(int fd, int cmd, int arg);
-
-        native public int ioctl(int fd, int cmd, IntByReference arg);
+        native public int ioctl(int fd, int cmd, int[] arg);
 
         native public int open(String path, int flags);
 
@@ -111,11 +107,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
         public int fcntl(int fd, int cmd, int arg);
 
-        public int ioctl(int fd, int cmd);
-
-        public int ioctl(int fd, int cmd, int arg);
-
-        public int ioctl(int fd, int cmd, IntByReference arg);
+        public int ioctl(int fd, int cmd, int[] arg);
 
         public int open(String path, int flags);
 
@@ -516,17 +508,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
     public int ioctl(int fd, int cmd, int... data) {
                 // At this time, all ioctl commands we have defined are either no parameter or 4 byte parameter.
-                ioctl_cmd tcmd = new ioctl_cmd(cmd);
-                Object arg = tcmd.getArg(data);
-                if (arg == null)
-                    return m_Clib.ioctl(fd, cmd);
-                int res;
-                if (arg instanceof IntByReference) {
-                    res = m_Clib.ioctl(fd, cmd, (IntByReference) arg);
-                    data[0] = ((IntByReference) arg).getValue();
-                    return res;
-                }
-                return m_Clib.ioctl(fd, cmd, (Integer) arg);
+                return m_Clib.ioctl(fd, cmd, data);
     }
 
 	public String getPortNamePattern() {

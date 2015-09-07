@@ -301,44 +301,6 @@ public class JTermios {
 
 		public String getPortNamePattern();
                 
-            static public final class ioctl_cmd {
-                public final int command;
-                public final int arglength;
-                public final boolean isout;
-
-                public ioctl_cmd(int cmd) {
-                    command = cmd;
-                    int inout = cmd & 0xe0000000;
-                    if (inout == 0x2000000) {
-                        isout = false;
-                        arglength = 0;
-                        return;
-                    }
-                    isout = ((inout & 0x40000000) == 0x40000000);
-                    arglength = (cmd & 0x1fff0000) >> 16;
-                    if (arglength != 4 && arglength != 8)
-                        throw new IllegalArgumentException("ioctl command " + cmd + " argument length illegal -> " + arglength);
-                }
-
-                public Object getArg(int... data) {
-                    if (arglength == 0 || data == null || data.length == 0)
-                        return null;
-
-                    if (data.length > 1)
-                        throw new java.lang.IllegalArgumentException("Only data length of 1 allowed.");
-                    if (isout) {
-                        if (arglength == 4)
-                            return new com.sun.jna.ptr.IntByReference(data[0]);
-                        else
-                            return new com.sun.jna.ptr.LongByReference(data[0]);
-                    } else {
-                        if (arglength == 4)
-                            return Integer.valueOf(data[0]);
-                        else
-                            return Long.valueOf(data[0]);
-                    }
-                }
-            }
 	}
 
 	public void shutdown() {
