@@ -232,7 +232,7 @@ public class JTermios {
                      * Create a zero-valued Size.
                      */
                     public NativeSize() {
-                        this(SIZE);
+                        this(0);
                     }
 
                     /**
