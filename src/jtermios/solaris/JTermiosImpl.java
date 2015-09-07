@@ -193,8 +193,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     static public class fd_set extends Structure implements FDSet {
 
         private final static int NFBBITS = NativeLong.SIZE * 8;
-        public int fd_count = 1024;
-        public NativeLong[] fd_array = new NativeLong[fd_count / NFBBITS];
+        private final static int fd_count = 1024;
+        public NativeLong[] fd_array = new NativeLong[(fd_count + NFBBITS - 1) / NFBBITS];
 
         public fd_set() {
             for (int i = 0; i < fd_array.length; ++i) {
@@ -205,13 +205,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
         @Override
         protected List getFieldOrder() {
             return Arrays.asList(//
-                    "fd_count",//
                     "fd_array"//
             );
         }
 
         public void FD_SET(int fd) {
-            fd_array[fd / NFBBITS].setValue(fd_array[fd / NFBBITS].longValue() & (1L << (fd % NFBBITS)));
+            fd_array[fd / NFBBITS].setValue(fd_array[fd / NFBBITS].longValue() | (1L << (fd % NFBBITS)));
         }
 
         public boolean FD_ISSET(int fd) {

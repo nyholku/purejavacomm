@@ -31,7 +31,6 @@
 package jtermios.macosx;
 
 import com.sun.jna.*;
-import com.sun.jna.ptr.*;
 import java.io.File;
 
 import java.util.*;
@@ -203,20 +202,19 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	static public class fd_set extends Structure implements FDSet {
 
-		private final static int NFBBITS = Integer.SIZE;
-		public int fd_count = 1024;
-		public int[] fd_array = new int[fd_count / NFBBITS];
+		private final static int NFBBITS = 32;
+		private final static int fd_count = 1024;
+		public int[] fd_array = new int[(fd_count + NFBBITS - 1) / NFBBITS];
 
 		@Override
 		protected List getFieldOrder() {
 			return Arrays.asList(//
-// per http://www.opensource.apple.com/source/xnu/xnu-1456.1.26/bsd/sys/_structs.h					"fd_count",//
 					"fd_array"//
 			);
 		}
 
 		public void FD_SET(int fd) {
-			fd_array[fd / NFBBITS] &= (1 << (fd % NFBBITS));
+			fd_array[fd / NFBBITS] |= (1 << (fd % NFBBITS));
 		}
 
 		public boolean FD_ISSET(int fd) {
