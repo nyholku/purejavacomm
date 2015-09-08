@@ -1128,22 +1128,25 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		int size = 0;
 		for (size = 16 * 1024; size < 1024 * 1024; size *= 2) {
 			buffer = new byte[size];
-			int res = QueryDosDevice(null, buffer, buffer.length);
-			if (res > 0) { //
-				LinkedList<String> list = new LinkedList<String>();
-				int offset = 0;
-				String port;
-				while ((port = getString(buffer, offset)).length() > 0) {
-					if (p.matcher(port).matches())
-						list.add(port);
+                        try {
+                            if (QueryDosDevice(null, buffer, buffer.length) > 0) { //
+                                    LinkedList<String> list = new LinkedList<String>();
+                                    int offset = 0;
+                                    String port;
+                                    while ((port = getString(buffer, offset)).length() > 0) {
+                                            if (p.matcher(port).matches())
+                                                    list.add(port);
 
-					offset += port.length() + 1;
-				}
-				return list;
-			} else {
-				int err = GetLastError();
-				if (err != ERROR_INSUFFICIENT_BUFFER) {
-					log = log && log(1, "QueryDosDeviceW() failed with GetLastError() = %d\n", err);
+                                            offset += port.length() + 1;
+                                    }
+                                    return list;
+                            } else {
+                                log = log && log(1, "QueryDosDeviceW() failed with GetLastError() = %d\n", 0);
+                                return null;
+                            }
+                        } catch (LastErrorException le) {
+				if (le.getErrorCode() != ERROR_INSUFFICIENT_BUFFER) {
+					log = log && log(1, "QueryDosDeviceW() failed with GetLastError() = %d\n", le.getErrorCode());
 					return null;
 				}
 			}
