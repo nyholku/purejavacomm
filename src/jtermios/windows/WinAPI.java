@@ -140,7 +140,7 @@ public class WinAPI {
 	public static HANDLE NULL = new HANDLE(Pointer.createConstant(0));
 
 	public static class Windows_kernel32_lib_Direct implements Windows_kernel32_lib {
-		native public HANDLE CreateFile(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template) throws LastErrorException;
+		native public HANDLE CreateFile(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template);
 
 		native public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn, Pointer lpOverlapped) throws LastErrorException;
 
@@ -202,7 +202,7 @@ public class WinAPI {
         }
 
         public interface Windows_kernel32_lib extends StdCallLibrary {
-		public HANDLE CreateFile(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template) throws LastErrorException;
+		public HANDLE CreateFile(String name, int access, int mode, SECURITY_ATTRIBUTES security, int create, int atteribs, Pointer template);
 
 		public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn, Pointer lpOverlapped) throws LastErrorException;
 
