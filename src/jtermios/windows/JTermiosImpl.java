@@ -136,15 +136,14 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						if (!filename.startsWith("\\\\"))
 							filename = "\\\\.\\" + filename;
 
-                                                try {
-                                                    m_Comm = CreateFile(filename, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
+                                                m_Comm = CreateFile(filename, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
 
-                                                    if (INVALID_HANDLE_VALUE == m_Comm) {
-                                                        m_ErrNo = EBUSY;
-							throw new LastErrorException(0);
-                                                    }
-                                                } catch (LastErrorException lee) {
-                                                    fail(lee);
+                                                if (INVALID_HANDLE_VALUE == m_Comm) {
+                                                    if (Native.getLastError() == ERROR_FILE_NOT_FOUND)
+                                                            m_ErrNo = ENOENT;
+                                                    else
+                                                            m_ErrNo = EBUSY;
+                                                    fail(new LastErrorException(Native.getLastError()));
                                                 }
 
                                                 try {
