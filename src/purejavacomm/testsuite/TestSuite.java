@@ -34,7 +34,7 @@ public class TestSuite {
 	public static void main(String[] args) throws Exception {
 		// Native.setProtected(false);
 		TestBase.init(args);
-		// jtermios.JTermios.JTermiosLogging.setLogMask(255);
+		//jtermios.JTermios.JTermiosLogging.setLogMask(255);
 		// System.setProperty("purejavacomm.usepoll", "true");
 		// System.setProperty("purejavacomm.rawreadmode", "true");
 		try {
