@@ -5,7 +5,7 @@ Version 0.0.27
   This version should work with Java 1.5 or higher
   
   Reverted windows backend to commit a6d51cd879ba4d828c6c45fc1b48db18fabdf67b
-  to get rid of the numerous problems caused by the introduction of
+  to get rid of the  problems caused by the introduction of
   LastErrorException to a code base that was based on using GetLastError.
   
   Re-implemented a fix for WaitCommEvent returning false but GetLastError
