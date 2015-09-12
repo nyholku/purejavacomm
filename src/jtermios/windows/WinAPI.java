@@ -994,7 +994,7 @@ public class WinAPI {
                     res = m_K32lib.QueryDosDevice(name, buffer, bsize);
                     LastError.get()[0] = 0;
                 } catch (LastErrorException le) {
-                    res = -1;
+                    res = 0;
                     LastError.get()[0] = le.getErrorCode();
                 }
 		log = log && log(4, "< QueryDosDeviceA(%s, %s, %d) => %d\n", name, buffer, bsize, res);
