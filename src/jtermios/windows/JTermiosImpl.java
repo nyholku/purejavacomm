@@ -859,7 +859,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 								ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
 							} else {
 								// FIXME if the port dies on us what happens
-								if (GetLastError() != 0 && GetLastError() != ERROR_IO_PENDING)
+								if (GetLastError() != ERROR_IO_PENDING)
 									port.fail();
 								waiting.add(port);
 								port.m_WaitPending = true;
