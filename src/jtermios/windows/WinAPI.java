@@ -96,6 +96,7 @@ public class WinAPI {
 	private static Windows_kernel32_lib m_K32lib;
         private static Windows_kernel32_lib_Direct m_K32libDM;
         private static WaitMultiple m_K32libWM;
+        private static FormatMessage m_K32FormatMessage; // Only used for ThreadLocalLastError now to get localized Success message
         static {
             // Moved to static per JNA recommendations
             Native.setPreserveLastError(true); // For older JNA to hopefully preserve last error although we don't use it with Windows
@@ -106,15 +107,47 @@ public class WinAPI {
             m_K32libDM = new Windows_kernel32_lib_Direct();
             m_K32lib = m_K32libDM;
             // m_K32lib = (Windows_kernel32_lib) Native.loadLibrary("kernel32", Windows_kernel32_lib.class, com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS);
+            Native.register(FormatMessage.class, NativeLibrary.getInstance("kernel32", com.sun.jna.win32.W32APIOptions.UNICODE_OPTIONS));
+            m_K32FormatMessage = new FormatMessage();
         }
         
         // The following is to fix JNA's non-thread-local getLastError implementation
-        private static final ThreadLocal<int[]> LastError = new ThreadLocal<int[]>() {
-            @Override
-            protected int[] initialValue() {
-                return new int[1];  // Arrays are always initialized to zero values
+        private static class ThreadLocalLastError {
+
+            private final static String SuccessErrorMessage = m_K32FormatMessage.FormatMessage(0);
+            
+            private int errorCode = 0;
+            private String errorMsg = SuccessErrorMessage;
+
+            private static final ThreadLocal<ThreadLocalLastError> LastError = new ThreadLocal<ThreadLocalLastError>() {
+                @Override
+                protected ThreadLocalLastError initialValue() {
+                    return new ThreadLocalLastError();  // Arrays are always initialized to zero values
+                }
+            };
+            
+            private static void setSuccess() {
+                ThreadLocalLastError tlle = LastError.get();
+                tlle.errorCode = 0;
+                tlle.errorMsg = SuccessErrorMessage;
             }
-        };
+            
+            private static void setError(LastErrorException le) {
+                ThreadLocalLastError tlle = LastError.get();
+                tlle.errorCode = le.getErrorCode();
+                tlle.errorMsg = le.getMessage();
+            }
+            
+            private static int GetLastError()
+            {
+                return LastError.get().errorCode;
+            }
+            
+            private static String FormatMessage()
+            {
+                return LastError.get().errorMsg;
+            }
+        }
 
 	public static class HANDLE extends PointerType {
 		private boolean immutable;
@@ -201,12 +234,25 @@ public class WinAPI {
 
 		native public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait) throws LastErrorException;
 
-		native public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
+//		native public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
 
 		native public int QueryDosDevice(String name, byte[] buffer, int bsize) throws LastErrorException;
 
 	}
-        
+  
+        // Implemented separately because this uses the Unicode library
+        public static class FormatMessage implements StdCallLibrary {
+
+            // Taken from JTermiosImpl to get SuccessMeessaage
+            private String FormatMessage(int err) {
+                Memory buffer = new Memory(2048);
+                FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, null, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, (int) buffer.size(), null);
+                return buffer.getWideString(0);
+            }
+            
+            native public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
+            
+        }
         public interface WaitMultiple extends StdCallLibrary {
 		public int WaitForMultipleObjects(int nCount, HANDLE[] lpHandles, boolean bWaitAll, int dwMilliseconds);
         }
@@ -264,7 +310,7 @@ public class WinAPI {
 
 		public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait);
 
-		public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
+//		public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
 
 		public int QueryDosDevice(String name, byte[] buffer, int bsize)  ;
 
@@ -595,10 +641,10 @@ public class WinAPI {
                 HANDLE h;
                 try {
                     h = m_K32lib.CreateFile(name, access, sharing, security, create, attribs, template);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     h = INVALID_HANDLE_VALUE;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< CreateFileA(%s, 0x%08X, 0x%08X, %s, 0x%08X, 0x%08X,%s) => %s\n", name, access, sharing, security, create, attribs, template, h);
 		return h;
@@ -610,10 +656,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.WriteFile(hFile, buf, wrn, nwrtn, null);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< WriteFile(%s, %s, %d, [%d]) => %s\n", hFile, log(buf, wrn), wrn, nwrtn[0], res);
 		return res;
@@ -625,10 +671,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.WriteFile(hFile, buf, wrn, nwrtn, ovrlp);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< WriteFile(%s, %s, %d, [%d], %s) => %s\n", hFile, log(buf.getByteArray(0, wrn), 5), wrn, nwrtn[0], ref(ovrlp), res);
 		return res;
@@ -640,10 +686,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.ReadFile(hFile, buf, rdn, nrd, null);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< ReadFile(%s, %s, %d, [%d]) => %s\n", hFile, log(buf, rdn), rdn, nrd[0], res);
 		return res;
@@ -655,10 +701,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.ReadFile(hFile, buf, rdn, nrd, ovrlp);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< ReadFile(%s, %s, %d, [%d], %s) => %s\n", hFile, log(buf.getByteArray(0, rdn), 5), rdn, nrd[0], ref(ovrlp), res);
 		return res;
@@ -669,10 +715,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.FlushFileBuffers(hFile);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< FlushFileBuffers(%s) => %s\n", hFile, res);
 		return res;
@@ -683,10 +729,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.PurgeComm(hFile, qmask);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< PurgeComm(%s,0x%08X) => %s\n", hFile, qmask, res);
 		return res;
@@ -697,10 +743,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.CancelIo(hFile);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< CancelIo(%s) => %s\n", hFile, res);
 		return res;
@@ -711,10 +757,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.CloseHandle(hFile);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< CloseHandle(%s) => %s\n", hFile, res);
 		return res;
@@ -725,10 +771,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.ClearCommError(hFile, n, s);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< ClearCommError(%s, [%d], %s) => %s\n", hFile, n[0], s, res);
 		return res;
@@ -739,10 +785,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.SetCommMask(hFile, mask);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< SetCommMask(%s, 0x%08X) => %s\n", hFile, mask, res);
 		return res;
@@ -753,10 +799,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.GetCommMask(hFile, mask);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< GetCommMask(%s, [0x%08X]) => %s\n", hFile, mask[0], res);
 		return res;
@@ -767,10 +813,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.GetCommState(hFile, dcb);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< GetCommState(%s, %s) => %s\n", hFile, dcb, res);
 		return res;
@@ -781,10 +827,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.SetCommState(hFile, dcb);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< SetCommState(%s, %s) => %s\n", hFile, dcb, res);
 		return res;
@@ -795,10 +841,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.SetCommTimeouts(hFile, touts);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< SetCommTimeouts(%s, %s) => %s\n", hFile, touts, res);
 		return res;
@@ -809,10 +855,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.SetupComm(hFile, inQueueSz, outQueueSz);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< SetCommTimeouts(%s, %d, %d) => %s\n", hFile, inQueueSz, outQueueSz, res);
 		return res;
@@ -823,10 +869,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.SetCommBreak(hFile);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< SetCommBreak(%s) => %s\n", hFile, res);
 		return res;
@@ -837,10 +883,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.ClearCommBreak(hFile);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< ClearCommBreak(%s) => %s\n", hFile, res);
 		return res;
@@ -851,10 +897,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.GetCommModemStatus(hFile, stat);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< GetCommModemStatus(%s,0x%08X) => %s\n", hFile, stat[0], res);
 		return res;
@@ -865,10 +911,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.EscapeCommFunction(hFile, func);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< EscapeCommFunction(%s,0x%08X) => %s\n", hFile, func, res);
 		return res;
@@ -879,10 +925,10 @@ public class WinAPI {
                 HANDLE h;
                 try {
                     h = m_K32lib.CreateEvent(security, manual, initial, name);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     h = INVALID_HANDLE_VALUE;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< CreateEventA(%s, %s, %s, %s) => %s\n", ref(security), manual, initial, name, h);
 		return h;
@@ -893,10 +939,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.SetEvent(hEvent);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< SetEvent(%s) => %s\n", hEvent, res);
 		return res;
@@ -907,10 +953,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.ResetEvent(hEvent);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< ResetEvent(%s) => %s\n", hEvent, res);
 		return res;
@@ -921,10 +967,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.WaitCommEvent(hFile, lpEvtMask, ovl);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask.getValue(), ref(ovl), res);
 		return res;
@@ -936,10 +982,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.WaitCommEvent(hFile, brlpEvtMask, null);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
                 lpEvtMask[0] = brlpEvtMask.getValue();
 		log = log && log(4, "< WaitCommEvent(%s, [%d], %s) => %s\n", hFile, lpEvtMask[0], null, res);
@@ -965,10 +1011,10 @@ public class WinAPI {
                 boolean res;
                 try {
                     res = m_K32lib.GetOverlappedResult(hFile, ovl, ntfrd, wait);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = false;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< GetOverlappedResult(%s, %s, [%d], %s) => %s\n", hFile, ref(ovl), ntfrd[0], wait, res);
 		return res;
@@ -976,26 +1022,33 @@ public class WinAPI {
 
 	static public int GetLastError() {
 		log = log && log(5, "> GetLastError()\n");
-		int res = LastError.get()[0]; // This prevents multiple retrying to create this function per JNA rules
+		int res = ThreadLocalLastError.GetLastError(); // This prevents multiple retrying to create this function per JNA rules
 		log = log && log(4, "< GetLastError() => %d\n", res);
 		return res;
 	}
 
-	static public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list) {
-		log = log && log(5, "> FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s)\n", flags, src, msgId, langId, dst, sze, va_list);
-		int res = m_K32lib.FormatMessageW(flags, src, msgId, langId, dst, sze, va_list);
-		log = log && log(4, "< FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s) => %d\n", flags, src, msgId, langId, dst, sze, va_list, res);
-		return res;
-	}
+        static public String FormatMessage() {
+		log = log && log(5, "> FormatMessage()\n");
+		String res = ThreadLocalLastError.FormatMessage(); // This uses the LastErrorException message which already called FormatMessageW
+		log = log && log(4, "< FormatMessage() => %s\n", res);
+                return res;
+        }
+        
+//	static public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list) {
+//		log = log && log(5, "> FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s)\n", flags, src, msgId, langId, dst, sze, va_list);
+//		int res = m_K32lib.FormatMessageW(flags, src, msgId, langId, dst, sze, va_list);
+//		log = log && log(4, "< FormatMessageW(%08x, %08x, %d, %d, %s, %d, %s) => %d\n", flags, src, msgId, langId, dst, sze, va_list, res);
+//		return res;
+//	}
 	static public int QueryDosDevice(String name, byte[] buffer, int bsize) {
 		log = log && log(5, "> QueryDosDeviceA(%s, %s, %d)\n", name, buffer, bsize);
                 int res;
                 try {
                     res = m_K32lib.QueryDosDevice(name, buffer, bsize);
-                    LastError.get()[0] = 0;
+                    ThreadLocalLastError.setSuccess();
                 } catch (LastErrorException le) {
                     res = 0;
-                    LastError.get()[0] = le.getErrorCode();
+                    ThreadLocalLastError.setError(le);
                 }
 		log = log && log(4, "< QueryDosDeviceA(%s, %s, %d) => %d\n", name, buffer, bsize, res);
 		return res;

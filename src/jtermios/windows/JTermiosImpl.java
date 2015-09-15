@@ -90,10 +90,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 		synchronized public void fail() throws Fail {
 			int err = GetLastError();
-			Memory buffer = new Memory(2048);
-			FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, null, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, (int) buffer.size(), null);
+//			Memory buffer = new Memory(2048);
+//			FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, null, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, (int) buffer.size(), null);
 
-			log = log && log(1, "fail() %s, Windows GetLastError()= %d, %s\n", lineno(1), err, buffer.getWideString(0));
+			log = log && log(1, "fail() %s, Windows GetLastError()= %d, %s\n", lineno(1), err, FormatMessage());
 
 			// FIXME here convert from Windows error code to 'posix' error code
 
