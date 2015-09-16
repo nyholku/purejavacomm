@@ -99,7 +99,7 @@ public class WinAPI {
         private static FormatMessage m_K32FormatMessage; // Only used for ThreadLocalLastError now to get localized Success message
         static {
             // Moved to static per JNA recommendations
-            Native.setPreserveLastError(true); // For older JNA to hopefully preserve last error although we don't use it with Windows
+// Not needed since using LastErrorException            Native.setPreserveLastError(true); // For older JNA to hopefully preserve last error although we don't use it with Windows
             // This had to be separated out for Direct Mapping (no non-primative arrays)
             m_K32libWM = (WaitMultiple) Native.loadLibrary("kernel32", WaitMultiple.class, com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS);
             // Added com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS so we don't mix/match WString and String
