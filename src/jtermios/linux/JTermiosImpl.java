@@ -132,9 +132,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
         native public int cfgetospeed(termios termios);
 
-        native public NativeSize write(int fd, byte[] buffer, NativeSize count);
+        native public NativeSize_t write(int fd, byte[] buffer, NativeSize_t count);
 
-        native public NativeSize read(int fd, byte[] buffer, NativeSize count);
+        native public NativeSize_t read(int fd, byte[] buffer, NativeSize_t count);
 
         native public int tcflush(int fd, int qs);
 
@@ -173,9 +173,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
         public int cfgetospeed(termios termios);
 
-        public NativeSize write(int fd, byte[] buffer, NativeSize count);
+        public NativeSize_t write(int fd, byte[] buffer, NativeSize_t count);
 
-        public NativeSize read(int fd, byte[] buffer, NativeSize count);
+        public NativeSize_t read(int fd, byte[] buffer, NativeSize_t count);
 
         public int tcflush(int fd, int qs);
 
@@ -532,11 +532,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     }
 
     public int read(int fd, byte[] buffer, int len) {
-        return m_Clib.read(fd, buffer, new NativeSize(len)).intValue();
+        return m_Clib.read(fd, buffer, new NativeSize_t(len)).intValue();
     }
 
     public int write(int fd, byte[] buffer, int len) {
-        return m_Clib.write(fd, buffer, new NativeSize(len)).intValue();
+        return m_Clib.write(fd, buffer, new NativeSize_t(len)).intValue();
     }
 
     public int close(int fd) {

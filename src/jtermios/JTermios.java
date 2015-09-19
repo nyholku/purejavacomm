@@ -217,29 +217,22 @@ public class JTermios {
         }
 
 	public interface JTermiosInterface {
-                public static class NativeSize extends IntegerType {
-
-                    /**
-                     *
-                     */
-                    private static final long serialVersionUID = 2398288011955445078L;
-                    /**
-                     * Size of a size_t integer, in bytes.
-                     */
-                    public static int SIZE = Native.SIZE_T_SIZE;//Platform.is64Bit() ? 8 : 4;
-
+                /**
+                 * Signed size_t class so -1 can be checked for
+                 */
+                public static class NativeSize_t extends IntegerType {
                     /**
                      * Create a zero-valued Size.
                      */
-                    public NativeSize() {
+                    public NativeSize_t() {
                         this(0);
                     }
 
                     /**
                      * Create a Size with the given value.
                      */
-                    public NativeSize(long value) {
-                        super(SIZE, value);
+                    public NativeSize_t(long value) {
+                        super(Native.SIZE_T_SIZE, value);
                     }
                 }
 
