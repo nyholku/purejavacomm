@@ -33,4 +33,11 @@ package jtermios;
 final public class TimeVal {
 	public long tv_sec;
 	public long tv_usec;
+	
+	@Override
+	public String toString() {
+		return String.format("TimeVal [tv_sec=%s, tv_usec=%s]", tv_sec, tv_usec);
+	}
+	
+	
 }
