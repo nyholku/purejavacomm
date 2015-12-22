@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Kustaa Nyholm / SpareTimeLabs
+ * Copyright (c) 2011,2015 Kustaa Nyholm / SpareTimeLabs
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -31,5 +31,11 @@
 package purejavacomm;
 
 public class PortInUseException extends Exception {
+	public String currentOwner;
+
+	PortInUseException(String str) {
+		super(str);
+		currentOwner = str;
+	}
 
 }

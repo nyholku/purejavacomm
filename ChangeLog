@@ -1,3 +1,7 @@
+Version 0.0.29
+
+* Added missing 'currentOwner' field for PortInUseException
+
 Version 0.0.28
 
 * As a precaution all the relevant WinAPI calls are wrapped in try/catch LastErrorException

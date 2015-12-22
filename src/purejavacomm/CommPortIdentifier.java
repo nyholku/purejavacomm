@@ -149,7 +149,7 @@ public class CommPortIdentifier {
 				}
 			}
 			if (isCurrentlyOwned())
-				throw new PortInUseException();
+				throw new PortInUseException(getCurrentOwner());
 
 			CommPortIdentifier info = m_PortIdentifiers.get(m_PortName);
 			CommPort port;

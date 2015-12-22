@@ -1086,7 +1086,7 @@ public class PureJavaSerialPort extends SerialPort {
 			} catch (InterruptedException e) {
 			}
 			if (tries-- < 0 || System.currentTimeMillis() - T0 >= timeout)
-				throw new PortInUseException();
+				throw new PortInUseException("Unknown Application");
 		}
 
 		m_MinVTIME = Integer.getInteger("purejavacomm.minvtime", 100);
