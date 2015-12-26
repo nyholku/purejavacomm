@@ -206,44 +206,44 @@ public class JTermios {
 	// reference to single arc/os specific implementation
 	private static JTermiosInterface m_Termios;
 
-        public interface FDSet {
-                public void FD_SET(int fd);
+	public interface FDSet {
+		public void FD_SET(int fd);
 
-                public void FD_CLR(int fd);
+		public void FD_CLR(int fd);
 
-                public boolean FD_ISSET(int fd);
+		public boolean FD_ISSET(int fd);
 
-                public void FD_ZERO();
-        }
+		public void FD_ZERO();
+	}
 
 	public interface JTermiosInterface {
-                public static class NativeSize extends IntegerType {
+		public static class NativeSize extends IntegerType {
 
-                    /**
+			/**
                      *
                      */
-                    private static final long serialVersionUID = 2398288011955445078L;
-                    /**
-                     * Size of a size_t integer, in bytes.
-                     */
-                    public static int SIZE = Native.SIZE_T_SIZE;//Platform.is64Bit() ? 8 : 4;
+			private static final long serialVersionUID = 2398288011955445078L;
+			/**
+			 * Size of a size_t integer, in bytes.
+			 */
+			public static int SIZE = Native.SIZE_T_SIZE;//Platform.is64Bit() ? 8 : 4;
 
-                    /**
-                     * Create a zero-valued Size.
-                     */
-                    public NativeSize() {
-                        this(0);
-                    }
+			/**
+			 * Create a zero-valued Size.
+			 */
+			public NativeSize() {
+				this(0);
+			}
 
-                    /**
-                     * Create a Size with the given value.
-                     */
-                    public NativeSize(long value) {
-                        super(SIZE, value);
-                    }
-                }
+			/**
+			 * Create a Size with the given value.
+			 */
+			public NativeSize(long value) {
+				super(SIZE, value);
+			}
+		}
 
-                public FDSet newFDSet();
+		public FDSet newFDSet();
 
 		int pipe(int[] fds);
 
@@ -252,7 +252,7 @@ public class JTermios {
 		int errno();
 
 		int fcntl(int fd, int cmd, int arg);
-		
+
 		int setspeed(int fd, Termios termios, int speed);
 
 		int cfgetispeed(Termios termios);
@@ -293,14 +293,14 @@ public class JTermios {
 		 * poll() on Windows has not been implemented and while implemented on
 		 * Mac OS X, does not work for devices.
 		 */
-                boolean canPoll();
-                
+		boolean canPoll();
+
 		void perror(String msg);
 
 		List<String> getPortList();
 
 		public String getPortNamePattern();
-                
+
 	}
 
 	public void shutdown() {
@@ -337,7 +337,7 @@ public class JTermios {
 		log = log && log(3, "< fcntl(%d, %d, %d) => %d\n", fd, cmd, arg, ret);
 		return ret;
 	}
-	
+
 	static public int cfgetispeed(Termios termios) {
 		log = log && log(5, "> cfgetispeed(%s)\n", termios);
 		int ret = m_Termios.cfgetispeed(termios);
@@ -448,12 +448,15 @@ public class JTermios {
 		log = log && log(3, "< ioctl(%d,%d,[%08X]) => %d\n", fd, cmd, Arrays.toString(data), ret);
 		return ret;
 	}
-        
+
 	private static String toString(int n, FDSet fdset) {
 		StringBuffer s = new StringBuffer("[");
-		for (int fd = 0; fd < n; fd++)
+		for (int fd = 0; fd < n; fd++) {
+			if (fd > 0)
+				s.append(",");
 			if (FD_ISSET(fd, fdset))
 				s.append(Integer.toString(fd));
+		}
 		s.append("]");
 		return s.toString();
 	}
@@ -475,10 +478,10 @@ public class JTermios {
 		log = log && log(3, "< poll(%s,%d,%d) => %d\n", log(fds, 8), nfds, timeout, ret);
 		return ret;
 	}
-        
-        static public boolean canPoll() {
-            return m_Termios.canPoll();
-        }
+
+	static public boolean canPoll() {
+		return m_Termios.canPoll();
+	}
 
 	static public int pipe(int[] fds) {
 		log = log && log(5, "> pipe([%d,%d,%d])\n", fds.length, fds[0], fds[1]);
@@ -496,24 +499,24 @@ public class JTermios {
 	}
 
 	static public void FD_SET(int fd, FDSet set) {
-            if (set != null)
-		set.FD_SET(fd);
+		if (set != null)
+			set.FD_SET(fd);
 	}
 
 	static public void FD_CLR(int fd, FDSet set) {
-            if (set != null)
-		set.FD_CLR(fd);
+		if (set != null)
+			set.FD_CLR(fd);
 	}
 
 	static public boolean FD_ISSET(int fd, FDSet set) {
-            if (set == null)
-                return false;
-            return set.FD_ISSET(fd);
+		if (set == null)
+			return false;
+		return set.FD_ISSET(fd);
 	}
 
 	static public void FD_ZERO(FDSet set) {
-            if (set != null)
-		set.FD_ZERO();
+		if (set != null)
+			set.FD_ZERO();
 	}
 
 	static public List<String> getPortList() {
