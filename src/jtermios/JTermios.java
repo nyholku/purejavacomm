@@ -443,9 +443,9 @@ public class JTermios {
 	}
 
 	static public int ioctl(int fd, int cmd, int... data) {
-		log = log && log(5, "> ioctl(%d,%d,[%08X])\n", fd, cmd, Arrays.toString(data));
+		log = log && log(5, "> ioctl(%d,%d,[%s])\n", fd, cmd, Arrays.toString(data));
 		int ret = m_Termios.ioctl(fd, cmd, data);
-		log = log && log(3, "< ioctl(%d,%d,[%08X]) => %d\n", fd, cmd, Arrays.toString(data), ret);
+		log = log && log(3, "< ioctl(%d,%d,[%s]) => %d\n", fd, cmd, Arrays.toString(data), ret);
 		return ret;
 	}
 
