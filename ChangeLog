@@ -1,3 +1,8 @@
+Version 1.0.0
+
+* Fixed some logging bugs that prevented use of logging
+* Improved timeout handling when opening a serial port
+
 Version 0.0.29
 
 * Added missing 'currentOwner' field for PortInUseException
