@@ -1,7 +1,0 @@
-#!/bin/bash          
-echo Ensure 'bin' directory exists
-mkdir bin
-echo Creating 'bin/purejavacomm.jar'
-jar cf bin/purejavacomm.jar -C classes .
-echo Creating 'bin/purejavacomm-src.jar' 
-jar cf bin/purejavacomm-src.jar -C src .

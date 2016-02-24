@@ -1,6 +1,0 @@
-#!/bin/bash          
-echo Ensure 'classes' directory exists
-mkdir classes
-echo Compile 'purejavacomm'
-javac -d classes -sourcepath ./src -cp lib/jna.jar src/purejavacomm/testsuite/TestSuite.java
-
