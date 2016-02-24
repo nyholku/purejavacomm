@@ -1,4 +1,1 @@
-bin/maven-archiver/
-bin/maven-status/
-classes/
-/bin/
+target

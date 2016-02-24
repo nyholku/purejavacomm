@@ -27,75 +27,63 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package purejavacomm.testsuite;
+package testsuite;
 
-import java.util.Enumeration;
+import purejavacomm.SerialPortEvent;
+import purejavacomm.SerialPortEventListener;
 
-import purejavacomm.CommPortIdentifier;
-
-public class Test16 extends TestBase {
-
-	@SuppressWarnings("unchecked")
+public class Test12 extends TestBase {
 	static void run() throws Exception {
 
-		Enumeration<CommPortIdentifier> cpiEnum;
-		
-		String origOwnerName = null;
-		String checkOwnerName = null;
-		
 		try {
-
-			begin("Test16 - port ownership");
-			
+			begin("Test12 - enableReceiveTimeout(0)");
 			openPort();
 
-			// Check ownership of the id of our test port first
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
+
+			final byte[] txbuffer = new byte[10];
+			final byte[] rxbuffer = new byte[txbuffer.length];
+
+			m_Port.enableReceiveTimeout(0);
+			m_Port.enableReceiveThreshold(100);
+			int totalN = 10;
+			int bytesN = 8;
 			{
-				CommPortIdentifier id = CommPortIdentifier
-						.getPortIdentifier(m_Port);
-				if (id == null) {
-					fail("No id for this serial port");
+				long totalT = 0;
+				for (int i = 0; i < totalN; i++) {
+					m_Out.write(txbuffer, 0, bytesN);
+					sleep(100); // give the data some time to loop back
+					{ // ask for 10 but expect to get back immediately with the 8 bytes that are available
+						long T0 = System.currentTimeMillis();
+						int n = m_In.read(rxbuffer, 0, 10);
+						long T1 = System.currentTimeMillis();
+						totalT += T1 - T0;
+						if (n != 8)
+							fail("did not get all data back, got only " + n + " bytes");
+					}
 				}
+				if (totalT / totalN > 1)
+					fail("read did not return immediately, it took " + totalT / totalN + " msec on average to read " + bytesN + " bytes");
 
-				if (id.getCurrentOwner() == null
-						|| !id.getCurrentOwner().equals(APPLICATION_NAME)) {
-					fail("Wrong or missing owner for this serial port (got \"%s\", expected \"%s\")",
-							id.getCurrentOwner(), APPLICATION_NAME);
-				}
 			}
-			
-			//first call to enumerate port identifiers
-			cpiEnum = CommPortIdentifier.getPortIdentifiers();
-			
-			//get original owner name
-			while (cpiEnum.hasMoreElements()) {
-				CommPortIdentifier cpi = cpiEnum.nextElement();
-				if (cpi.getName().equals(getPortName())) {
-					origOwnerName = cpi.getCurrentOwner();
-					break;
+			{
+				long totalT = 0;
+				for (int i = 0; i < totalN; i++) {
+					{ // ask for 10 but expect to get back immediately with the 0 bytes that are available
+						long T0 = System.currentTimeMillis();
+						int n = m_In.read(rxbuffer, 0, 10);
+						long T1 = System.currentTimeMillis();
+						totalT += T1 - T0;
+						if (n != 0)
+							fail("was expecting 0 bytes, but got " + n + " bytes");
+					}
 				}
+				if (totalT / totalN > 1)
+					fail("read did not return immediately, it took " + totalT / totalN + " msec");
 			}
 
-			//second call to enumerate port identifiers
-			cpiEnum = CommPortIdentifier.getPortIdentifiers();
-
-			//get owner name again
-			while (cpiEnum.hasMoreElements()) {
-				CommPortIdentifier cpi = cpiEnum.nextElement();
-				if (cpi.getName().equals(getPortName())) {
-					checkOwnerName = cpi.getCurrentOwner();
-					break;
-				}
-			}
-			
-			//these should be exactly the same
-			if (checkOwnerName != origOwnerName && !checkOwnerName.equals(origOwnerName)) {
-				fail("Owner name incorrectly changed simply by reenumerating ports." + origOwnerName + " vs. " + checkOwnerName);
-			}
-			else {
-				finishedOK();
-			}
-			
+			finishedOK();
 		} finally {
 			closePort();
 		}

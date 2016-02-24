@@ -27,41 +27,74 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package purejavacomm.testsuite;
+package testsuite;
 
-import java.util.Arrays;
+import java.io.IOException;
 
-import purejavacomm.SerialPort;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
-public class Test3 extends TestBase {
+public class Test14 extends TestBase {
+	static volatile boolean m_ReadThreadRunning;
+	static volatile int m_ReadBytes = 0;
+	static volatile long m_T0;
+	static volatile long m_T1;
+
 	static void run() throws Exception {
+
 		try {
-			begin("Test3 - transmit all characters");
+			int timeout = 100;
+			begin("Test14 - treshold disabled, timeout disabled");
 			openPort();
-			int mode = m_Port.getFlowControlMode();
-			mode &= ~(SerialPort.FLOWCONTROL_XONXOFF_IN | SerialPort.FLOWCONTROL_XONXOFF_OUT);
-			m_Port.setFlowControlMode(mode);
-			byte[] sent = new byte[256];
-			byte[] rcvd = new byte[256];
-			for (int i = 0; i < 256; i++)
-				sent[i] = (byte) i;
-			m_Port.enableReceiveTimeout(1000);
+
 			m_Out = m_Port.getOutputStream();
 			m_In = m_Port.getInputStream();
-			m_Out.write(sent);
 
-			sleep(500);
+			final byte[] txbuffer = new byte[1000];
+			final byte[] rxbuffer = new byte[txbuffer.length];
 
-			int n = m_In.read(rcvd);
+			m_Port.disableReceiveTimeout();
+			m_Port.disableReceiveThreshold();
 
-			for (int i = 0; i < 256; ++i) {
-				if (sent[i] != rcvd[i])
-					fail("failed to transmit/receive char '%d'", i);
+			Thread rxthread = new Thread(new Runnable() {
+				public void run() {
+					m_ReadThreadRunning = true;
+					try {
+						m_ReadBytes = m_In.read(rxbuffer, 0, rxbuffer.length);
+						m_T1 = System.currentTimeMillis();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					m_ReadThreadRunning = false;
+
+				}
+			});
+
+			m_ReadThreadRunning = false;
+			rxthread.start();
+			while (!m_ReadThreadRunning)
+				Thread.sleep(10);
+
+			{
+				sleep(500);
+				if (!m_ReadThreadRunning)
+					fail("read did not block but returned with " + m_ReadBytes + " bytes");
+				m_Out.write(txbuffer, 0, 1);
+				m_T0 = System.currentTimeMillis();
+				Thread.sleep(20);
+				int i = 200;
+				while (--i > 0 && m_ReadThreadRunning)
+					Thread.sleep(5);
+				if (i <= 0)
+					fail("read did not return in time");
+
+				if (m_ReadBytes != 1)
+					fail("was expecting read to return 1 but got " + m_ReadBytes);
+				int time = (int) (m_T1 - m_T0);
+				int timeMax = 6;
+				if (time > timeMax)
+					fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
 			}
-			if (n < 256)
-				fail("did not receive all 256 chars, got %d", n);
 
 			finishedOK();
 		} finally {

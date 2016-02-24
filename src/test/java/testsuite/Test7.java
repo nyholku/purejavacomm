@@ -27,35 +27,36 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package purejavacomm.testsuite;
+package testsuite;
 
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
-public class Test4 extends TestBase {
+public class Test7 extends TestBase {
 	private static Exception m_Exception = null;
 	private static Thread m_Receiver;
 	private static Thread m_Transmitter;
+	private static volatile long m_T0;
 
 	static void run() throws Exception {
 		try {
-			begin("Test4 - indefinite blocking");
+			begin("Test7 - threshold");
 			openPort();
 			// receiving thread
 			m_Receiver = new Thread(new Runnable() {
 				public void run() {
 					try {
 						sync(2);
-						long T0 = System.currentTimeMillis();
-						byte[] b = { 0 };
+						m_Port.enableReceiveThreshold(7);
+						m_Port.disableReceiveTimeout();
+						byte[] b = new byte[8];
 						int n = m_In.read(b);
-						long dT = System.currentTimeMillis() - T0;
-						if (n != 1)
-							fail("read did not block, read returned %d", n);
-						if (b[0] != 73)
-							fail("read did not get looped back '73' got '%d'", b[0]);
+						long dT = System.currentTimeMillis() - m_T0;
+						if (n != 7)
+							fail("read did not get 7 bytes as expected, got %d", n);
 						if (dT < 10000)
-							fail("read did not block for 10000 msec, received loopback in %d msec", dT);
+							fail("timed out in %d though we got 7 bytes",dT);
+
 					} catch (InterruptedException e) {
 					} catch (Exception e) {
 						if (m_Exception == null)
@@ -71,8 +72,9 @@ public class Test4 extends TestBase {
 				public void run() {
 					try {
 						sync(2);
+						m_T0 = System.currentTimeMillis();
 						sleep(10000);
-						m_Out.write(73);
+						m_Out.write(new byte[7]);
 
 					} catch (InterruptedException e) {
 					} catch (Exception e) {

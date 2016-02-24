@@ -27,72 +27,42 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package purejavacomm.testsuite;
+package testsuite;
 
+import java.util.Arrays;
+
+import purejavacomm.SerialPort;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
-public class Test5 extends TestBase {
-	private static Exception m_Exception = null;
-	private static Thread m_Receiver;
-	private static Thread m_Transmitter;
-
+public class Test3 extends TestBase {
 	static void run() throws Exception {
 		try {
-			begin("Test5 - timeout");
+			begin("Test3 - transmit all characters");
 			openPort();
-			// receiving thread
-			m_Receiver = new Thread(new Runnable() {
-				public void run() {
-					try {
-						sync(2);
-						m_Port.disableReceiveThreshold();
-						m_Port.enableReceiveTimeout(1000);
-						long T0 = System.currentTimeMillis();
-						byte[] b = { 0 };
-						int n = m_In.read(b);
-						long dT = System.currentTimeMillis() - T0;
-						if (n != 0)
-							fail("read did not time out as expected, read returned %d > 0", n);
-						if (dT < 1000 - 10)
-							fail("read timed out early, expected 1000 msec, got %d msec", dT);
-						if (dT > 1100)
-							fail("read timed out with suspicious delay, expected 1000 msec, got %d msec", dT);
-					} catch (InterruptedException e) {
-					} catch (Exception e) {
-						if (m_Exception == null)
-							m_Exception = e;
-						m_Receiver.interrupt();
-						m_Transmitter.interrupt();
-					}
-				};
-			});
+			int mode = m_Port.getFlowControlMode();
+			mode &= ~(SerialPort.FLOWCONTROL_XONXOFF_IN | SerialPort.FLOWCONTROL_XONXOFF_OUT);
+			m_Port.setFlowControlMode(mode);
+			byte[] sent = new byte[256];
+			byte[] rcvd = new byte[256];
+			for (int i = 0; i < 256; i++)
+				sent[i] = (byte) i;
+			m_Port.enableReceiveTimeout(1000);
+			m_Out = m_Port.getOutputStream();
+			m_In = m_Port.getInputStream();
+			m_Out.write(sent);
 
-			// sending thread
-			m_Transmitter = new Thread(new Runnable() {
-				public void run() {
-					try {
-						sync(2);
-					} catch (InterruptedException e) {
-					} catch (Exception e) {
-						e.printStackTrace();
-						if (m_Exception == null)
-							m_Exception = e;
-						m_Receiver.interrupt();
-						m_Transmitter.interrupt();
-					}
-				};
-			});
+			sleep(500);
 
-			m_Receiver.start();
-			m_Transmitter.start();
+			int n = m_In.read(rcvd);
 
-			while (m_Receiver.isAlive() || m_Transmitter.isAlive()) {
-				sleep(100);
+			for (int i = 0; i < 256; ++i) {
+				if (sent[i] != rcvd[i])
+					fail("failed to transmit/receive char '%d'", i);
 			}
+			if (n < 256)
+				fail("did not receive all 256 chars, got %d", n);
 
-			if (m_Exception != null)
-				throw m_Exception;
 			finishedOK();
 		} finally {
 			closePort();

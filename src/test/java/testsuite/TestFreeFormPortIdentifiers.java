@@ -1,4 +1,4 @@
-package purejavacomm.testsuite;
+package testsuite;
 
 import java.io.File;
 

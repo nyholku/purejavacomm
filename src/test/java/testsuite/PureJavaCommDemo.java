@@ -28,7 +28,7 @@
  * OF SUCH DAMAGE.
  */
 
-package purejavacomm.testsuite;
+package testsuite;
 
 import java.io.InputStream;
 import java.io.OutputStream;

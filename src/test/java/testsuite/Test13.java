@@ -27,73 +27,60 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package purejavacomm.testsuite;
-
-import java.io.IOException;
+package testsuite;
 
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
-public class Test14 extends TestBase {
-	static volatile boolean m_ReadThreadRunning;
-	static volatile int m_ReadBytes = 0;
-	static volatile long m_T0;
-	static volatile long m_T1;
-
+public class Test13 extends TestBase {
 	static void run() throws Exception {
 
 		try {
-			int timeout = 100;
-			begin("Test14 - treshold disabled, timeout disabled");
+			begin("Test13 - enableReceiveThreshold(0)");
 			openPort();
 
 			m_Out = m_Port.getOutputStream();
 			m_In = m_Port.getInputStream();
 
-			final byte[] txbuffer = new byte[1000];
+			final byte[] txbuffer = new byte[10];
 			final byte[] rxbuffer = new byte[txbuffer.length];
 
-			m_Port.disableReceiveTimeout();
-			m_Port.disableReceiveThreshold();
-
-			Thread rxthread = new Thread(new Runnable() {
-				public void run() {
-					m_ReadThreadRunning = true;
-					try {
-						m_ReadBytes = m_In.read(rxbuffer, 0, rxbuffer.length);
-						m_T1 = System.currentTimeMillis();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					m_ReadThreadRunning = false;
-
-				}
-			});
-
-			m_ReadThreadRunning = false;
-			rxthread.start();
-			while (!m_ReadThreadRunning)
-				Thread.sleep(10);
-
+			m_Port.enableReceiveTimeout(100);
+			m_Port.enableReceiveThreshold(0);
+			int totalN = 10;
+			int bytesN = 8;
 			{
-				sleep(500);
-				if (!m_ReadThreadRunning)
-					fail("read did not block but returned with " + m_ReadBytes + " bytes");
-				m_Out.write(txbuffer, 0, 1);
-				m_T0 = System.currentTimeMillis();
-				Thread.sleep(20);
-				int i = 200;
-				while (--i > 0 && m_ReadThreadRunning)
-					Thread.sleep(5);
-				if (i <= 0)
-					fail("read did not return in time");
+				long totalT = 0;
+				for (int i = 0; i < totalN; i++) {
+					m_Out.write(txbuffer, 0, bytesN);
+					sleep(100); // give the data some time to loop back
+					{ // ask for 10 but expect to get back immediately with the 8 bytes that are available
+						long T0 = System.currentTimeMillis();
+						int n = m_In.read(rxbuffer, 0, 10);
+						long T1 = System.currentTimeMillis();
+						totalT += T1 - T0;
+						if (n != 8)
+							fail("did not get all data back, got only " + n + " bytes");
+					}
+				}
+				if (totalT / totalN > 1)
+					fail("read did not return immediately, it took " + totalT / totalN + " msec on average to read " + bytesN + " bytes");
 
-				if (m_ReadBytes != 1)
-					fail("was expecting read to return 1 but got " + m_ReadBytes);
-				int time = (int) (m_T1 - m_T0);
-				int timeMax = 6;
-				if (time > timeMax)
-					fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
+			}
+			{
+				long totalT = 0;
+				for (int i = 0; i < totalN; i++) {
+					{ // ask for 10 but expect to get back immediately with the 0 bytes that are available
+						long T0 = System.currentTimeMillis();
+						int n = m_In.read(rxbuffer, 0, 10);
+						long T1 = System.currentTimeMillis();
+						totalT += T1 - T0;
+						if (n != 0)
+							fail("was expecting 0 bytes, but got " + n + " bytes");
+					}
+				}
+				if (totalT / totalN > 1)
+					fail("read did not return immediately, it took " + totalT / totalN + " msec");
 			}
 
 			finishedOK();

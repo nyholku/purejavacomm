@@ -28,7 +28,7 @@
  * OF SUCH DAMAGE.
  */
 
-package purejavacomm.testsuite;
+package testsuite;
 
 public class TestSuite {
 	public static void main(String[] args) throws Exception {
