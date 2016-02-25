@@ -1,124 +1,62 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.sparetimelabs</groupId>
-	<artifactId>purejavacomm</artifactId>
-	<version>1.0.0</version>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.sparetimelabs</groupId>
+    <artifactId>purejavacomm</artifactId>
+    <version>2.0.0</version>
 
-	<name>PureJavaComm</name>
-	<url>http://www.sparetimelabs.com/purejavacomm/purejavacomm.php</url>
+    <name>PureJavaComm</name>
+    <url>http://www.sparetimelabs.com/purejavacomm/purejavacomm.php</url>
 
-	<prerequisites>
-		<maven>2.2.1</maven>
-	</prerequisites>
+    <licenses>
+        <license>
+            <name>Simplified BSD License</name>
+            <url>http://www.opensource.org/licenses/BSD-3-Clause</url>
+        </license>
+    </licenses>
 
-	<licenses>
-		<license>
-			<name>Simplified BSD License</name>
-			<url>http://www.opensource.org/licenses/BSD-3-Clause</url>
-		</license>
-	</licenses>
+    <developers>
+        <developer>
+            <name>Kustaa Nyholm</name>
+            <id>nyholku</id>
+        </developer>
+        <developer>
+            <name>Chauvet Guillaume</name>
+            <id>gchauvet</id>
+        </developer>
+    </developers>
 
-	<developers>
-		<developer>
-			<name>Kustaa Nyholm</name>
-			<id>nyholku</id>
-		</developer>
-	</developers>
+    <scm>
+        <developerConnection>scm:git:https://github.com/nyholku/purejavacomm.git</developerConnection>
+        <connection>scm:git:http://github.com/nyholku/purejavacomm.git</connection>
+        <url>https://github.com/nyholku/purejavacomm</url>
+    </scm>
 
-	<scm>
-		<developerConnection>scm:git:https://github.com/nyholku/purejavacomm.git</developerConnection>
-		<connection>scm:git:http://github.com/nyholku/purejavacomm.git</connection>
-		<url>https://github.com/nyholku/purejavacomm</url>
-	</scm>
+    <distributionManagement>
+        <repository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>repository.com.sparetimelabs</id>
+            <name>PureJavaComm Repository</name>
+            <url>ftp://ftp.sparetimelabs.com/maven2</url>
+            <layout>default</layout>
+        </repository>
+    </distributionManagement>
 
-	<properties>
-		<maven.validate.skip>true</maven.validate.skip>
-		<maven.initialize.skip>true</maven.initialize.skip>
-		<maven.generate-sources.skip>true</maven.generate-sources.skip>
-		<maven.process-sources.skip>true</maven.process-sources.skip>
-		<maven.generate-resources.skip>true</maven.generate-resources.skip>
-		<maven.process-resources.skip>true</maven.process-resources.skip>
-		<maven.compile.skip>true</maven.compile.skip>
-		<maven.process-classes.skip>true</maven.process-classes.skip>
-		<maven.generate-test-sources.skip>true</maven.generate-test-sources.skip>
-		<maven.process-test-sources.skip>true</maven.process-test-sources.skip>
-		<maven.generate-test-resources.skip>true</maven.generate-test-resources.skip>
-		<maven.process-test-resources.skip>true</maven.process-test-resources.skip>
-		<maven.test-compile.skip>true</maven.test-compile.skip>
-		<maven.process-test-classes.skip>true</maven.process-test-classes.skip>
-		<maven.test.skip>true</maven.test.skip>
-	</properties>
-
-	<distributionManagement>
-		<repository>
-			<uniqueVersion>false</uniqueVersion>
-			<id>repository.com.sparetimelabs</id>
-			<name>PureJavaComm Repository</name>
-			<url>ftp://ftp.sparetimelabs.com/maven2</url>
-			<layout>default</layout>
-		</repository>
-	</distributionManagement>
-
-	<build>
-		<!-- target directory : where *.class are -->
-		<directory>${basedir}/bin</directory>
-		<!-- java sources directory -->
-		<sourceDirectory>${basedir}/src</sourceDirectory>
-		<!-- java test sources directory -->
-		<!-- not needed -->
-		<!-- <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory> -->
-
-		<outputDirectory>${basedir}/classes</outputDirectory>
-		<!-- not needed -->
-		<!-- <testOutputDirectory>${basedir}/test-classes</testOutputDirectory> -->
-
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ssh</artifactId>
-				<version>2.0</version>
-			</extension>
-
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ftp</artifactId>
-				<version>2.0</version>
-			</extension>
-		</extensions>
-
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.5</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.8</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<encoding>UTF-8</encoding>
-					<source>1.7</source>
-					<target>1.7</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
-	<dependencies>
-		<dependency>
-			<groupId>net.java.dev.jna</groupId>
-			<artifactId>jna</artifactId>
-			<version>4.0.0</version>
-		</dependency>
-	</dependencies>
-
+    <dependencies>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <properties>
+        <maven.compiler.source>1.5</maven.compiler.source>
+        <maven.compiler.target>1.5</maven.compiler.target>
+    </properties>
 </project>

@@ -1,5 +1,0 @@
-#!/bin/bash          
-echo Run purejavacomm.testsuite.TestSuite
-#java -cp classes:lib/jna.jar purejavacomm.testsuite.TestSuite ttyUSB0
-java -cp bin/purejavahidapi.jar/jna-4.0.0.jar Example2
-

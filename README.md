@@ -1,4 +1,4 @@
-PureJavaComm is an Application Programmin Interface (API) for accessing serial ports from Java, so this is a library aimed at programmers, not end users.
+PureJavaComm is an Application Programming Interface (API) for accessing serial ports from Java, so this is a library aimed at programmers, not end users.
 
 PureJavaComm aims to be a drop-in replacement for Sun's (now Oracle) abandoned JavaComm and an easier to deploy alternative to RXTX.
 
