@@ -39,13 +39,12 @@ import java.io.File;
 
 import java.util.*;
 
-import com.sparetimelabs.serial.termios.Pollfd;
 import com.sparetimelabs.serial.termios.Termios;
 import com.sparetimelabs.serial.termios.TimeVal;
 import static com.sparetimelabs.serial.termios.JTermios.*;
 import static com.sparetimelabs.serial.termios.JTermios.JTermiosLogging.log;
 
-public class FreeBSDTermios implements com.sparetimelabs.serial.termios.JTermios.JTermiosInterface {
+public class FreeBSDTermios implements JTermiosInterface {
 
     private static String DEVICE_DIR_PATH = "/dev/";
     static C_lib_DirectMapping m_ClibDM;

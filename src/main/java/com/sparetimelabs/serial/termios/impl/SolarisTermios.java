@@ -36,13 +36,12 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import com.sparetimelabs.serial.termios.JTermios;
-import com.sparetimelabs.serial.termios.Pollfd;
 import com.sparetimelabs.serial.termios.Termios;
 import com.sparetimelabs.serial.termios.TimeVal;
 import static com.sparetimelabs.serial.termios.JTermios.*;
 import static com.sparetimelabs.serial.termios.JTermios.JTermiosLogging.log;
 
-public class SolarisTermios implements com.sparetimelabs.serial.termios.JTermios.JTermiosInterface {
+public class SolarisTermios implements JTermiosInterface {
 
     private static String DEVICE_DIR_PATH = "/dev/";
     static C_lib_DirectMapping m_ClibDM;

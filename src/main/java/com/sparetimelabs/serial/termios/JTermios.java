@@ -29,6 +29,7 @@
  */
 package com.sparetimelabs.serial.termios;
 
+import com.sparetimelabs.serial.termios.JTermios.JTermiosInterface.Pollfd;
 import static com.sparetimelabs.serial.termios.JTermios.JTermiosLogging.*;
 import com.sparetimelabs.serial.termios.impl.*;
 
@@ -216,6 +217,13 @@ public class JTermios {
     }
 
     public interface JTermiosInterface {
+        
+        class Pollfd {
+
+            public int fd;
+            public short events;
+            public short revents;
+        }
 
         public static class NativeSize extends IntegerType {
 

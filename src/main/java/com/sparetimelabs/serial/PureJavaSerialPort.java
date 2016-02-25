@@ -31,7 +31,6 @@ package com.sparetimelabs.serial;
 
 // FIXME move javadoc comments for input stream to SerialPort.java
 import com.sparetimelabs.serial.termios.Termios;
-import com.sparetimelabs.serial.termios.Pollfd;
 import com.sparetimelabs.serial.termios.TimeVal;
 import com.sparetimelabs.serial.termios.JTermios;
 import java.io.*;
@@ -41,6 +40,7 @@ import com.sun.jna.Native;
 
 import static com.sparetimelabs.serial.termios.JTermios.JTermiosLogging.*;
 import static com.sparetimelabs.serial.termios.JTermios.*;
+import com.sparetimelabs.serial.termios.JTermios.JTermiosInterface.Pollfd;
 
 public class PureJavaSerialPort extends SerialPort {
 
@@ -717,7 +717,7 @@ public class PureJavaSerialPort extends SerialPort {
                 // this stuff is just cached/precomputed stuff to make read() faster
                 private int im_VTIME = -1;
                 private int im_VMIN = -1;
-                private final com.sparetimelabs.serial.termios.Pollfd[] im_ReadPollFD = new Pollfd[]{new Pollfd(), new Pollfd()};
+                private final Pollfd[] im_ReadPollFD = new Pollfd[]{new Pollfd(), new Pollfd()};
                 private byte[] im_Nudge;
                 private FDSet im_ReadFDSet;
                 private TimeVal im_ReadTimeVal;
@@ -1224,7 +1224,7 @@ public class PureJavaSerialPort extends SerialPort {
                     TimeVal timeout = null;
                     FDSet rset = null;
                     FDSet wset = null;
-                    com.sparetimelabs.serial.termios.Pollfd[] pollfd = null;
+                    Pollfd[] pollfd = null;
                     byte[] nudge = null;
 
                     if (USE_POLL) {

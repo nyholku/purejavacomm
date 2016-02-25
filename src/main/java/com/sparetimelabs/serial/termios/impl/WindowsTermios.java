@@ -38,7 +38,6 @@ import com.sun.jna.ptr.IntByReference;
 
 import static com.sparetimelabs.serial.termios.JTermios.*;
 import static com.sparetimelabs.serial.termios.JTermios.JTermiosLogging.*;
-import com.sparetimelabs.serial.termios.Pollfd;
 import com.sparetimelabs.serial.termios.Termios;
 import com.sparetimelabs.serial.termios.TimeVal;
 import static com.sparetimelabs.serial.termios.impl.WinAPI.*;
