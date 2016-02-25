@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package com.sparetimelabs.serial.termios.windows;
+package com.sparetimelabs.serial.termios.impl;
 
 import com.sparetimelabs.serial.termios.JTermios;
 import java.util.*;
@@ -41,10 +41,10 @@ import static com.sparetimelabs.serial.termios.JTermios.JTermiosLogging.*;
 import com.sparetimelabs.serial.termios.Pollfd;
 import com.sparetimelabs.serial.termios.Termios;
 import com.sparetimelabs.serial.termios.TimeVal;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.*;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.DCB.*;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.*;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.DCB.*;
 
-public class JTermiosImpl implements JTermiosInterface {
+public class WindowsTermios implements JTermiosInterface {
 
     private volatile int m_ErrNo = 0;
 
@@ -129,7 +129,7 @@ public class JTermiosImpl implements JTermiosInterface {
         }
 
         public void open(String filename, int flags) throws Fail {
-            synchronized (JTermiosImpl.this) {
+            synchronized (WindowsTermios.this) {
                 m_FD = -1;
                 for (int i = 0; i < m_PortFDs.length; ++i) {
                     if (!m_PortFDs[i]) {
@@ -203,7 +203,7 @@ public class JTermiosImpl implements JTermiosInterface {
         }
 
         public void close() {
-            synchronized (JTermiosImpl.this) {
+            synchronized (WindowsTermios.this) {
                 if (m_FD >= 0) {
                     m_OpenPorts.remove(m_FD);
                     m_PortFDs[m_FD] = false;
@@ -300,7 +300,7 @@ public class JTermiosImpl implements JTermiosInterface {
         }
     }
 
-    public JTermiosImpl() {
+    public WindowsTermios() {
         log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
     }
 

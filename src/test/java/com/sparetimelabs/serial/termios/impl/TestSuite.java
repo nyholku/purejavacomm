@@ -27,36 +27,36 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package com.sparetimelabs.serial.termios.windows;
+package com.sparetimelabs.serial.termios.impl;
 
-import static com.sparetimelabs.serial.termios.windows.WinAPI.CBR_1200;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.CloseHandle;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.CreateEvent;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.CreateFile;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.ERROR_IO_INCOMPLETE;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.ERROR_IO_PENDING;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.FILE_FLAG_OVERLAPPED;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.GENERIC_READ;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.GENERIC_WRITE;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.GetLastError;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.GetOverlappedResult;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.INVALID_HANDLE_VALUE;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.NOPARITY;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.ONESTOPBIT;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.OPEN_EXISTING;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.ReadFile;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.ResetEvent;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.SetCommState;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.SetCommTimeouts;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.SetupComm;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.WAIT_OBJECT_0;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.WAIT_TIMEOUT;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.WaitForSingleObject;
-import static com.sparetimelabs.serial.termios.windows.WinAPI.WriteFile;
-import com.sparetimelabs.serial.termios.windows.WinAPI.COMMTIMEOUTS;
-import com.sparetimelabs.serial.termios.windows.WinAPI.DCB;
-import com.sparetimelabs.serial.termios.windows.WinAPI.HANDLE;
-import com.sparetimelabs.serial.termios.windows.WinAPI.OVERLAPPED;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.CBR_1200;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.CloseHandle;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.CreateEvent;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.CreateFile;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.ERROR_IO_INCOMPLETE;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.ERROR_IO_PENDING;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.FILE_FLAG_OVERLAPPED;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.GENERIC_READ;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.GENERIC_WRITE;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.GetLastError;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.GetOverlappedResult;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.INVALID_HANDLE_VALUE;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.NOPARITY;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.ONESTOPBIT;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.OPEN_EXISTING;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.ReadFile;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.ResetEvent;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.SetCommState;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.SetCommTimeouts;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.SetupComm;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.WAIT_OBJECT_0;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.WAIT_TIMEOUT;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.WaitForSingleObject;
+import static com.sparetimelabs.serial.termios.impl.WinAPI.WriteFile;
+import com.sparetimelabs.serial.termios.impl.WinAPI.COMMTIMEOUTS;
+import com.sparetimelabs.serial.termios.impl.WinAPI.DCB;
+import com.sparetimelabs.serial.termios.impl.WinAPI.HANDLE;
+import com.sparetimelabs.serial.termios.impl.WinAPI.OVERLAPPED;
 
 import com.sun.jna.Memory;
 

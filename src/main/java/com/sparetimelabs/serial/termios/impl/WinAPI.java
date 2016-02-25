@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-package com.sparetimelabs.serial.termios.windows;
+package com.sparetimelabs.serial.termios.impl;
 
 import java.util.Arrays;
 import java.util.List;
@@ -90,7 +90,7 @@ import static com.sparetimelabs.serial.termios.JTermios.JTermiosLogging.*;
  * @author Kustaa Nyholm
  *
  */
-public class WinAPI {
+class WinAPI {
 
     private static Windows_kernel32_lib m_K32lib;
     private static Windows_kernel32_lib_Direct m_K32libDM;

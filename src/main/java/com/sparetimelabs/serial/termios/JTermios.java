@@ -30,6 +30,7 @@
 package com.sparetimelabs.serial.termios;
 
 import static com.sparetimelabs.serial.termios.JTermios.JTermiosLogging.*;
+import com.sparetimelabs.serial.termios.impl.*;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -310,15 +311,15 @@ public class JTermios {
 
     static { // INSTANTIATION 
         if (Platform.isMac()) {
-            m_Termios = new com.sparetimelabs.serial.termios.macosx.JTermiosImpl();
+            m_Termios = new MacOSXTermios();
         } else if (Platform.isWindows()) {
-            m_Termios = new com.sparetimelabs.serial.termios.windows.JTermiosImpl();
+            m_Termios = new WindowsTermios();
         } else if (Platform.isLinux()) {
-            m_Termios = new com.sparetimelabs.serial.termios.linux.JTermiosImpl();
+            m_Termios = new LinuxTermios();
         } else if (Platform.isSolaris()) {
-            m_Termios = new com.sparetimelabs.serial.termios.solaris.JTermiosImpl();
+            m_Termios = new SolarisTermios();
         } else if (Platform.isFreeBSD()) {
-            m_Termios = new com.sparetimelabs.serial.termios.freebsd.JTermiosImpl();
+            m_Termios = new FreeBSDTermios();
         } else {
             log(0, "JTermios has no support for OS %s\n", System.getProperty("os.name"));
         }
