@@ -31,8 +31,6 @@ package com.sparetimelabs.serial;
 
 import java.util.Enumeration;
 
-import com.sparetimelabs.serial.CommPortIdentifier;
-
 public class Test16 extends TestBase {
 
     @SuppressWarnings("unchecked")

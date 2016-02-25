@@ -29,9 +29,6 @@
  */
 package com.sparetimelabs.serial;
 
-import com.sparetimelabs.serial.UnsupportedCommOperationException;
-import com.sparetimelabs.serial.SerialPort;
-
 public class Test8 extends TestBase {
 
     // To allow us to run this test with limited hardware, we use two sets of

@@ -29,9 +29,6 @@
  */
 package com.sparetimelabs.serial;
 
-import com.sparetimelabs.serial.SerialPortEvent;
-import com.sparetimelabs.serial.SerialPortEventListener;
-
 public class Test1 extends TestBase {
 
     static void run() throws Exception {

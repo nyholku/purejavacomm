@@ -33,10 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.sparetimelabs.serial.CommPortIdentifier;
-import com.sparetimelabs.serial.NoSuchPortException;
-import com.sparetimelabs.serial.SerialPort;
-
 public class TestBase {
 
     static class TestFailedException extends Exception {

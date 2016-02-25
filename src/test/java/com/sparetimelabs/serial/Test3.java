@@ -29,12 +29,6 @@
  */
 package com.sparetimelabs.serial;
 
-import java.util.Arrays;
-
-import com.sparetimelabs.serial.SerialPort;
-import com.sparetimelabs.serial.SerialPortEvent;
-import com.sparetimelabs.serial.SerialPortEventListener;
-
 public class Test3 extends TestBase {
 
     static void run() throws Exception {

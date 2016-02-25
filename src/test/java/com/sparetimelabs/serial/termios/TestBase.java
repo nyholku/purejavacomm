@@ -30,7 +30,6 @@
 package com.sparetimelabs.serial.termios;
 
 import static com.sparetimelabs.serial.termios.JTermios.errno;
-import com.sparetimelabs.serial.termios.JTermios;
 
 public class TestBase {
 

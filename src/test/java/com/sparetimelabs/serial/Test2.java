@@ -29,12 +29,7 @@
  */
 package com.sparetimelabs.serial;
 
-import java.util.Arrays;
 import java.util.Random;
-
-import com.sparetimelabs.serial.SerialPort;
-import com.sparetimelabs.serial.SerialPortEvent;
-import com.sparetimelabs.serial.SerialPortEventListener;
 
 public class Test2 extends TestBase {
 

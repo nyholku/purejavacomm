@@ -29,10 +29,6 @@
  */
 package com.sparetimelabs.serial;
 
-import com.sparetimelabs.serial.SerialPort;
-import com.sparetimelabs.serial.SerialPortEvent;
-import com.sparetimelabs.serial.SerialPortEventListener;
-import com.sparetimelabs.serial.CommPortIdentifier;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;

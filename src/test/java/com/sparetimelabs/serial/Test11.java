@@ -29,12 +29,6 @@
  */
 package com.sparetimelabs.serial;
 
-import java.io.IOException;
-
-import com.sparetimelabs.serial.PureJavaSerialPort;
-import com.sparetimelabs.serial.SerialPortEvent;
-import com.sparetimelabs.serial.SerialPortEventListener;
-
 public class Test11 extends TestBase {
 
     static volatile boolean m_ThreadRunning;

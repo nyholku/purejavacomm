@@ -32,8 +32,6 @@ package com.sparetimelabs.serial.termios;
 import static com.sparetimelabs.serial.termios.JTermios.*;
 import static com.sparetimelabs.serial.termios.TestBase.S;
 import static com.sparetimelabs.serial.termios.TestBase.fail;
-import com.sparetimelabs.serial.termios.Termios;
-import com.sparetimelabs.serial.termios.TimeVal;
 
 public class JTermiosDemo {
 
