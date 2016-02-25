@@ -588,7 +588,7 @@ public class JTermios {
         }
 
         public static String log(int[] ints, int n) {
-            StringBuffer b = new StringBuffer();
+            StringBuilder b = new StringBuilder();
             if (n < 0 || n > ints.length) {
                 n = ints.length;
             }
@@ -604,7 +604,7 @@ public class JTermios {
         }
 
         public static String log(char[] bts, int n) {
-            StringBuffer b = new StringBuffer();
+            StringBuilder b = new StringBuilder();
             if (n < 0 || n > bts.length) {
                 n = bts.length;
             }
@@ -620,7 +620,7 @@ public class JTermios {
         }
 
         public static String log(Object[] bts, int n) {
-            StringBuffer b = new StringBuffer();
+            StringBuilder b = new StringBuilder();
             if (n < 0 || n > bts.length) {
                 n = bts.length;
             }
@@ -636,32 +636,29 @@ public class JTermios {
             return b.toString();
         }
 
-        static private StringBuffer buffer = new StringBuffer();
-
         static public boolean log(int l, String format, Object... args) {
+            final StringBuffer buffer = new StringBuffer();
             if (l == 0 || LOG_MASK != 0) {
-                synchronized (buffer) {
-                    buffer.setLength(0);
-                    if ((LOG_MASK & (1 << (5))) != 0) {
-                        buffer.append(String.format("%06d,", System.currentTimeMillis() % 1000000));
-                    }
-                    if ((LOG_MASK & (1 << (6))) != 0) {
-                        buffer.append(lineno(2));
-                        buffer.append(", ");
-                    }
-                    if ((LOG_MASK & (1 << (7))) != 0) {
-                        buffer.append("thread id ");
-                        buffer.append(Thread.currentThread().getId());
-                        buffer.append(", ");
-                        buffer.append(Thread.currentThread().getName());
-                        buffer.append(", ");
-                    }
-                    if (l == 0 || (LOG_MASK & (1 << (l - 1))) != 0) {
-                        buffer.append(String.format(format, args));
-                    }
-                    if (buffer.length() > 0) {
-                        System.err.printf("log: " + buffer.toString());
-                    }
+                buffer.setLength(0);
+                if ((LOG_MASK & (1 << (5))) != 0) {
+                    buffer.append(String.format("%06d,", System.currentTimeMillis() % 1000000));
+                }
+                if ((LOG_MASK & (1 << (6))) != 0) {
+                    buffer.append(lineno(2));
+                    buffer.append(", ");
+                }
+                if ((LOG_MASK & (1 << (7))) != 0) {
+                    buffer.append("thread id ");
+                    buffer.append(Thread.currentThread().getId());
+                    buffer.append(", ");
+                    buffer.append(Thread.currentThread().getName());
+                    buffer.append(", ");
+                }
+                if (l == 0 || (LOG_MASK & (1 << (l - 1))) != 0) {
+                    buffer.append(String.format(format, args));
+                }
+                if (buffer.length() > 0) {
+                    System.err.printf("log: " + buffer.toString());
                 }
             }
             return true;
