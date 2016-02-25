@@ -33,8 +33,6 @@ public class PureJavaCommDriver implements CommDriver {
 
     @Override
     public CommPort getCommPort(String name, int type) {
-        //if (type == CommPortIdentifier.PORT_SERIAL)
-        //	return new PureJavaSerialPort(name,0);
         return null;
     }
 

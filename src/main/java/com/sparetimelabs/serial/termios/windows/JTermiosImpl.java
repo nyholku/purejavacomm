@@ -44,13 +44,13 @@ import com.sparetimelabs.serial.termios.TimeVal;
 import static com.sparetimelabs.serial.termios.windows.WinAPI.*;
 import static com.sparetimelabs.serial.termios.windows.WinAPI.DCB.*;
 
-public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.JTermiosInterface {
+public class JTermiosImpl implements JTermiosInterface {
 
     private volatile int m_ErrNo = 0;
 
     private volatile boolean m_PortFDs[] = new boolean[FDSetImpl.FD_SET_SIZE];
 
-    private volatile Hashtable<Integer, Port> m_OpenPorts = new Hashtable<Integer, Port>();
+    private volatile Map<Integer, Port> m_OpenPorts = new HashMap<Integer, Port>();
 
     private class Port {
 
@@ -273,29 +273,28 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
 
     }
 
-    //static private class FDSetImpl extends FDSet {
-    //	static final int FD_SET_SIZE = 256; // Windows supports max 255 serial ports so this is enough
-    //	static final int NFBBITS = 32;
-    //	int[] bits = new int[(FD_SET_SIZE + NFBBITS - 1) / NFBBITS];
-    //}
     static private class FDSetImpl implements FDSet {
 
         static final int FD_SET_SIZE = 256; // Windows supports max 255 serial ports so this is enough
         static final int NFBBITS = 32;
         int[] bits = new int[(FD_SET_SIZE + NFBBITS - 1) / NFBBITS];
 
+        @Override
         public void FD_CLR(int fd) {
             bits[fd / NFBBITS] &= ~(1 << (fd % NFBBITS));
         }
 
+        @Override
         public boolean FD_ISSET(int fd) {
             return (bits[fd / NFBBITS] & (1 << (fd % NFBBITS))) != 0;
         }
 
+        @Override
         public void FD_SET(int fd) {
             bits[fd / NFBBITS] |= 1 << (fd % NFBBITS);
         }
 
+        @Override
         public void FD_ZERO() {
             java.util.Arrays.fill(bits, 0);
         }
@@ -305,10 +304,12 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
     }
 
+    @Override
     public int errno() {
         return m_ErrNo;
     }
 
+    @Override
     public void cfmakeraw(Termios termios) {
         termios.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
         termios.c_oflag &= ~OPOST;
@@ -317,6 +318,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         termios.c_cflag |= CS8;
     }
 
+    @Override
     public int fcntl(int fd, int cmd, int arg) {
 
         Port port = getPort(fd);
@@ -334,6 +336,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         return 0;
     }
 
+    @Override
     public int tcdrain(int fd) {
         Port port = getPort(fd);
         if (port == null) {
@@ -351,24 +354,29 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         }
     }
 
+    @Override
     public int cfgetispeed(Termios termios) {
         return termios.c_ispeed;
     }
 
+    @Override
     public int cfgetospeed(Termios termios) {
         return termios.c_ospeed;
     }
 
+    @Override
     public int cfsetispeed(Termios termios, int speed) {
         termios.c_ispeed = speed;
         return 0;
     }// Error code for Interrupted = EINTR
 
+    @Override
     public int cfsetospeed(Termios termios, int speed) {
         termios.c_ospeed = speed;
         return 0;
     }
 
+    @Override
     public int open(String filename, int flags) {
         Port port = new Port();
         try {
@@ -421,6 +429,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         return a > b ? a : b;
     }
 
+    @Override
     public int read(int fd, byte[] buffer, int length) {
 
         Port port = getPort(fd);
@@ -526,6 +535,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         }
     }
 
+    @Override
     public int write(int fd, byte[] buffer, int length) {
         Port port = getPort(fd);
         if (port == null) {
@@ -591,6 +601,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         }
     }
 
+    @Override
     public int close(int fd) {
         Port port = getPort(fd);
         if (port == null) {
@@ -600,6 +611,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         return 0;
     }
 
+    @Override
     public int tcflush(int fd, int queue) {
         Port port = getPort(fd);
         if (port == null) {
@@ -642,6 +654,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
      * 
      * @see jtermios.JTermios.JTermiosInterface#tcgetattr(int, jtermios.Termios)
      */
+    @Override
     public int tcgetattr(int fd, Termios termios) {
         Port port = getPort(fd);
         if (port == null) {
@@ -651,6 +664,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         return 0;
     }
 
+    @Override
     public int tcsendbreak(int fd, int duration) {
         Port port = getPort(fd);
         if (port == null) {
@@ -670,6 +684,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         }
     }
 
+    @Override
     public int tcsetattr(int fd, int cmd, Termios termios) {
         if (cmd != TCSANOW) {
             log(0, "tcsetattr only supports TCSANOW\n");
@@ -869,6 +884,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         }
     }
 
+    @Override
     public int select(int n, FDSet readfds, FDSet writefds, FDSet exceptfds, TimeVal timeout) {
         // long T0 = System.currentTimeMillis();
         int ready = 0;
@@ -1024,12 +1040,10 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
             }
 
         }
-        // long T1 = System.currentTimeMillis();
-        // System.err.println("select() " + (T1 - T0));
-
         return ready;
     }
 
+    @Override
     public int poll(Pollfd fds[], int nfds, int timeout) {
         m_ErrNo = EINVAL;
         return -1;
@@ -1040,10 +1054,12 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         return -1;
     }
 
+    @Override
     public boolean canPoll() {
         return false;
     }
 
+    @Override
     public void perror(String msg) {
         if (msg != null && msg.length() > 0) {
             System.out.print(msg + ": ");
@@ -1091,6 +1107,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         }
     }
 
+    @Override
     public FDSet newFDSet() {
         return new FDSetImpl();
     }
@@ -1127,6 +1144,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         java.util.Arrays.fill(p.bits, 0);
     }
 
+    @Override
     public int ioctl(int fd, int cmd, int[] arg) {
         Port port = getPort(fd);
         if (port == null) {
@@ -1208,14 +1226,6 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         }
     }
 
-    private void set_errno(int x) {
-        m_ErrNo = x;
-    }
-
-    private void report(String msg) {
-        System.err.print(msg);
-    }
-
     private Port getPort(int fd) {
         synchronized (this) {
             Port port = m_OpenPorts.get(fd);
@@ -1227,7 +1237,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
     }
 
     private static String getString(byte[] buffer, int offset) {
-        StringBuffer s = new StringBuffer();
+        StringBuilder s = new StringBuilder();
         byte c;
         while ((c = buffer[offset++]) != 0) {
             s.append((char) c);
@@ -1235,10 +1245,12 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         return s.toString();
     }
 
+    @Override
     public String getPortNamePattern() {
         return "^COM.*";
     }
 
+    @Override
     public List<String> getPortList() {
         Pattern p = JTermios.getPortNamePattern(this);
         byte[] buffer;
@@ -1270,6 +1282,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         return null;
     }
 
+    @Override
     public void shutDown() {
         for (Port port : m_OpenPorts.values()) {
             try {
@@ -1282,6 +1295,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         }
     }
 
+    @Override
     public int setspeed(int fd, Termios termios, int speed) {
         int br = speed;
         switch (speed) {
@@ -1365,6 +1379,7 @@ public class JTermiosImpl implements com.sparetimelabs.serial.termios.JTermios.J
         return 0;
     }
 
+    @Override
     public int pipe(int[] fds) {
         m_ErrNo = EMFILE; // pipe() not implemented on Windows backend
         return -1;

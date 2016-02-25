@@ -33,12 +33,13 @@ package com.sparetimelabs.serial;
 import static com.sparetimelabs.serial.termios.JTermios.*;
 
 import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.sparetimelabs.serial.termios.Termios;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CommPortIdentifier {
 
@@ -49,10 +50,10 @@ public class CommPortIdentifier {
     private volatile int m_PortType;
     private volatile CommDriver m_Driver;
 
-    private volatile static Hashtable<String, CommPortIdentifier> m_PortIdentifiers = new Hashtable<String, CommPortIdentifier>();
-    private volatile static Hashtable<CommPort, CommPortIdentifier> m_OpenPorts = new Hashtable<CommPort, CommPortIdentifier>();
-    private volatile static Hashtable<CommPortIdentifier, String> m_Owners = new Hashtable<CommPortIdentifier, String>();
-    private volatile Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>> m_OwnerShipListeners = new Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>>();
+    private volatile static Map<String, CommPortIdentifier> m_PortIdentifiers = new HashMap<String, CommPortIdentifier>();
+    private volatile static Map<CommPort, CommPortIdentifier> m_OpenPorts = new HashMap<CommPort, CommPortIdentifier>();
+    private volatile static Map<CommPortIdentifier, String> m_Owners = new HashMap<CommPortIdentifier, String>();
+    private volatile Map<CommPortIdentifier, List<CommPortOwnershipListener>> m_OwnerShipListeners = new HashMap<CommPortIdentifier, List<CommPortOwnershipListener>>();
 
     @Override
     public boolean equals(Object x) {
@@ -216,23 +217,20 @@ public class CommPortIdentifier {
                 }
                 Iterator<CommPortIdentifier> m_Iterator = m_PortIDs.iterator();
 
+                @Override
                 public boolean hasMoreElements() {
                     return m_Iterator != null ? m_Iterator.hasNext() : false;
                 }
 
+                @Override
                 public Object nextElement() {
                     return m_Iterator.next();
                 }
-            ;
+            };
         }
+    }
 
-    
-
-    ;
-		}
-	}
-
-	public String getCurrentOwner() {
+    public String getCurrentOwner() {
         synchronized (m_Mutex) {
             return m_Owners.get(this);
         }
