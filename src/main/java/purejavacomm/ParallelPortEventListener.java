@@ -1,5 +1,6 @@
 package purejavacomm;
 
 public interface ParallelPortEventListener {
-	 void parallelEvent(ParallelPortEvent ev);
+
+    void parallelEvent(ParallelPortEvent ev);
 }

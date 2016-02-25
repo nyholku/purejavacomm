@@ -35,71 +35,78 @@ import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class Test14 extends TestBase {
-	static volatile boolean m_ReadThreadRunning;
-	static volatile int m_ReadBytes = 0;
-	static volatile long m_T0;
-	static volatile long m_T1;
 
-	static void run() throws Exception {
+    static volatile boolean m_ReadThreadRunning;
+    static volatile int m_ReadBytes = 0;
+    static volatile long m_T0;
+    static volatile long m_T1;
 
-		try {
-			int timeout = 100;
-			begin("Test14 - treshold disabled, timeout disabled");
-			openPort();
+    static void run() throws Exception {
 
-			m_Out = m_Port.getOutputStream();
-			m_In = m_Port.getInputStream();
+        try {
+            int timeout = 100;
+            begin("Test14 - treshold disabled, timeout disabled");
+            openPort();
 
-			final byte[] txbuffer = new byte[1000];
-			final byte[] rxbuffer = new byte[txbuffer.length];
+            m_Out = m_Port.getOutputStream();
+            m_In = m_Port.getInputStream();
 
-			m_Port.disableReceiveTimeout();
-			m_Port.disableReceiveThreshold();
+            final byte[] txbuffer = new byte[1000];
+            final byte[] rxbuffer = new byte[txbuffer.length];
 
-			Thread rxthread = new Thread(new Runnable() {
-				public void run() {
-					m_ReadThreadRunning = true;
-					try {
-						m_ReadBytes = m_In.read(rxbuffer, 0, rxbuffer.length);
-						m_T1 = System.currentTimeMillis();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					m_ReadThreadRunning = false;
+            m_Port.disableReceiveTimeout();
+            m_Port.disableReceiveThreshold();
 
-				}
-			});
+            Thread rxthread = new Thread(new Runnable() {
+                public void run() {
+                    m_ReadThreadRunning = true;
+                    try {
+                        m_ReadBytes = m_In.read(rxbuffer, 0, rxbuffer.length);
+                        m_T1 = System.currentTimeMillis();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    m_ReadThreadRunning = false;
 
-			m_ReadThreadRunning = false;
-			rxthread.start();
-			while (!m_ReadThreadRunning)
-				Thread.sleep(10);
+                }
+            });
 
-			{
-				sleep(500);
-				if (!m_ReadThreadRunning)
-					fail("read did not block but returned with " + m_ReadBytes + " bytes");
-				m_Out.write(txbuffer, 0, 1);
-				m_T0 = System.currentTimeMillis();
-				Thread.sleep(20);
-				int i = 200;
-				while (--i > 0 && m_ReadThreadRunning)
-					Thread.sleep(5);
-				if (i <= 0)
-					fail("read did not return in time");
+            m_ReadThreadRunning = false;
+            rxthread.start();
+            while (!m_ReadThreadRunning) {
+                Thread.sleep(10);
+            }
 
-				if (m_ReadBytes != 1)
-					fail("was expecting read to return 1 but got " + m_ReadBytes);
-				int time = (int) (m_T1 - m_T0);
-				int timeMax = 6;
-				if (time > timeMax)
-					fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
-			}
+            {
+                sleep(500);
+                if (!m_ReadThreadRunning) {
+                    fail("read did not block but returned with " + m_ReadBytes + " bytes");
+                }
+                m_Out.write(txbuffer, 0, 1);
+                m_T0 = System.currentTimeMillis();
+                Thread.sleep(20);
+                int i = 200;
+                while (--i > 0 && m_ReadThreadRunning) {
+                    Thread.sleep(5);
+                }
+                if (i <= 0) {
+                    fail("read did not return in time");
+                }
 
-			finishedOK();
-		} finally {
-			closePort();
-		}
+                if (m_ReadBytes != 1) {
+                    fail("was expecting read to return 1 but got " + m_ReadBytes);
+                }
+                int time = (int) (m_T1 - m_T0);
+                int timeMax = 6;
+                if (time > timeMax) {
+                    fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
+                }
+            }
 
-	}
+            finishedOK();
+        } finally {
+            closePort();
+        }
+
+    }
 }

@@ -33,54 +33,63 @@ import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class Test1 extends TestBase {
-	static void run() throws Exception {
 
-		try {
-			begin("Test1 - control lines ");
-			openPort();
-			m_Port.setRTS(false);
-			m_Port.setDTR(false);
-			sleep();
-			
-			m_Port.notifyOnCTS(true);
-			m_Port.notifyOnRingIndicator(true);
-			m_Port.notifyOnCarrierDetect(true);
-			m_Port.notifyOnDSR(true);
-			final int[] counts = new int[11];
-			m_Port.addEventListener(new SerialPortEventListener() {
-				public void serialEvent(SerialPortEvent event) {
-					try {
-						if (event.getEventType() == SerialPortEvent.CTS)
-							counts[SerialPortEvent.CTS]++;
-						if (event.getEventType() == SerialPortEvent.RI)
-							counts[SerialPortEvent.RI]++;
-						if (event.getEventType() == SerialPortEvent.CD)
-							counts[SerialPortEvent.CD]++;
-						if (event.getEventType() == SerialPortEvent.DSR)
-							counts[SerialPortEvent.DSR]++;
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			});
-			int N = 128;
-			for (int i = 0; i < N; i++) {
-				m_Port.setRTS((i & 1) != 0);
-				m_Port.setDTR((i & 2) != 0);
-				sleep();
-			}
-			if (counts[SerialPortEvent.CTS] != N - 1)
-				fail("CTS loopback failed, expected %d toggles, got %d", N - 1, counts[SerialPortEvent.CTS]);
-			if (counts[SerialPortEvent.DSR] != N / 2 - 1)
-				fail("DSR loopback failed, expected %d toggles, got %d", N / 2 - 1, counts[SerialPortEvent.DSR]);
-			if (counts[SerialPortEvent.RI] != N - 1)
-				fail("RI loopback failed, expected %d toggles, got %d", N-1, counts[SerialPortEvent.RI]);
-			if (counts[SerialPortEvent.CD] != N / 2 - 1)
-				fail("CTS loopback failed, expected %d toggles, got %d", N / 2 - 1, counts[SerialPortEvent.CD]);
-			finishedOK();
-		} finally {
-			closePort();
-		}
+    static void run() throws Exception {
 
-	}
+        try {
+            begin("Test1 - control lines ");
+            openPort();
+            m_Port.setRTS(false);
+            m_Port.setDTR(false);
+            sleep();
+
+            m_Port.notifyOnCTS(true);
+            m_Port.notifyOnRingIndicator(true);
+            m_Port.notifyOnCarrierDetect(true);
+            m_Port.notifyOnDSR(true);
+            final int[] counts = new int[11];
+            m_Port.addEventListener(new SerialPortEventListener() {
+                public void serialEvent(SerialPortEvent event) {
+                    try {
+                        if (event.getEventType() == SerialPortEvent.CTS) {
+                            counts[SerialPortEvent.CTS]++;
+                        }
+                        if (event.getEventType() == SerialPortEvent.RI) {
+                            counts[SerialPortEvent.RI]++;
+                        }
+                        if (event.getEventType() == SerialPortEvent.CD) {
+                            counts[SerialPortEvent.CD]++;
+                        }
+                        if (event.getEventType() == SerialPortEvent.DSR) {
+                            counts[SerialPortEvent.DSR]++;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            int N = 128;
+            for (int i = 0; i < N; i++) {
+                m_Port.setRTS((i & 1) != 0);
+                m_Port.setDTR((i & 2) != 0);
+                sleep();
+            }
+            if (counts[SerialPortEvent.CTS] != N - 1) {
+                fail("CTS loopback failed, expected %d toggles, got %d", N - 1, counts[SerialPortEvent.CTS]);
+            }
+            if (counts[SerialPortEvent.DSR] != N / 2 - 1) {
+                fail("DSR loopback failed, expected %d toggles, got %d", N / 2 - 1, counts[SerialPortEvent.DSR]);
+            }
+            if (counts[SerialPortEvent.RI] != N - 1) {
+                fail("RI loopback failed, expected %d toggles, got %d", N - 1, counts[SerialPortEvent.RI]);
+            }
+            if (counts[SerialPortEvent.CD] != N / 2 - 1) {
+                fail("CTS loopback failed, expected %d toggles, got %d", N / 2 - 1, counts[SerialPortEvent.CD]);
+            }
+            finishedOK();
+        } finally {
+            closePort();
+        }
+
+    }
 }

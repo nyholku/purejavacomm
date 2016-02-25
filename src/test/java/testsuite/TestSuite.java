@@ -27,41 +27,41 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package testsuite;
 
 public class TestSuite {
-	public static void main(String[] args) throws Exception {
-		// Native.setProtected(false);
-		TestBase.init(args);
-		//jtermios.JTermios.JTermiosLogging.setLogMask(255);
-		// System.setProperty("purejavacomm.usepoll", "true");
-		// System.setProperty("purejavacomm.rawreadmode", "true");
-		try {
-			System.out.println("PureJavaComm Test Suite");
-			System.out.println("Using port: " + TestBase.getPortName());
-			TestFreeFormPortIdentifiers.testMissingPortInCommPortIdentifier();
-			TestFreeFormPortIdentifiers.testDevicePathInCommPortIdentifier();
-			TestFreeFormPortIdentifiers.testDevicePathToInvalidTTYInCommPortIdentifier();
-			Test1.run();
-			Test2.run(19200);
-			Test3.run();
-			Test4.run();
-			Test5.run();
-			Test6.run();
-			Test7.run();
-			Test8.run(!(args.length > 1 && args[1].equals("limited")));
-			Test9.run();
-			Test10.run();
-			Test11.run();
-			Test12.run();
-			Test13.run();
-			Test15.run();
-			Test16.run();
-			System.out.println("All tests passed OK.");
-		} catch (TestBase.TestFailedException e) {
-			System.out.println("Test failure");
-			System.exit(1);
-		}
-	}
+
+    public static void main(String[] args) throws Exception {
+        // Native.setProtected(false);
+        TestBase.init(args);
+        //jtermios.JTermios.JTermiosLogging.setLogMask(255);
+        // System.setProperty("purejavacomm.usepoll", "true");
+        // System.setProperty("purejavacomm.rawreadmode", "true");
+        try {
+            System.out.println("PureJavaComm Test Suite");
+            System.out.println("Using port: " + TestBase.getPortName());
+            TestFreeFormPortIdentifiers.testMissingPortInCommPortIdentifier();
+            TestFreeFormPortIdentifiers.testDevicePathInCommPortIdentifier();
+            TestFreeFormPortIdentifiers.testDevicePathToInvalidTTYInCommPortIdentifier();
+            Test1.run();
+            Test2.run(19200);
+            Test3.run();
+            Test4.run();
+            Test5.run();
+            Test6.run();
+            Test7.run();
+            Test8.run(!(args.length > 1 && args[1].equals("limited")));
+            Test9.run();
+            Test10.run();
+            Test11.run();
+            Test12.run();
+            Test13.run();
+            Test15.run();
+            Test16.run();
+            System.out.println("All tests passed OK.");
+        } catch (TestBase.TestFailedException e) {
+            System.out.println("Test failure");
+            System.exit(1);
+        }
+    }
 }

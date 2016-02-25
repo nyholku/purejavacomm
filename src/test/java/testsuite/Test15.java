@@ -33,55 +33,60 @@ import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class Test15 extends TestBase {
-	static void run() throws Exception {
 
-		try {
-			int timeout = 100;
-			begin("Test15 - treshold disabled, timeout == " + timeout);
-			openPort();
-			m_Out = m_Port.getOutputStream();
-			m_In = m_Port.getInputStream();
+    static void run() throws Exception {
 
-			final byte[] txbuffer = new byte[1000];
-			final byte[] rxbuffer = new byte[txbuffer.length];
+        try {
+            int timeout = 100;
+            begin("Test15 - treshold disabled, timeout == " + timeout);
+            openPort();
+            m_Out = m_Port.getOutputStream();
+            m_In = m_Port.getInputStream();
 
-			m_Port.enableReceiveTimeout(100);
-			m_Port.disableReceiveThreshold();
+            final byte[] txbuffer = new byte[1000];
+            final byte[] rxbuffer = new byte[txbuffer.length];
 
-			{
-				long T0 = System.currentTimeMillis();
-				int n = m_In.read(rxbuffer, 0, 10);
-				long T1 = System.currentTimeMillis();
-				if (n != 0)
-					fail("was expecting 0 bytes, but got " + n + " bytes");
-				int timeLo = timeout;
-				int timeHi = timeout * 110 / 100;
-				int time = (int) (T1 - T0);
-				if (time < timeLo)
-					fail("timed out early, was expecting  " + timeLo + " but got " + time + " msec");
-				if (time > timeHi)
-					fail("timed out late, was expecting  " + timeHi + " but got " + time + " msec");
-			}
+            m_Port.enableReceiveTimeout(100);
+            m_Port.disableReceiveThreshold();
 
-			{
-				m_Out.write(txbuffer, 0, 1000); // at 9600 this should take about 1 sec 
-				sleep(50); // give time to about 50 chars to loop back
-				long T0 = System.currentTimeMillis();
-				int n = m_In.read(rxbuffer, 0, 1000);
-				long T1 = System.currentTimeMillis();
-				int time = (int) (T1 - T0);
-				int etime= n * 150/100; // at 9600
-				if (time > etime)
-					fail("expected read to return in " + etime+" but it took " + time + " msec and returned "+n +" bytes");
-				if (n < 10)
-					fail("was expecting at least 900 bytes, but got " + n + " bytes");
-			}
+            {
+                long T0 = System.currentTimeMillis();
+                int n = m_In.read(rxbuffer, 0, 10);
+                long T1 = System.currentTimeMillis();
+                if (n != 0) {
+                    fail("was expecting 0 bytes, but got " + n + " bytes");
+                }
+                int timeLo = timeout;
+                int timeHi = timeout * 110 / 100;
+                int time = (int) (T1 - T0);
+                if (time < timeLo) {
+                    fail("timed out early, was expecting  " + timeLo + " but got " + time + " msec");
+                }
+                if (time > timeHi) {
+                    fail("timed out late, was expecting  " + timeHi + " but got " + time + " msec");
+                }
+            }
 
-			
-			finishedOK();
-		} finally {
-			closePort();
-		}
+            {
+                m_Out.write(txbuffer, 0, 1000); // at 9600 this should take about 1 sec 
+                sleep(50); // give time to about 50 chars to loop back
+                long T0 = System.currentTimeMillis();
+                int n = m_In.read(rxbuffer, 0, 1000);
+                long T1 = System.currentTimeMillis();
+                int time = (int) (T1 - T0);
+                int etime = n * 150 / 100; // at 9600
+                if (time > etime) {
+                    fail("expected read to return in " + etime + " but it took " + time + " msec and returned " + n + " bytes");
+                }
+                if (n < 10) {
+                    fail("was expecting at least 900 bytes, but got " + n + " bytes");
+                }
+            }
 
-	}
+            finishedOK();
+        } finally {
+            closePort();
+        }
+
+    }
 }

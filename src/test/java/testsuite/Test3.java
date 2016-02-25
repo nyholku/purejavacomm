@@ -36,37 +36,41 @@ import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class Test3 extends TestBase {
-	static void run() throws Exception {
-		try {
-			begin("Test3 - transmit all characters");
-			openPort();
-			int mode = m_Port.getFlowControlMode();
-			mode &= ~(SerialPort.FLOWCONTROL_XONXOFF_IN | SerialPort.FLOWCONTROL_XONXOFF_OUT);
-			m_Port.setFlowControlMode(mode);
-			byte[] sent = new byte[256];
-			byte[] rcvd = new byte[256];
-			for (int i = 0; i < 256; i++)
-				sent[i] = (byte) i;
-			m_Port.enableReceiveTimeout(1000);
-			m_Out = m_Port.getOutputStream();
-			m_In = m_Port.getInputStream();
-			m_Out.write(sent);
 
-			sleep(500);
+    static void run() throws Exception {
+        try {
+            begin("Test3 - transmit all characters");
+            openPort();
+            int mode = m_Port.getFlowControlMode();
+            mode &= ~(SerialPort.FLOWCONTROL_XONXOFF_IN | SerialPort.FLOWCONTROL_XONXOFF_OUT);
+            m_Port.setFlowControlMode(mode);
+            byte[] sent = new byte[256];
+            byte[] rcvd = new byte[256];
+            for (int i = 0; i < 256; i++) {
+                sent[i] = (byte) i;
+            }
+            m_Port.enableReceiveTimeout(1000);
+            m_Out = m_Port.getOutputStream();
+            m_In = m_Port.getInputStream();
+            m_Out.write(sent);
 
-			int n = m_In.read(rcvd);
+            sleep(500);
 
-			for (int i = 0; i < 256; ++i) {
-				if (sent[i] != rcvd[i])
-					fail("failed to transmit/receive char '%d'", i);
-			}
-			if (n < 256)
-				fail("did not receive all 256 chars, got %d", n);
+            int n = m_In.read(rcvd);
 
-			finishedOK();
-		} finally {
-			closePort();
-		}
+            for (int i = 0; i < 256; ++i) {
+                if (sent[i] != rcvd[i]) {
+                    fail("failed to transmit/receive char '%d'", i);
+                }
+            }
+            if (n < 256) {
+                fail("did not receive all 256 chars, got %d", n);
+            }
 
-	}
+            finishedOK();
+        } finally {
+            closePort();
+        }
+
+    }
 }

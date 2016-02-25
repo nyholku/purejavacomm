@@ -27,100 +27,100 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm;
 
 import java.util.EventObject;
 
 public class SerialPortEvent extends EventObject {
-	/**
-	 * Data available at the serial port.
-	 */
-	public static final int DATA_AVAILABLE = 1;
-	/**
-	 * Output buffer is empty.
-	 */
-	public static final int OUTPUT_BUFFER_EMPTY = 2;
-	/**
-	 * Clear to send.
-	 */
-	public static final int CTS = 3;
-	/**
-	 * Data set ready.
-	 */
-	public static final int DSR = 4;
-	/**
-	 * Ring indicator.
-	 */
-	public static final int RI = 5;
-	/**
-	 * Carrier detect.
-	 */
-	public static final int CD = 6;
-	/**
-	 * Overrun error.
-	 */
-	public static final int OE = 7;
-	/**
-	 * Parity error.
-	 */
-	public static final int PE = 8;
-	/**
-	 * Framing error.
-	 */
-	public static final int FE = 9;
-	/**
-	 * Break interrupt.
-	 */
-	public static final int BI = 10;
 
-	private final int eventType;
-	private final boolean newValue;
-	private final boolean oldValue;
+    /**
+     * Data available at the serial port.
+     */
+    public static final int DATA_AVAILABLE = 1;
+    /**
+     * Output buffer is empty.
+     */
+    public static final int OUTPUT_BUFFER_EMPTY = 2;
+    /**
+     * Clear to send.
+     */
+    public static final int CTS = 3;
+    /**
+     * Data set ready.
+     */
+    public static final int DSR = 4;
+    /**
+     * Ring indicator.
+     */
+    public static final int RI = 5;
+    /**
+     * Carrier detect.
+     */
+    public static final int CD = 6;
+    /**
+     * Overrun error.
+     */
+    public static final int OE = 7;
+    /**
+     * Parity error.
+     */
+    public static final int PE = 8;
+    /**
+     * Framing error.
+     */
+    public static final int FE = 9;
+    /**
+     * Break interrupt.
+     */
+    public static final int BI = 10;
 
-	/**
-	 * Constructs a <CODE>SerialPortEvent</CODE> with the specified serial port,
-	 * event type, old and new values. Application programs should not directly
-	 * create <CODE>SerialPortEvent</CODE> objects.
-	 * 
-	 * @param source
-	 * @param eventType
-	 * @param oldValue
-	 * @param newValue
-	 */
-	public SerialPortEvent(SerialPort source, int eventType, boolean oldValue, boolean newValue) {
-		super(source);
-		this.eventType = eventType;
-		this.newValue = newValue;
-		this.oldValue = oldValue;
-	}
+    private final int eventType;
+    private final boolean newValue;
+    private final boolean oldValue;
 
-	/**
-	 * Returns the type of this event.
-	 * 
-	 * @return The type of this event.
-	 */
-	public int getEventType() {
-		return this.eventType;
-	}
+    /**
+     * Constructs a <CODE>SerialPortEvent</CODE> with the specified serial port,
+     * event type, old and new values. Application programs should not directly
+     * create <CODE>SerialPortEvent</CODE> objects.
+     *
+     * @param source
+     * @param eventType
+     * @param oldValue
+     * @param newValue
+     */
+    public SerialPortEvent(SerialPort source, int eventType, boolean oldValue, boolean newValue) {
+        super(source);
+        this.eventType = eventType;
+        this.newValue = newValue;
+        this.oldValue = oldValue;
+    }
 
-	/**
-	 * Returns the new value of the state change that caused the
-	 * <CODE>SerialPortEvent</CODE> to be propagated.
-	 * 
-	 * @return The new value of the state change.
-	 */
-	public boolean getNewValue() {
-		return this.newValue;
-	}
+    /**
+     * Returns the type of this event.
+     *
+     * @return The type of this event.
+     */
+    public int getEventType() {
+        return this.eventType;
+    }
 
-	/**
-	 * Returns the old value of the state change that caused the
-	 * <CODE>SerialPortEvent</CODE> to be propagated.
-	 * 
-	 * @return The old value of the state change.
-	 */
-	public boolean getOldValue() {
-		return this.oldValue;
-	}
+    /**
+     * Returns the new value of the state change that caused the
+     * <CODE>SerialPortEvent</CODE> to be propagated.
+     *
+     * @return The new value of the state change.
+     */
+    public boolean getNewValue() {
+        return this.newValue;
+    }
+
+    /**
+     * Returns the old value of the state change that caused the
+     * <CODE>SerialPortEvent</CODE> to be propagated.
+     *
+     * @return The old value of the state change.
+     */
+    public boolean getOldValue() {
+        return this.oldValue;
+    }
 }

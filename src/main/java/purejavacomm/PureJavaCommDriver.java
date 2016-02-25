@@ -27,17 +27,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm;
 
 public class PureJavaCommDriver implements CommDriver {
 
-	public CommPort getCommPort(String name, int type) {
-		//if (type == CommPortIdentifier.PORT_SERIAL)
-		//	return new PureJavaSerialPort(name,0);
-		return null;
-	}
+    @Override
+    public CommPort getCommPort(String name, int type) {
+        //if (type == CommPortIdentifier.PORT_SERIAL)
+        //	return new PureJavaSerialPort(name,0);
+        return null;
+    }
 
-	public void initialize() {
-	}
+    @Override
+    public void initialize() {
+    }
 }

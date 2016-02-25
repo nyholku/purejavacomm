@@ -31,125 +31,135 @@ package testsuite;
 
 import java.io.IOException;
 
-import purejavacomm.SerialPortEvent;
-import purejavacomm.SerialPortEventListener;
-
 public class Test10 extends TestBase {
-	static volatile boolean m_ReadThreadRunning;
-	static volatile boolean m_ThreadStarted;
-	static volatile int m_ReadBytes = 0;
-	static volatile long m_T0;
-	static volatile long m_T1;
 
-	static void run() throws Exception {
+    static volatile boolean m_ReadThreadRunning;
+    static volatile boolean m_ThreadStarted;
+    static volatile int m_ReadBytes = 0;
+    static volatile long m_T0;
+    static volatile long m_T1;
 
-		try {
-			final int threshold = 128;
-			final int chunks = 16; // send the data in 16 chunks
-			begin("Test10 - treshold 100, timeout disabled ");
-			openPort();
-			m_Out = m_Port.getOutputStream();
-			m_In = m_Port.getInputStream();
+    static void run() throws Exception {
 
-			final byte[] txbuffer = new byte[1000];
-			final byte[] rxbuffer = new byte[txbuffer.length];
+        try {
+            final int threshold = 128;
+            final int chunks = 16; // send the data in 16 chunks
+            begin("Test10 - treshold 100, timeout disabled ");
+            openPort();
+            m_Out = m_Port.getOutputStream();
+            m_In = m_Port.getInputStream();
 
-			m_Port.disableReceiveTimeout();
-			m_Port.enableReceiveThreshold(threshold);
-			{ // Test a single big read with threshold < read length
-				Thread rxthread = new Thread(new Runnable() {
-					public void run() {
-						m_ReadThreadRunning = true;
-						m_ThreadStarted = true;
-						try {
-							m_ReadBytes = m_In.read(rxbuffer, 0, rxbuffer.length);
-							m_T1 = System.currentTimeMillis();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-						m_ReadThreadRunning = false;
-					}
-				});
+            final byte[] txbuffer = new byte[1000];
+            final byte[] rxbuffer = new byte[txbuffer.length];
 
-				m_ReadThreadRunning = false;
-				m_ThreadStarted = false;
-				m_ReadBytes = -666;
-				rxthread.start();
-				while (!m_ThreadStarted)
-					Thread.sleep(10);
+            m_Port.disableReceiveTimeout();
+            m_Port.enableReceiveThreshold(threshold);
+            { // Test a single big read with threshold < read length
+                Thread rxthread = new Thread(new Runnable() {
+                    public void run() {
+                        m_ReadThreadRunning = true;
+                        m_ThreadStarted = true;
+                        try {
+                            m_ReadBytes = m_In.read(rxbuffer, 0, rxbuffer.length);
+                            m_T1 = System.currentTimeMillis();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        m_ReadThreadRunning = false;
+                    }
+                });
 
-				for (int i = 0; i < chunks; i++) {
-					int n = threshold / chunks;
-					sleep(n * 10);
-					if (!m_ReadThreadRunning)
-						fail("read did not block but returned with " + m_ReadBytes + " bytes");
-					m_Out.write(txbuffer, 0, n);
-				}
-				m_T0 = System.currentTimeMillis();
-				Thread.sleep(100);
-				int i = 2000;
-				while (--i > 0 && m_ReadThreadRunning)
-					Thread.sleep(5);
-				if (i <= 0)
-					fail("read did not return in time");
+                m_ReadThreadRunning = false;
+                m_ThreadStarted = false;
+                m_ReadBytes = -666;
+                rxthread.start();
+                while (!m_ThreadStarted) {
+                    Thread.sleep(10);
+                }
 
-				if (m_ReadBytes != threshold)
-					fail("was expecting read to return " + threshold + " but got " + m_ReadBytes);
-				int time = (int) (m_T1 - m_T0);
-				int timeMax = 30;
-				if (time > timeMax)
-					fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
-			}
+                for (int i = 0; i < chunks; i++) {
+                    int n = threshold / chunks;
+                    sleep(n * 10);
+                    if (!m_ReadThreadRunning) {
+                        fail("read did not block but returned with " + m_ReadBytes + " bytes");
+                    }
+                    m_Out.write(txbuffer, 0, n);
+                }
+                m_T0 = System.currentTimeMillis();
+                Thread.sleep(100);
+                int i = 2000;
+                while (--i > 0 && m_ReadThreadRunning) {
+                    Thread.sleep(5);
+                }
+                if (i <= 0) {
+                    fail("read did not return in time");
+                }
 
-		{ // Test a single big read with  read length < threshold 
-				Thread rxthread = new Thread(new Runnable() {
-					public void run() {
-						m_ReadThreadRunning = true;
-						m_ThreadStarted = true;
-						try {
-							m_ReadBytes = m_In.read(rxbuffer, 0, threshold / 2);
-							m_T1 = System.currentTimeMillis();
-					} catch (IOException e) {
-							e.printStackTrace();
-						}
-						m_ReadThreadRunning = false;
-					}
-				});
+                if (m_ReadBytes != threshold) {
+                    fail("was expecting read to return " + threshold + " but got " + m_ReadBytes);
+                }
+                int time = (int) (m_T1 - m_T0);
+                int timeMax = 30;
+                if (time > timeMax) {
+                    fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
+                }
+            }
 
-				m_ReadThreadRunning = false;
-				m_ThreadStarted = false;
-				m_ReadBytes = -666;
-			rxthread.start();
-				while (!m_ThreadStarted)
-					Thread.sleep(10);
+            { // Test a single big read with  read length < threshold 
+                Thread rxthread = new Thread(new Runnable() {
+                    public void run() {
+                        m_ReadThreadRunning = true;
+                        m_ThreadStarted = true;
+                        try {
+                            m_ReadBytes = m_In.read(rxbuffer, 0, threshold / 2);
+                            m_T1 = System.currentTimeMillis();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        m_ReadThreadRunning = false;
+                    }
+                });
 
-				for (int i = 0; i < chunks / 2; i++) {
-					int n = threshold / chunks;
-					sleep(n * 10);
-					if (!m_ReadThreadRunning)
-						fail("read did not block but returned with " + m_ReadBytes + " bytes");
-					m_Out.write(txbuffer, 0, n);
-				}
-				m_T0 = System.currentTimeMillis();
-				Thread.sleep(100);
-				int i = 200;
-				while (--i > 0 && m_ReadThreadRunning)
-					Thread.sleep(5);
-				if (i <= 0)
-					fail("read did not return in time");
+                m_ReadThreadRunning = false;
+                m_ThreadStarted = false;
+                m_ReadBytes = -666;
+                rxthread.start();
+                while (!m_ThreadStarted) {
+                    Thread.sleep(10);
+                }
 
-				if (m_ReadBytes != threshold / 2)
-					fail("was expecting read to return " + threshold + " but got " + m_ReadBytes);
-				int time = (int) (m_T1 - m_T0);
-				int timeMax = 30;
-				if (time > timeMax)
-					fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
-			}
+                for (int i = 0; i < chunks / 2; i++) {
+                    int n = threshold / chunks;
+                    sleep(n * 10);
+                    if (!m_ReadThreadRunning) {
+                        fail("read did not block but returned with " + m_ReadBytes + " bytes");
+                    }
+                    m_Out.write(txbuffer, 0, n);
+                }
+                m_T0 = System.currentTimeMillis();
+                Thread.sleep(100);
+                int i = 200;
+                while (--i > 0 && m_ReadThreadRunning) {
+                    Thread.sleep(5);
+                }
+                if (i <= 0) {
+                    fail("read did not return in time");
+                }
 
-			finishedOK();
-		} finally {
-			closePort();
-		}
+                if (m_ReadBytes != threshold / 2) {
+                    fail("was expecting read to return " + threshold + " but got " + m_ReadBytes);
+                }
+                int time = (int) (m_T1 - m_T0);
+                int timeMax = 30;
+                if (time > timeMax) {
+                    fail("was expecting read to happen in " + timeMax + " but it took " + time + " msec");
+                }
+            }
 
-	}
+            finishedOK();
+        } finally {
+            closePort();
+        }
+
+    }
 }

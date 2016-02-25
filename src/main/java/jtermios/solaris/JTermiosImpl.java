@@ -30,7 +30,6 @@
 package jtermios.solaris;
 
 import com.sun.jna.*;
-import com.sun.jna.ptr.IntByReference;
 import java.io.File;
 
 import java.util.*;
@@ -272,120 +271,119 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     public JTermiosImpl() {
         log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
 
-		// sys/filio.h stuff
-		FIONREAD = 0x4004667F;
+        // sys/filio.h stuff
+        FIONREAD = 0x4004667F;
 
-		//fcntl.h stuff
-		O_RDWR = 0x00000002;
-		O_NONBLOCK = 0x00000080;
-		O_NOCTTY = 0x00000800;
-		O_NDELAY = 0x00000004;
-		F_GETFL = 0x00000003;
-		F_SETFL = 0x00000004;
+        //fcntl.h stuff
+        O_RDWR = 0x00000002;
+        O_NONBLOCK = 0x00000080;
+        O_NOCTTY = 0x00000800;
+        O_NDELAY = 0x00000004;
+        F_GETFL = 0x00000003;
+        F_SETFL = 0x00000004;
 
-		//errno.h stuff
-		EAGAIN = 11;
-		EBADF = 9;
-		EACCES = 22;
-		EEXIST = 17;
-		EINTR = 4;
-		EINVAL = 22;
-		EIO = 5;
-		EISDIR = 21;
-		ELOOP = 90;
-		EMFILE = 24;
-		ENAMETOOLONG = 78;
-		ENFILE = 23;
-		ENOENT = 2;
-		ENOSR = 63;
-		ENOSPC = 28;
-		ENOTDIR = 20;
-		ENXIO = 6;
-		EOVERFLOW = 79;
-		EROFS = 30;
-		ENOTSUP = 48;
+        //errno.h stuff
+        EAGAIN = 11;
+        EBADF = 9;
+        EACCES = 22;
+        EEXIST = 17;
+        EINTR = 4;
+        EINVAL = 22;
+        EIO = 5;
+        EISDIR = 21;
+        ELOOP = 90;
+        EMFILE = 24;
+        ENAMETOOLONG = 78;
+        ENFILE = 23;
+        ENOENT = 2;
+        ENOSR = 63;
+        ENOSPC = 28;
+        ENOTDIR = 20;
+        ENXIO = 6;
+        EOVERFLOW = 79;
+        EROFS = 30;
+        ENOTSUP = 48;
 
-		//termios.h stuff
-		TIOCM_RNG = 0x00000080;
-		TIOCM_CAR = 0x00000040;
-		IGNBRK = 0x00000001;
-		BRKINT = 0x00000002;
-		IGNPAR = 0x00000004;
-		PARMRK = 0x00000008;
-		INLCR = 0x00000040;
-		IGNCR = 0x00000080;
-		ICRNL = 0x00000100;
-		ECHONL = 0x00000040;
-		IEXTEN = 0x00008000;
-		CLOCAL = 0x00000800;
-		OPOST = 0x00000001;
-		VSTART = 0x00000008;
-		TCSANOW = 0x0000540E;
-		VSTOP = 0x00000009;
-		VMIN = 0x00000004;
-		VTIME = 0x00000005;
-		VEOF = 0x00000004;
-		TIOCMGET = 0x0000741D;
-		TIOCM_CTS = 0x00000020;
-		TIOCM_DSR = 0x00000100;
-		TIOCM_RI = 0x00000080;
-		TIOCM_CD = 0x00000040;
-		TIOCM_DTR = 0x00000002;
-		TIOCM_RTS = 0x00000004;
-		ICANON = 0x00000002;
-		ECHO = 0x00000008;
-		ECHOE = 0x00000010;
-		ISIG = 0x00000001;
-		TIOCMSET = 0x0000741A;
-		IXON = 0x00000400;
-		IXOFF = 0x00001000;
-		IXANY = 0x00000800;
-		CRTSCTS = 0x80000000;
-		TCSADRAIN = 0x0000540F;
-		INPCK = 0x00000010;
-		ISTRIP = 0x00000020;
-		CSIZE = 0x00000030;
-		TCIFLUSH = 0x00000000;
-		TCOFLUSH = 0x00000001;
-		TCIOFLUSH = 0x00000002;
-		CS5 = 0x00000000;
-		CS6 = 0x00000010;
-		CS7 = 0x00000020;
-		CS8 = 0x00000030;
-		CSTOPB = 0x00000040;
-		CREAD = 0x00000080;
-		PARENB = 0x00000100;
-		PARODD = 0x00000200;
-		B0 = 0;
-		B50 = 1;
-		B75 = 2;
-		B110 = 3;
-		B134 = 4;
-		B150 = 5;
-		B200 = 6;
-		B300 = 7;
-		B600 = 8;
-		B1200 = 8;
-		B1800 = 10;
-		B2400 = 11;
-		B4800 = 12;
-		B9600 = 13;
-		B19200 = 14;
-		B38400 = 15;
-		B57600 = 16;
-		B76800 = 17;
-		B115200 = 18;
-		B230400 = 20;
+        //termios.h stuff
+        TIOCM_RNG = 0x00000080;
+        TIOCM_CAR = 0x00000040;
+        IGNBRK = 0x00000001;
+        BRKINT = 0x00000002;
+        IGNPAR = 0x00000004;
+        PARMRK = 0x00000008;
+        INLCR = 0x00000040;
+        IGNCR = 0x00000080;
+        ICRNL = 0x00000100;
+        ECHONL = 0x00000040;
+        IEXTEN = 0x00008000;
+        CLOCAL = 0x00000800;
+        OPOST = 0x00000001;
+        VSTART = 0x00000008;
+        TCSANOW = 0x0000540E;
+        VSTOP = 0x00000009;
+        VMIN = 0x00000004;
+        VTIME = 0x00000005;
+        VEOF = 0x00000004;
+        TIOCMGET = 0x0000741D;
+        TIOCM_CTS = 0x00000020;
+        TIOCM_DSR = 0x00000100;
+        TIOCM_RI = 0x00000080;
+        TIOCM_CD = 0x00000040;
+        TIOCM_DTR = 0x00000002;
+        TIOCM_RTS = 0x00000004;
+        ICANON = 0x00000002;
+        ECHO = 0x00000008;
+        ECHOE = 0x00000010;
+        ISIG = 0x00000001;
+        TIOCMSET = 0x0000741A;
+        IXON = 0x00000400;
+        IXOFF = 0x00001000;
+        IXANY = 0x00000800;
+        CRTSCTS = 0x80000000;
+        TCSADRAIN = 0x0000540F;
+        INPCK = 0x00000010;
+        ISTRIP = 0x00000020;
+        CSIZE = 0x00000030;
+        TCIFLUSH = 0x00000000;
+        TCOFLUSH = 0x00000001;
+        TCIOFLUSH = 0x00000002;
+        CS5 = 0x00000000;
+        CS6 = 0x00000010;
+        CS7 = 0x00000020;
+        CS8 = 0x00000030;
+        CSTOPB = 0x00000040;
+        CREAD = 0x00000080;
+        PARENB = 0x00000100;
+        PARODD = 0x00000200;
+        B0 = 0;
+        B50 = 1;
+        B75 = 2;
+        B110 = 3;
+        B134 = 4;
+        B150 = 5;
+        B200 = 6;
+        B300 = 7;
+        B600 = 8;
+        B1200 = 8;
+        B1800 = 10;
+        B2400 = 11;
+        B4800 = 12;
+        B9600 = 13;
+        B19200 = 14;
+        B38400 = 15;
+        B57600 = 16;
+        B76800 = 17;
+        B115200 = 18;
+        B230400 = 20;
 
-		//poll.h stuff
-		POLLIN = 0x0001;
-		POLLPRI = 0x0002;
-		POLLOUT = 0x0004;
-		POLLERR = 0x0008;
-		POLLNVAL = 0x0020;
+        //poll.h stuff
+        POLLIN = 0x0001;
+        POLLPRI = 0x0002;
+        POLLOUT = 0x0004;
+        POLLERR = 0x0008;
+        POLLNVAL = 0x0020;
 
-		//select.h stuff
-
+        //select.h stuff
     }
 
     public int errno() {
@@ -507,119 +505,123 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     }
 
     public int ioctl(int fd, int cmd, int... data) {
-                // At this time, all ioctl commands we have defined are either no parameter or 4 byte parameter.
-                return m_Clib.ioctl(fd, cmd, data);
+        // At this time, all ioctl commands we have defined are either no parameter or 4 byte parameter.
+        return m_Clib.ioctl(fd, cmd, data);
     }
 
-	public String getPortNamePattern() {
-		return ".*";
-	}
+    public String getPortNamePattern() {
+        return ".*";
+    }
 
-	public List<String> getPortList() {
-		File dir = new File(DEVICE_DIR_PATH);
-		if (!dir.isDirectory()) {
-			log = log && log(1, "device directory %s does not exist\n", DEVICE_DIR_PATH);
-			return null;
-		}
-		String[] devs = dir.list();
-		LinkedList<String> list = new LinkedList<String>();
+    public List<String> getPortList() {
+        File dir = new File(DEVICE_DIR_PATH);
+        if (!dir.isDirectory()) {
+            log = log && log(1, "device directory %s does not exist\n", DEVICE_DIR_PATH);
+            return null;
+        }
+        String[] devs = dir.list();
+        LinkedList<String> list = new LinkedList<String>();
 
-		Pattern p = JTermios.getPortNamePattern(this);
-		if (devs != null) {
-			for (int i = 0; i < devs.length; i++) {
-				String s = devs[i];
-				if (p.matcher(s).matches())
-					list.add(s);
-			}
-		}
-		return list;
-	}
+        Pattern p = JTermios.getPortNamePattern(this);
+        if (devs != null) {
+            for (int i = 0; i < devs.length; i++) {
+                String s = devs[i];
+                if (p.matcher(s).matches()) {
+                    list.add(s);
+                }
+            }
+        }
+        return list;
+    }
 
-	public void shutDown() {
-	}
+    public void shutDown() {
+    }
 
-	public int setspeed(int fd, Termios termios, int speed) {
-		int br = speed;
-		switch (speed) {
-			case 50:
-				br = B50;
-				break;
-			case 75:
-				br = B75;
-				break;
-			case 110:
-				br = B110;
-				break;
-			case 134:
-				br = B134;
-				break;
-			case 150:
-				br = B150;
-				break;
-			case 200:
-				br = B200;
-				break;
-			case 300:
-				br = B300;
-				break;
-			case 600:
-				br = B600;
-				break;
-			case 1200:
-				br = B1200;
-				break;
-			case 1800:
-				br = B1800;
-				break;
-			case 2400:
-				br = B2400;
-				break;
-			case 4800:
-				br = B4800;
-				break;
-			case 9600:
-				br = B9600;
-				break;
-			case 19200:
-				br = B19200;
-				break;
-			case 38400:
-				br = B38400;
-				break;
-			case 7200:
-				br = B7200;
-				break;
-			case 14400:
-				br = B14400;
-				break;
-			case 28800:
-				br = B28800;
-				break;
-			case 57600:
-				br = B57600;
-				break;
-			case 76800:
-				br = B76800;
-				break;
-			case 115200:
-				br = B115200;
-				break;
-			case 230400:
-				br = B230400;
-				break;
-		}
-		int r;
-		if ((r = cfsetispeed(termios, br)) != 0)
-			return r;
-		if ((r = cfsetospeed(termios, br)) != 0)
-			return r;
-		if ((r = tcsetattr(fd, TCSANOW, termios)) != 0)
-			return r;
-		return 0;
-	}
-	
-	public int pipe(int[] fds) {
-		return m_Clib.pipe(fds);
-	}
+    public int setspeed(int fd, Termios termios, int speed) {
+        int br = speed;
+        switch (speed) {
+            case 50:
+                br = B50;
+                break;
+            case 75:
+                br = B75;
+                break;
+            case 110:
+                br = B110;
+                break;
+            case 134:
+                br = B134;
+                break;
+            case 150:
+                br = B150;
+                break;
+            case 200:
+                br = B200;
+                break;
+            case 300:
+                br = B300;
+                break;
+            case 600:
+                br = B600;
+                break;
+            case 1200:
+                br = B1200;
+                break;
+            case 1800:
+                br = B1800;
+                break;
+            case 2400:
+                br = B2400;
+                break;
+            case 4800:
+                br = B4800;
+                break;
+            case 9600:
+                br = B9600;
+                break;
+            case 19200:
+                br = B19200;
+                break;
+            case 38400:
+                br = B38400;
+                break;
+            case 7200:
+                br = B7200;
+                break;
+            case 14400:
+                br = B14400;
+                break;
+            case 28800:
+                br = B28800;
+                break;
+            case 57600:
+                br = B57600;
+                break;
+            case 76800:
+                br = B76800;
+                break;
+            case 115200:
+                br = B115200;
+                break;
+            case 230400:
+                br = B230400;
+                break;
+        }
+        int r;
+        if ((r = cfsetispeed(termios, br)) != 0) {
+            return r;
+        }
+        if ((r = cfsetospeed(termios, br)) != 0) {
+            return r;
+        }
+        if ((r = tcsetattr(fd, TCSANOW, termios)) != 0) {
+            return r;
+        }
+        return 0;
+    }
+
+    public int pipe(int[] fds) {
+        return m_Clib.pipe(fds);
+    }
 
 }

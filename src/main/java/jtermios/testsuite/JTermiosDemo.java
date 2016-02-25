@@ -27,7 +27,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package jtermios.testsuite;
 
 import static jtermios.JTermios.*;
@@ -39,63 +38,63 @@ import jtermios.TimeVal;
 
 public class JTermiosDemo {
 
-	public static void run() throws TestFailedException {
-		String port = TestBase.getPortName();
+    public static void run() throws TestFailedException {
+        String port = TestBase.getPortName();
 
-		int fd;
-		S(fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK), "failed to open port");
+        int fd;
+        S(fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK), "failed to open port");
 
-		Termios opts = new Termios();
+        Termios opts = new Termios();
 
-		S(tcgetattr(fd, opts));
+        S(tcgetattr(fd, opts));
 
-		opts.c_iflag = IGNBRK | IGNPAR;
-		opts.c_oflag = 0;
-		opts.c_cflag = CLOCAL | CREAD | CS8;
-		opts.c_lflag = 0;
-		
-		opts.c_cc[VMIN] = 0;
-		opts.c_cc[VTIME] = 10;
+        opts.c_iflag = IGNBRK | IGNPAR;
+        opts.c_oflag = 0;
+        opts.c_cflag = CLOCAL | CREAD | CS8;
+        opts.c_lflag = 0;
 
-		cfsetispeed(opts, B9600);
-		cfsetospeed(opts, B9600);
+        opts.c_cc[VMIN] = 0;
+        opts.c_cc[VTIME] = 10;
 
-		S(tcsetattr(fd, TCSANOW, opts));
+        cfsetispeed(opts, B9600);
+        cfsetospeed(opts, B9600);
 
-		S(tcflush(fd, TCIOFLUSH));
+        S(tcsetattr(fd, TCSANOW, opts));
 
-		final String TEST_STRING = "Not so very long text string";
-		
-		byte[] tx = TEST_STRING.getBytes();
-		byte[] rx = new byte[tx.length];
-		int l = tx.length;
-		S(write(fd, tx, l), "write() failed ");
+        S(tcflush(fd, TCIOFLUSH));
 
-		FDSet rdset = newFDSet();
-		FD_ZERO(rdset);
-		FD_SET(fd, rdset);
+        final String TEST_STRING = "Not so very long text string";
 
-		TimeVal tout = new TimeVal();
-		tout.tv_sec = 10;
+        byte[] tx = TEST_STRING.getBytes();
+        byte[] rx = new byte[tx.length];
+        int l = tx.length;
+        S(write(fd, tx, l), "write() failed ");
 
-		byte buffer[] = new byte[1024];
+        FDSet rdset = newFDSet();
+        FD_ZERO(rdset);
+        FD_SET(fd, rdset);
 
-		while (l > 0) {
-			int s;
-			S(s = select(fd + 1, rdset, null, null, tout), "select() failed ");
-			if (s == 0) {
-				fail("Timeout (no dongle connected?)");
-			} else {
-				int m;
-				S(m = read(fd, buffer, l), "read() failed ");
-				System.arraycopy(buffer, 0, rx, rx.length - l, m);
-				l -= m;
-			}
-		}
+        TimeVal tout = new TimeVal();
+        tout.tv_sec = 10;
 
-		if (!new String(rx).equals(TEST_STRING)) {
-			fail("Didn't receive what we expected (is \"%s\", should be \"%s\")", new String(rx), TEST_STRING);
-		}
-		S(close(fd));
-	}
+        byte buffer[] = new byte[1024];
+
+        while (l > 0) {
+            int s;
+            S(s = select(fd + 1, rdset, null, null, tout), "select() failed ");
+            if (s == 0) {
+                fail("Timeout (no dongle connected?)");
+            } else {
+                int m;
+                S(m = read(fd, buffer, l), "read() failed ");
+                System.arraycopy(buffer, 0, rx, rx.length - l, m);
+                l -= m;
+            }
+        }
+
+        if (!new String(rx).equals(TEST_STRING)) {
+            fail("Didn't receive what we expected (is \"%s\", should be \"%s\")", new String(rx), TEST_STRING);
+        }
+        S(close(fd));
+    }
 }

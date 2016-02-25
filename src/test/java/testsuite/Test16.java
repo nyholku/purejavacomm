@@ -35,70 +35,69 @@ import purejavacomm.CommPortIdentifier;
 
 public class Test16 extends TestBase {
 
-	@SuppressWarnings("unchecked")
-	static void run() throws Exception {
+    @SuppressWarnings("unchecked")
+    static void run() throws Exception {
 
-		Enumeration<CommPortIdentifier> cpiEnum;
-		
-		String origOwnerName = null;
-		String checkOwnerName = null;
-		
-		try {
+        Enumeration<CommPortIdentifier> cpiEnum;
 
-			begin("Test16 - port ownership");
-			
-			openPort();
+        String origOwnerName = null;
+        String checkOwnerName = null;
 
-			// Check ownership of the id of our test port first
-			{
-				CommPortIdentifier id = CommPortIdentifier
-						.getPortIdentifier(m_Port);
-				if (id == null) {
-					fail("No id for this serial port");
-				}
+        try {
 
-				if (id.getCurrentOwner() == null
-						|| !id.getCurrentOwner().equals(APPLICATION_NAME)) {
-					fail("Wrong or missing owner for this serial port (got \"%s\", expected \"%s\")",
-							id.getCurrentOwner(), APPLICATION_NAME);
-				}
-			}
-			
-			//first call to enumerate port identifiers
-			cpiEnum = CommPortIdentifier.getPortIdentifiers();
-			
-			//get original owner name
-			while (cpiEnum.hasMoreElements()) {
-				CommPortIdentifier cpi = cpiEnum.nextElement();
-				if (cpi.getName().equals(getPortName())) {
-					origOwnerName = cpi.getCurrentOwner();
-					break;
-				}
-			}
+            begin("Test16 - port ownership");
 
-			//second call to enumerate port identifiers
-			cpiEnum = CommPortIdentifier.getPortIdentifiers();
+            openPort();
 
-			//get owner name again
-			while (cpiEnum.hasMoreElements()) {
-				CommPortIdentifier cpi = cpiEnum.nextElement();
-				if (cpi.getName().equals(getPortName())) {
-					checkOwnerName = cpi.getCurrentOwner();
-					break;
-				}
-			}
-			
-			//these should be exactly the same
-			if (checkOwnerName != origOwnerName && !checkOwnerName.equals(origOwnerName)) {
-				fail("Owner name incorrectly changed simply by reenumerating ports." + origOwnerName + " vs. " + checkOwnerName);
-			}
-			else {
-				finishedOK();
-			}
-			
-		} finally {
-			closePort();
-		}
+            // Check ownership of the id of our test port first
+            {
+                CommPortIdentifier id = CommPortIdentifier
+                        .getPortIdentifier(m_Port);
+                if (id == null) {
+                    fail("No id for this serial port");
+                }
 
-	}
+                if (id.getCurrentOwner() == null
+                        || !id.getCurrentOwner().equals(APPLICATION_NAME)) {
+                    fail("Wrong or missing owner for this serial port (got \"%s\", expected \"%s\")",
+                            id.getCurrentOwner(), APPLICATION_NAME);
+                }
+            }
+
+            //first call to enumerate port identifiers
+            cpiEnum = CommPortIdentifier.getPortIdentifiers();
+
+            //get original owner name
+            while (cpiEnum.hasMoreElements()) {
+                CommPortIdentifier cpi = cpiEnum.nextElement();
+                if (cpi.getName().equals(getPortName())) {
+                    origOwnerName = cpi.getCurrentOwner();
+                    break;
+                }
+            }
+
+            //second call to enumerate port identifiers
+            cpiEnum = CommPortIdentifier.getPortIdentifiers();
+
+            //get owner name again
+            while (cpiEnum.hasMoreElements()) {
+                CommPortIdentifier cpi = cpiEnum.nextElement();
+                if (cpi.getName().equals(getPortName())) {
+                    checkOwnerName = cpi.getCurrentOwner();
+                    break;
+                }
+            }
+
+            //these should be exactly the same
+            if (checkOwnerName != origOwnerName && !checkOwnerName.equals(origOwnerName)) {
+                fail("Owner name incorrectly changed simply by reenumerating ports." + origOwnerName + " vs. " + checkOwnerName);
+            } else {
+                finishedOK();
+            }
+
+        } finally {
+            closePort();
+        }
+
+    }
 }

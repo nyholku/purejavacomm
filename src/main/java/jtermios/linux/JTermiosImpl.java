@@ -604,7 +604,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
     public int ioctl(int fd, int cmd, int... data) {
         return m_Clib.ioctl(fd, cmd, data);
-                }
+    }
 
     // This ioctl is Linux specific, so keep it private for now
     private int ioctl(int fd, int cmd, serial_struct data) {

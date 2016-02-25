@@ -27,11 +27,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm;
 
 public class UnsupportedCommOperationException extends Exception {
-	public UnsupportedCommOperationException(String msg) {
-		super(msg);
-	}
+
+    public UnsupportedCommOperationException(String msg) {
+        super(msg);
+    }
 }

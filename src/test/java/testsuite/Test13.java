@@ -29,64 +29,66 @@
  */
 package testsuite;
 
-import purejavacomm.SerialPortEvent;
-import purejavacomm.SerialPortEventListener;
-
 public class Test13 extends TestBase {
-	static void run() throws Exception {
 
-		try {
-			begin("Test13 - enableReceiveThreshold(0)");
-			openPort();
+    static void run() throws Exception {
 
-			m_Out = m_Port.getOutputStream();
-			m_In = m_Port.getInputStream();
+        try {
+            begin("Test13 - enableReceiveThreshold(0)");
+            openPort();
 
-			final byte[] txbuffer = new byte[10];
-			final byte[] rxbuffer = new byte[txbuffer.length];
+            m_Out = m_Port.getOutputStream();
+            m_In = m_Port.getInputStream();
 
-			m_Port.enableReceiveTimeout(100);
-			m_Port.enableReceiveThreshold(0);
-			int totalN = 10;
-			int bytesN = 8;
-			{
-				long totalT = 0;
-				for (int i = 0; i < totalN; i++) {
-					m_Out.write(txbuffer, 0, bytesN);
-					sleep(100); // give the data some time to loop back
-					{ // ask for 10 but expect to get back immediately with the 8 bytes that are available
-						long T0 = System.currentTimeMillis();
-						int n = m_In.read(rxbuffer, 0, 10);
-						long T1 = System.currentTimeMillis();
-						totalT += T1 - T0;
-						if (n != 8)
-							fail("did not get all data back, got only " + n + " bytes");
-					}
-				}
-				if (totalT / totalN > 1)
-					fail("read did not return immediately, it took " + totalT / totalN + " msec on average to read " + bytesN + " bytes");
+            final byte[] txbuffer = new byte[10];
+            final byte[] rxbuffer = new byte[txbuffer.length];
 
-			}
-			{
-				long totalT = 0;
-				for (int i = 0; i < totalN; i++) {
-					{ // ask for 10 but expect to get back immediately with the 0 bytes that are available
-						long T0 = System.currentTimeMillis();
-						int n = m_In.read(rxbuffer, 0, 10);
-						long T1 = System.currentTimeMillis();
-						totalT += T1 - T0;
-						if (n != 0)
-							fail("was expecting 0 bytes, but got " + n + " bytes");
-					}
-				}
-				if (totalT / totalN > 1)
-					fail("read did not return immediately, it took " + totalT / totalN + " msec");
-			}
+            m_Port.enableReceiveTimeout(100);
+            m_Port.enableReceiveThreshold(0);
+            int totalN = 10;
+            int bytesN = 8;
+            {
+                long totalT = 0;
+                for (int i = 0; i < totalN; i++) {
+                    m_Out.write(txbuffer, 0, bytesN);
+                    sleep(100); // give the data some time to loop back
+                    { // ask for 10 but expect to get back immediately with the 8 bytes that are available
+                        long T0 = System.currentTimeMillis();
+                        int n = m_In.read(rxbuffer, 0, 10);
+                        long T1 = System.currentTimeMillis();
+                        totalT += T1 - T0;
+                        if (n != 8) {
+                            fail("did not get all data back, got only " + n + " bytes");
+                        }
+                    }
+                }
+                if (totalT / totalN > 1) {
+                    fail("read did not return immediately, it took " + totalT / totalN + " msec on average to read " + bytesN + " bytes");
+                }
 
-			finishedOK();
-		} finally {
-			closePort();
-		}
+            }
+            {
+                long totalT = 0;
+                for (int i = 0; i < totalN; i++) {
+                    { // ask for 10 but expect to get back immediately with the 0 bytes that are available
+                        long T0 = System.currentTimeMillis();
+                        int n = m_In.read(rxbuffer, 0, 10);
+                        long T1 = System.currentTimeMillis();
+                        totalT += T1 - T0;
+                        if (n != 0) {
+                            fail("was expecting 0 bytes, but got " + n + " bytes");
+                        }
+                    }
+                }
+                if (totalT / totalN > 1) {
+                    fail("read did not return immediately, it took " + totalT / totalN + " msec");
+                }
+            }
 
-	}
+            finishedOK();
+        } finally {
+            closePort();
+        }
+
+    }
 }

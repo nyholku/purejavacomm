@@ -27,11 +27,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package jtermios;
 
 public class Pollfd {
-	public int fd;
-	public short events;
-	public short revents;
+
+    public int fd;
+    public short events;
+    public short revents;
 }

@@ -33,77 +33,86 @@ import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class Test6 extends TestBase {
-	private static Exception m_Exception = null;
-	private static Thread m_Receiver;
-	private static Thread m_Transmitter;
 
-	static void run() throws Exception {
-		try {
-			begin("Test6 - threshold + timeout");
-			openPort();
-			m_Port.setSerialPortParams(230400, 8, 1, 0);
-			//m_In = purejavacomm.RawStream.getInputStream(m_Port);
-			// receiving thread
-			m_Receiver = new Thread(new Runnable() {
-				public void run() {
-					try {
-						sync(2);
-						m_Port.enableReceiveThreshold(4);
-						m_Port.enableReceiveTimeout(10000);
-						//purejavacomm.RawStream.configureThresholdTimeout(m_Port, 4, 2000);
-						byte[] b = new byte[4];
-						for (int i = 0; i < 1000; i++) {
-							long T0 = System.currentTimeMillis();
-							int n = m_In.read(b);
-							long dT = System.currentTimeMillis() - T0;
-							if (n != 4)
-								fail("read did not get 4 bytes as expected, got %d ", n);
-							if (dT >= 1000)
-								fail("read timed out though we got 4 bytes "+dT);
-						}
+    private static Exception m_Exception = null;
+    private static Thread m_Receiver;
+    private static Thread m_Transmitter;
 
-					} catch (InterruptedException e) {
-					} catch (Exception e) {
-						if (m_Exception == null)
-							m_Exception = e;
-						m_Receiver.interrupt();
-						m_Transmitter.interrupt();
-					}
-				};
-			});
+    static void run() throws Exception {
+        try {
+            begin("Test6 - threshold + timeout");
+            openPort();
+            m_Port.setSerialPortParams(230400, 8, 1, 0);
+            //m_In = purejavacomm.RawStream.getInputStream(m_Port);
+            // receiving thread
+            m_Receiver = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        sync(2);
+                        m_Port.enableReceiveThreshold(4);
+                        m_Port.enableReceiveTimeout(10000);
+                        //purejavacomm.RawStream.configureThresholdTimeout(m_Port, 4, 2000);
+                        byte[] b = new byte[4];
+                        for (int i = 0; i < 1000; i++) {
+                            long T0 = System.currentTimeMillis();
+                            int n = m_In.read(b);
+                            long dT = System.currentTimeMillis() - T0;
+                            if (n != 4) {
+                                fail("read did not get 4 bytes as expected, got %d ", n);
+                            }
+                            if (dT >= 1000) {
+                                fail("read timed out though we got 4 bytes " + dT);
+                            }
+                        }
+
+                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
+                        if (m_Exception == null) {
+                            m_Exception = e;
+                        }
+                        m_Receiver.interrupt();
+                        m_Transmitter.interrupt();
+                    }
+                }
+            ;
+            });
 
 			// sending thread
 			m_Transmitter = new Thread(new Runnable() {
-				public void run() {
-					try {
-						sync(2);
-						for (int i = 0; i < 1000; i++)
-							m_Out.write(new byte[4]);
-					} catch (InterruptedException e) {
-					} catch (Exception e) {
-						e.printStackTrace();
-						if (m_Exception == null)
-							m_Exception = e;
-						m_Receiver.interrupt();
-						m_Transmitter.interrupt();
-					}
-				};
-			});
+                public void run() {
+                    try {
+                        sync(2);
+                        for (int i = 0; i < 1000; i++) {
+                            m_Out.write(new byte[4]);
+                        }
+                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        if (m_Exception == null) {
+                            m_Exception = e;
+                        }
+                        m_Receiver.interrupt();
+                        m_Transmitter.interrupt();
+                    }
+                }
+            ;
+            });
 
 			m_Transmitter.start();
-			sleep(100);
-			m_Receiver.start();
+            sleep(100);
+            m_Receiver.start();
 
-			while (m_Receiver.isAlive() || m_Transmitter.isAlive()) {
-				sleep(100);
-			}
+            while (m_Receiver.isAlive() || m_Transmitter.isAlive()) {
+                sleep(100);
+            }
 
-			if (m_Exception != null)
-				throw m_Exception;
-			finishedOK();
-		} finally {
-			closePort();
-		}
+            if (m_Exception != null) {
+                throw m_Exception;
+            }
+            finishedOK();
+        } finally {
+            closePort();
+        }
 
-	}
+    }
 }

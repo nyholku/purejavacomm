@@ -33,70 +33,79 @@ import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
 public class Test5 extends TestBase {
-	private static Exception m_Exception = null;
-	private static Thread m_Receiver;
-	private static Thread m_Transmitter;
 
-	static void run() throws Exception {
-		try {
-			begin("Test5 - timeout");
-			openPort();
-			// receiving thread
-			m_Receiver = new Thread(new Runnable() {
-				public void run() {
-					try {
-						sync(2);
-						m_Port.disableReceiveThreshold();
-						m_Port.enableReceiveTimeout(1000);
-						long T0 = System.currentTimeMillis();
-						byte[] b = { 0 };
-						int n = m_In.read(b);
-						long dT = System.currentTimeMillis() - T0;
-						if (n != 0)
-							fail("read did not time out as expected, read returned %d > 0", n);
-						if (dT < 1000 - 10)
-							fail("read timed out early, expected 1000 msec, got %d msec", dT);
-						if (dT > 1100)
-							fail("read timed out with suspicious delay, expected 1000 msec, got %d msec", dT);
-					} catch (InterruptedException e) {
-					} catch (Exception e) {
-						if (m_Exception == null)
-							m_Exception = e;
-						m_Receiver.interrupt();
-						m_Transmitter.interrupt();
-					}
-				};
-			});
+    private static Exception m_Exception = null;
+    private static Thread m_Receiver;
+    private static Thread m_Transmitter;
+
+    static void run() throws Exception {
+        try {
+            begin("Test5 - timeout");
+            openPort();
+            // receiving thread
+            m_Receiver = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        sync(2);
+                        m_Port.disableReceiveThreshold();
+                        m_Port.enableReceiveTimeout(1000);
+                        long T0 = System.currentTimeMillis();
+                        byte[] b = {0};
+                        int n = m_In.read(b);
+                        long dT = System.currentTimeMillis() - T0;
+                        if (n != 0) {
+                            fail("read did not time out as expected, read returned %d > 0", n);
+                        }
+                        if (dT < 1000 - 10) {
+                            fail("read timed out early, expected 1000 msec, got %d msec", dT);
+                        }
+                        if (dT > 1100) {
+                            fail("read timed out with suspicious delay, expected 1000 msec, got %d msec", dT);
+                        }
+                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
+                        if (m_Exception == null) {
+                            m_Exception = e;
+                        }
+                        m_Receiver.interrupt();
+                        m_Transmitter.interrupt();
+                    }
+                }
+            ;
+            });
 
 			// sending thread
 			m_Transmitter = new Thread(new Runnable() {
-				public void run() {
-					try {
-						sync(2);
-					} catch (InterruptedException e) {
-					} catch (Exception e) {
-						e.printStackTrace();
-						if (m_Exception == null)
-							m_Exception = e;
-						m_Receiver.interrupt();
-						m_Transmitter.interrupt();
-					}
-				};
-			});
+                public void run() {
+                    try {
+                        sync(2);
+                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        if (m_Exception == null) {
+                            m_Exception = e;
+                        }
+                        m_Receiver.interrupt();
+                        m_Transmitter.interrupt();
+                    }
+                }
+            ;
+            });
 
 			m_Receiver.start();
-			m_Transmitter.start();
+            m_Transmitter.start();
 
-			while (m_Receiver.isAlive() || m_Transmitter.isAlive()) {
-				sleep(100);
-			}
+            while (m_Receiver.isAlive() || m_Transmitter.isAlive()) {
+                sleep(100);
+            }
 
-			if (m_Exception != null)
-				throw m_Exception;
-			finishedOK();
-		} finally {
-			closePort();
-		}
+            if (m_Exception != null) {
+                throw m_Exception;
+            }
+            finishedOK();
+        } finally {
+            closePort();
+        }
 
-	}
+    }
 }

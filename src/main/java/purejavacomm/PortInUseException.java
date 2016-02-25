@@ -27,15 +27,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm;
 
 public class PortInUseException extends Exception {
-	public String currentOwner;
 
-	PortInUseException(String str) {
-		super(str);
-		currentOwner = str;
-	}
+    public String currentOwner;
+
+    PortInUseException(String str) {
+        super(str);
+        currentOwner = str;
+    }
 
 }

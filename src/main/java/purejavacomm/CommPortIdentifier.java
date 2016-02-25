@@ -27,7 +27,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm;
 
 // FIXME no mechanism to warn about duplicate port names
@@ -42,219 +41,241 @@ import java.util.List;
 import jtermios.Termios;
 
 public class CommPortIdentifier {
-	public static final int PORT_SERIAL = 1;
-	public static final int PORT_PARALLEL = 2;
-	private static volatile Object m_Mutex = new Object();
-	private volatile String m_PortName;
-	private volatile int m_PortType;
-	private volatile CommDriver m_Driver;
 
-	private volatile static Hashtable<String, CommPortIdentifier> m_PortIdentifiers = new Hashtable<String, CommPortIdentifier>();
-	private volatile static Hashtable<CommPort, CommPortIdentifier> m_OpenPorts = new Hashtable<CommPort, CommPortIdentifier>();
-	private volatile static Hashtable<CommPortIdentifier, String> m_Owners = new Hashtable<CommPortIdentifier, String>();
-	private volatile Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>> m_OwnerShipListeners = new Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>>();
+    public static final int PORT_SERIAL = 1;
+    public static final int PORT_PARALLEL = 2;
+    private static volatile Object m_Mutex = new Object();
+    private volatile String m_PortName;
+    private volatile int m_PortType;
+    private volatile CommDriver m_Driver;
 
-	@Override
-	public boolean equals(Object x) {
-		return (x instanceof CommPortIdentifier) && m_PortName.equals(((CommPortIdentifier) x).m_PortName);
-	}
+    private volatile static Hashtable<String, CommPortIdentifier> m_PortIdentifiers = new Hashtable<String, CommPortIdentifier>();
+    private volatile static Hashtable<CommPort, CommPortIdentifier> m_OpenPorts = new Hashtable<CommPort, CommPortIdentifier>();
+    private volatile static Hashtable<CommPortIdentifier, String> m_Owners = new Hashtable<CommPortIdentifier, String>();
+    private volatile Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>> m_OwnerShipListeners = new Hashtable<CommPortIdentifier, List<CommPortOwnershipListener>>();
 
-	@Override
-	public int hashCode() {
-		return m_PortName.hashCode();
-	}
+    @Override
+    public boolean equals(Object x) {
+        return (x instanceof CommPortIdentifier) && m_PortName.equals(((CommPortIdentifier) x).m_PortName);
+    }
 
-	/**
-	 * This has not been tested at all
-	 */
-	public static void addPortName(String portName, int portType, CommDriver driver) {
-		synchronized (m_Mutex) {
-			m_PortIdentifiers.put(portName, new CommPortIdentifier(portName, portType, driver));
-		}
-	}
+    @Override
+    public int hashCode() {
+        return m_PortName.hashCode();
+    }
 
-	private CommPortIdentifier(String name, int portType, CommDriver driver) {
-		m_PortName = name;
-		m_PortType = portType;
-		m_Driver = driver;
-	}
+    /**
+     * This has not been tested at all
+     */
+    public static void addPortName(String portName, int portType, CommDriver driver) {
+        synchronized (m_Mutex) {
+            m_PortIdentifiers.put(portName, new CommPortIdentifier(portName, portType, driver));
+        }
+    }
 
-	public static CommPortIdentifier getPortIdentifier(String portName) throws NoSuchPortException {
-		synchronized (m_Mutex) {
-			boolean ENUMERATE = false;
-			for (CommPortIdentifier portid : m_OpenPorts.values())
-				if (portid.getName().equals(portName))
-					return portid;
-			if (ENUMERATE) { // enumerating ports takes time, lets see if we can avoid it
-				Enumeration e = getPortIdentifiers();
-				while (e.hasMoreElements()) {
-					CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
-					if (portid.getName().equals(portName))
-						return portid;
-				}
-			} else {
-				CommPortIdentifier portid = m_PortIdentifiers.get(portName);
-				if (portid != null)
-					return portid;
+    private CommPortIdentifier(String name, int portType, CommDriver driver) {
+        m_PortName = name;
+        m_PortType = portType;
+        m_Driver = driver;
+    }
 
-				// check if we can open a port with the given name
-				int fd = jtermios.JTermios.open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK);
-				if (fd != -1) {
-					// yep, it exists, now check to see if it's really a serial
-					// port
-					if (tcgetattr(fd, new Termios()) != -1 || errno() != ENOTTY) {
-						jtermios.JTermios.close(fd);
-						return new CommPortIdentifier(portName, PORT_SERIAL,
-								null);
-					} else {
-						// Not a serial port, or we can't access it
-						jtermios.JTermios.close(fd);
-					}
-				} else if (errno() != ENOENT) {
-					// exists but couldn't open. cannot throw anything here, so
-					// return a port for it. Might not be a TTY after all, but
-					// no way to check that without opening it
-					return new CommPortIdentifier(portName, PORT_SERIAL, null);
-				}
-			}
-			throw new NoSuchPortException();
-		}
-	}
+    public static CommPortIdentifier getPortIdentifier(String portName) throws NoSuchPortException {
+        synchronized (m_Mutex) {
+            boolean ENUMERATE = false;
+            for (CommPortIdentifier portid : m_OpenPorts.values()) {
+                if (portid.getName().equals(portName)) {
+                    return portid;
+                }
+            }
+            if (ENUMERATE) { // enumerating ports takes time, lets see if we can avoid it
+                Enumeration e = getPortIdentifiers();
+                while (e.hasMoreElements()) {
+                    CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
+                    if (portid.getName().equals(portName)) {
+                        return portid;
+                    }
+                }
+            } else {
+                CommPortIdentifier portid = m_PortIdentifiers.get(portName);
+                if (portid != null) {
+                    return portid;
+                }
 
-	public static CommPortIdentifier getPortIdentifier(CommPort port) throws NoSuchPortException {
-		synchronized (m_Mutex) {
-			CommPortIdentifier portid = m_OpenPorts.get(port);
-			if (portid == null)
-				throw new NoSuchPortException();
-			return portid;
-		}
-	}
+                // check if we can open a port with the given name
+                int fd = jtermios.JTermios.open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK);
+                if (fd != -1) {
+                    // yep, it exists, now check to see if it's really a serial
+                    // port
+                    if (tcgetattr(fd, new Termios()) != -1 || errno() != ENOTTY) {
+                        jtermios.JTermios.close(fd);
+                        return new CommPortIdentifier(portName, PORT_SERIAL,
+                                null);
+                    } else {
+                        // Not a serial port, or we can't access it
+                        jtermios.JTermios.close(fd);
+                    }
+                } else if (errno() != ENOENT) {
+                    // exists but couldn't open. cannot throw anything here, so
+                    // return a port for it. Might not be a TTY after all, but
+                    // no way to check that without opening it
+                    return new CommPortIdentifier(portName, PORT_SERIAL, null);
+                }
+            }
+            throw new NoSuchPortException();
+        }
+    }
 
-	public CommPort open(String appname, int timeout) throws PortInUseException {
-		synchronized (m_Mutex) {
-			long t0 = System.currentTimeMillis();
+    public static CommPortIdentifier getPortIdentifier(CommPort port) throws NoSuchPortException {
+        synchronized (m_Mutex) {
+            CommPortIdentifier portid = m_OpenPorts.get(port);
+            if (portid == null) {
+                throw new NoSuchPortException();
+            }
+            return portid;
+        }
+    }
 
-			String owner = m_Owners.get(this);
-			if (owner != null) {
-				fireOwnershipEvent(CommPortOwnershipListener.PORT_OWNERSHIP_REQUESTED);
-				try {
-					while (System.currentTimeMillis() - t0 < timeout) {
-						m_Mutex.wait(5);
-						if (!isCurrentlyOwned())
-							break;
-					}
-				} catch (InterruptedException ie) {
-					// can't throw it, can't swallow it, try to propagate it
-					Thread.currentThread().interrupt();
-				}
-			}
-			if (isCurrentlyOwned())
-				throw new PortInUseException(getCurrentOwner());
+    public CommPort open(String appname, int timeout) throws PortInUseException {
+        synchronized (m_Mutex) {
+            long t0 = System.currentTimeMillis();
 
-			CommPortIdentifier info = m_PortIdentifiers.get(m_PortName);
-			CommPort port;
-			if (info != null)
-				port = info.m_Driver.getCommPort(m_PortName, info.m_PortType);
-			else
-				port = new PureJavaSerialPort(m_PortName, timeout); // FIXME timeout here is not used
-			m_OpenPorts.put(port, this);
-			m_Owners.put(this, appname);
-			fireOwnershipEvent(CommPortOwnershipListener.PORT_OWNED);
-			return port;
-		}
-	}
+            String owner = m_Owners.get(this);
+            if (owner != null) {
+                fireOwnershipEvent(CommPortOwnershipListener.PORT_OWNERSHIP_REQUESTED);
+                try {
+                    while (System.currentTimeMillis() - t0 < timeout) {
+                        m_Mutex.wait(5);
+                        if (!isCurrentlyOwned()) {
+                            break;
+                        }
+                    }
+                } catch (InterruptedException ie) {
+                    // can't throw it, can't swallow it, try to propagate it
+                    Thread.currentThread().interrupt();
+                }
+            }
+            if (isCurrentlyOwned()) {
+                throw new PortInUseException(getCurrentOwner());
+            }
 
-	/* package */
-	static void close(CommPort port) {
-		synchronized (m_Mutex) {
-			CommPortIdentifier portid = m_OpenPorts.remove(port);
-			if (portid != null) {
-				portid.fireOwnershipEvent(CommPortOwnershipListener.PORT_UNOWNED);
-				m_Owners.remove(portid);
-			}
-		}
-	}
+            CommPortIdentifier info = m_PortIdentifiers.get(m_PortName);
+            CommPort port;
+            if (info != null) {
+                port = info.m_Driver.getCommPort(m_PortName, info.m_PortType);
+            } else {
+                port = new PureJavaSerialPort(m_PortName, timeout); // FIXME timeout here is not used
+            }
+            m_OpenPorts.put(port, this);
+            m_Owners.put(this, appname);
+            fireOwnershipEvent(CommPortOwnershipListener.PORT_OWNED);
+            return port;
+        }
+    }
 
-	public CommPort open(java.io.FileDescriptor fd) throws UnsupportedCommOperationException {
-		throw new UnsupportedCommOperationException("open from file descriptor not supported");
-	}
+    /* package */
+    static void close(CommPort port) {
+        synchronized (m_Mutex) {
+            CommPortIdentifier portid = m_OpenPorts.remove(port);
+            if (portid != null) {
+                portid.fireOwnershipEvent(CommPortOwnershipListener.PORT_UNOWNED);
+                m_Owners.remove(portid);
+            }
+        }
+    }
 
-	public String getName() {
-		return m_PortName;
-	}
+    public CommPort open(java.io.FileDescriptor fd) throws UnsupportedCommOperationException {
+        throw new UnsupportedCommOperationException("open from file descriptor not supported");
+    }
 
-	public int getPortType() {
-		return m_PortType;
-	}
+    public String getName() {
+        return m_PortName;
+    }
 
-	public static Enumeration getPortIdentifiers() {
-		synchronized (m_Mutex) {
+    public int getPortType() {
+        return m_PortType;
+    }
 
-			return new Enumeration() {
-				List<CommPortIdentifier> m_PortIDs;
-				{ // insert the  'addPortName' ports to the dynamic port list
-					m_PortIDs = new LinkedList<CommPortIdentifier>();
-					for (CommPortIdentifier portid : m_PortIdentifiers.values())
-						m_PortIDs.add(portid);
-					// and now add the PureSerialPorts
-					List<String> pureports = getPortList();
-					if (pureports != null)
-						for (String name : pureports)
-							m_PortIDs.add(new CommPortIdentifier(name, PORT_SERIAL, null));
-				}
-				Iterator<CommPortIdentifier> m_Iterator = m_PortIDs.iterator();
+    public static Enumeration getPortIdentifiers() {
+        synchronized (m_Mutex) {
 
-				public boolean hasMoreElements() {
-					return m_Iterator != null ? m_Iterator.hasNext() : false;
-				}
+            return new Enumeration() {
+                List<CommPortIdentifier> m_PortIDs;
 
-				public Object nextElement() {
-					return m_Iterator.next();
-				};
-			};
+                { // insert the  'addPortName' ports to the dynamic port list
+                    m_PortIDs = new LinkedList<CommPortIdentifier>();
+                    for (CommPortIdentifier portid : m_PortIdentifiers.values()) {
+                        m_PortIDs.add(portid);
+                    }
+                    // and now add the PureSerialPorts
+                    List<String> pureports = getPortList();
+                    if (pureports != null) {
+                        for (String name : pureports) {
+                            m_PortIDs.add(new CommPortIdentifier(name, PORT_SERIAL, null));
+                        }
+                    }
+                }
+                Iterator<CommPortIdentifier> m_Iterator = m_PortIDs.iterator();
+
+                public boolean hasMoreElements() {
+                    return m_Iterator != null ? m_Iterator.hasNext() : false;
+                }
+
+                public Object nextElement() {
+                    return m_Iterator.next();
+                }
+            ;
+        }
+
+    
+
+    ;
 		}
 	}
 
 	public String getCurrentOwner() {
-		synchronized (m_Mutex) {
-			return m_Owners.get(this);
-		}
-	}
+        synchronized (m_Mutex) {
+            return m_Owners.get(this);
+        }
+    }
 
-	public boolean isCurrentlyOwned() {
-		return getCurrentOwner() != null;
-	}
+    public boolean isCurrentlyOwned() {
+        return getCurrentOwner() != null;
+    }
 
-	public void addPortOwnershipListener(CommPortOwnershipListener listener) {
-		synchronized (m_Mutex) {
-			List<CommPortOwnershipListener> list = m_OwnerShipListeners.get(this);
-			if (list == null) {
-				list = new LinkedList<CommPortOwnershipListener>();
-				m_OwnerShipListeners.put(this, list);
-			}
-			list.add(listener);
-		}
-	}
+    public void addPortOwnershipListener(CommPortOwnershipListener listener) {
+        synchronized (m_Mutex) {
+            List<CommPortOwnershipListener> list = m_OwnerShipListeners.get(this);
+            if (list == null) {
+                list = new LinkedList<CommPortOwnershipListener>();
+                m_OwnerShipListeners.put(this, list);
+            }
+            list.add(listener);
+        }
+    }
 
-	public void removePortOwnershipListener(CommPortOwnershipListener listener) {
-		synchronized (m_Mutex) {
-			List<CommPortOwnershipListener> list = m_OwnerShipListeners.get(this);
-			if (list == null)
-				return;
-			list.remove(listener);
-			if (list.isEmpty())
-				m_OwnerShipListeners.remove(this);
+    public void removePortOwnershipListener(CommPortOwnershipListener listener) {
+        synchronized (m_Mutex) {
+            List<CommPortOwnershipListener> list = m_OwnerShipListeners.get(this);
+            if (list == null) {
+                return;
+            }
+            list.remove(listener);
+            if (list.isEmpty()) {
+                m_OwnerShipListeners.remove(this);
+            }
 
-		}
-	}
+        }
+    }
 
-	private void fireOwnershipEvent(int type) {
-		synchronized (m_Mutex) {
-			List<CommPortOwnershipListener> list = m_OwnerShipListeners.get(this);
-			if (list == null)
-				return;
-			for (CommPortOwnershipListener listener : list)
-				listener.ownershipChange(type);
-		}
-	}
+    private void fireOwnershipEvent(int type) {
+        synchronized (m_Mutex) {
+            List<CommPortOwnershipListener> list = m_OwnerShipListeners.get(this);
+            if (list == null) {
+                return;
+            }
+            for (CommPortOwnershipListener listener : list) {
+                listener.ownershipChange(type);
+            }
+        }
+    }
 }

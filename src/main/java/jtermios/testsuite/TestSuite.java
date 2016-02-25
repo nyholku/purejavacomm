@@ -27,20 +27,20 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package jtermios.testsuite;
 
 public class TestSuite {
-	public static void main(String[] args) throws Exception {
-		TestBase.init(args);
-		try {
-			System.out.println("JTermios Test Suite");
-			System.out.println("Using port: " + TestBase.getPortName());
-			JTermiosDemo.run();
-			System.out.println("All tests passed OK.");
-		} catch (TestFailedException e) {
-			System.out.println("Test failure");
-			System.exit(1);
-		}
-	}
+
+    public static void main(String[] args) throws Exception {
+        TestBase.init(args);
+        try {
+            System.out.println("JTermios Test Suite");
+            System.out.println("Using port: " + TestBase.getPortName());
+            JTermiosDemo.run();
+            System.out.println("All tests passed OK.");
+        } catch (TestFailedException e) {
+            System.out.println("Test failure");
+            System.exit(1);
+        }
+    }
 }

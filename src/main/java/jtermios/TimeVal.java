@@ -27,10 +27,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package jtermios;
 
 final public class TimeVal {
-	public long tv_sec;
-	public long tv_usec;
+
+    public long tv_sec;
+    public long tv_usec;
 }

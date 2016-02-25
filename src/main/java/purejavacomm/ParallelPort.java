@@ -27,70 +27,70 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-
 package purejavacomm;
 
 public class ParallelPort {
-	public static final int LPT_MODE_ANY = 0;
-	public static final int LPT_MODE_SPP = 1;
-	public static final int LPT_MODE_PS2 = 2;
-	public static final int LPT_MODE_EPP = 3;
-	public static final int LPT_MODE_ECP = 4;
-	public static final int LPT_MODE_NIBBLE = 5;
 
-	void addEventListener(ParallelPortEventListener lsnr) {
+    public static final int LPT_MODE_ANY = 0;
+    public static final int LPT_MODE_SPP = 1;
+    public static final int LPT_MODE_PS2 = 2;
+    public static final int LPT_MODE_EPP = 3;
+    public static final int LPT_MODE_ECP = 4;
+    public static final int LPT_MODE_NIBBLE = 5;
 
-	}
+    void addEventListener(ParallelPortEventListener lsnr) {
 
-	int getMode() {
-		return LPT_MODE_ANY;
-	}
+    }
 
-	int getOutputBufferFree() {
-		return 0;
-	}
+    int getMode() {
+        return LPT_MODE_ANY;
+    }
 
-	boolean isPaperOut() {
-		return false;
-	}
+    int getOutputBufferFree() {
+        return 0;
+    }
 
-	boolean isPrinterBusy() {
-		return false;
-	}
+    boolean isPaperOut() {
+        return false;
+    }
 
-	boolean isPrinterError() {
-		return false;
-	}
+    boolean isPrinterBusy() {
+        return false;
+    }
 
-	boolean isPrinterSelected() {
-		return false;
-	}
+    boolean isPrinterError() {
+        return false;
+    }
 
-	boolean isPrinterTimedOut() {
-		return false;
-	}
+    boolean isPrinterSelected() {
+        return false;
+    }
 
-	void notifyOnBuffer(boolean notify) {
+    boolean isPrinterTimedOut() {
+        return false;
+    }
 
-	}
+    void notifyOnBuffer(boolean notify) {
 
-	void notifyOnError(boolean notify) {
+    }
 
-	}
+    void notifyOnError(boolean notify) {
 
-	void removeEventListener() {
+    }
 
-	}
+    void removeEventListener() {
 
-	void restart() {
+    }
 
-	}
+    void restart() {
 
-	int setMode(int mode) throws UnsupportedCommOperationException {
-		return getMode();
-	}
+    }
 
-	void suspend() {
+    int setMode(int mode) throws UnsupportedCommOperationException {
+        return getMode();
+    }
 
-	}
+    void suspend() {
+
+    }
 }

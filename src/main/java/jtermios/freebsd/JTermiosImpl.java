@@ -32,11 +32,9 @@
  * Many thanks for his persistence and efforts to make it happen!
  * 
  */
-
 package jtermios.freebsd;
 
 import com.sun.jna.*;
-import com.sun.jna.ptr.IntByReference;
 import java.io.File;
 
 import java.util.*;
@@ -200,32 +198,32 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
     static public class fd_set extends Structure implements FDSet {
 
-		private final static int NFBBITS = 32;
-		private final static int fd_count = 1024;
-		public int[] fd_array = new int[(fd_count + NFBBITS - 1) / NFBBITS];
+        private final static int NFBBITS = 32;
+        private final static int fd_count = 1024;
+        public int[] fd_array = new int[(fd_count + NFBBITS - 1) / NFBBITS];
 
-		@Override
-		protected List getFieldOrder() {
-			return Arrays.asList(//
-					"fd_array"//
-			);
-		}
+        @Override
+        protected List getFieldOrder() {
+            return Arrays.asList(//
+                    "fd_array"//
+            );
+        }
 
-		public void FD_SET(int fd) {
-			fd_array[fd / NFBBITS] |= (1 << (fd % NFBBITS));
-		}
+        public void FD_SET(int fd) {
+            fd_array[fd / NFBBITS] |= (1 << (fd % NFBBITS));
+        }
 
-		public boolean FD_ISSET(int fd) {
-			return (fd_array[fd / NFBBITS] & (1 << (fd % NFBBITS))) != 0;
-		}
+        public boolean FD_ISSET(int fd) {
+            return (fd_array[fd / NFBBITS] & (1 << (fd % NFBBITS))) != 0;
+        }
 
-		public void FD_ZERO() {
-			Arrays.fill(fd_array, 0);
-		}
+        public void FD_ZERO() {
+            Arrays.fill(fd_array, 0);
+        }
 
-		public void FD_CLR(int fd) {
-			fd_array[fd / NFBBITS] &= ~(1 << (fd % NFBBITS));
-		}
+        public void FD_CLR(int fd) {
+            fd_array[fd / NFBBITS] &= ~(1 << (fd % NFBBITS));
+        }
 
     }
 
@@ -507,50 +505,53 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     }
 
     public int ioctl(int fd, int cmd, int... data) {
-                // At this time, all ioctl commands we have defined are either no parameter or 4 byte parameter.
-                return m_Clib.ioctl(fd, cmd, data);
+        // At this time, all ioctl commands we have defined are either no parameter or 4 byte parameter.
+        return m_Clib.ioctl(fd, cmd, data);
     }
 
-	public List<String> getPortList() {
-		File dir = new File(DEVICE_DIR_PATH);
-		if (!dir.isDirectory()) {
-			log = log && log(1, "device directory %s does not exist\n", DEVICE_DIR_PATH);
-			return null;
-		}
-		String[] devs = dir.list();
-		LinkedList<String> list = new LinkedList<String>();
-		if (devs != null) {
-			for (int i = 0; i < devs.length; i++) {
-				String s = devs[i];
-				if (s.startsWith("cua") || s.startsWith("tty"))
-					list.add(s);
-			}
+    public List<String> getPortList() {
+        File dir = new File(DEVICE_DIR_PATH);
+        if (!dir.isDirectory()) {
+            log = log && log(1, "device directory %s does not exist\n", DEVICE_DIR_PATH);
+            return null;
+        }
+        String[] devs = dir.list();
+        LinkedList<String> list = new LinkedList<String>();
+        if (devs != null) {
+            for (int i = 0; i < devs.length; i++) {
+                String s = devs[i];
+                if (s.startsWith("cua") || s.startsWith("tty")) {
+                    list.add(s);
+                }
+            }
 
-		}
+        }
 
-		return list;
-	}
+        return list;
+    }
 
-	public void shutDown() {
+    public void shutDown() {
 
-	}
+    }
 
-	public String getPortNamePattern() {
-		return "^(tty\\.|cu\\.).*";
-	}
+    public String getPortNamePattern() {
+        return "^(tty\\.|cu\\.).*";
+    }
 
-	public int setspeed(int fd, Termios termios, int speed) {
-		int r;
-		r = cfsetispeed(termios, speed);
-		if (r == 0)
-			r = cfsetospeed(termios, speed);
-		if (r == 0)
-			r = tcsetattr(fd, TCSANOW, termios);
-		return r;
-	}
+    public int setspeed(int fd, Termios termios, int speed) {
+        int r;
+        r = cfsetispeed(termios, speed);
+        if (r == 0) {
+            r = cfsetospeed(termios, speed);
+        }
+        if (r == 0) {
+            r = tcsetattr(fd, TCSANOW, termios);
+        }
+        return r;
+    }
 
-	public int pipe(int[] fds) {
-		return m_Clib.pipe(fds);
-	}
+    public int pipe(int[] fds) {
+        return m_Clib.pipe(fds);
+    }
 
 }
