@@ -36,10 +36,14 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import com.sun.jna.Platform;
+import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.IntegerType;
 import com.sun.jna.Native;
+
 import java.util.*;
+
+import jtermios.windows.WinAPI.OVERLAPPED;
 
 /**
  * JTermios provides a limited cross platform unix termios type interface to
@@ -550,6 +554,13 @@ public class JTermios {
 		public static String lineno(int n) {
 			StackTraceElement e = Thread.currentThread().getStackTrace()[2 + n];
 			return String.format("class %s line% d", e.getClassName(), e.getLineNumber());
+		}
+
+		public static String ref(Pointer pointer) {
+			if (pointer == null)
+				return "null";
+			else
+				return pointer.toString();
 		}
 
 		public static String ref(Structure struct) {
