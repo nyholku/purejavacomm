@@ -1187,7 +1187,7 @@ public class PureJavaSerialPort extends SerialPort {
 								pollfd[0].events = e;
 								pollfd[1].events = POLLIN;
 								if (m_HaveNudgePipe)
-									n = poll(pollfd, 2, -1);
+									n = poll(pollfd, 2, TIMEOUT);
 								else
 									n = poll(pollfd, 1, TIMEOUT);
 
