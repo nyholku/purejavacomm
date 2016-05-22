@@ -187,7 +187,7 @@ public class CommPortIdentifier {
 		return m_PortType;
 	}
 
-	public static Enumeration getPortIdentifiers() {
+	public static Enumeration<CommPortIdentifier> getPortIdentifiers() {
 		synchronized (m_Mutex) {
 
 			return new Enumeration() {
