@@ -198,7 +198,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 					m_FD = -1;
 				}
 
-
 				HANDLE h; // / 'hEvent' might never have been 'read' so read it to this var first
 
 				if (m_ReadCancelObject != null)
@@ -257,26 +256,27 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	//	static final int NFBBITS = 32;
 	//	int[] bits = new int[(FD_SET_SIZE + NFBBITS - 1) / NFBBITS];
 	//}
-	
+
 	static private class FDSetImpl implements FDSet {
 		static final int FD_SET_SIZE = 256; // Windows supports max 255 serial ports so this is enough
 		static final int NFBBITS = 32;
 		int[] bits = new int[(FD_SET_SIZE + NFBBITS - 1) / NFBBITS];
-                public void FD_CLR(int fd) {
-                        bits[fd / NFBBITS] &= ~(1 << (fd % NFBBITS));
-                }
 
-                public boolean FD_ISSET(int fd) {
-                        return (bits[fd / NFBBITS] & (1 << (fd % NFBBITS))) != 0;
-                }
+		public void FD_CLR(int fd) {
+			bits[fd / NFBBITS] &= ~(1 << (fd % NFBBITS));
+		}
 
-                public void FD_SET(int fd) {
-                        bits[fd / NFBBITS] |= 1 << (fd % NFBBITS);
-                }
+		public boolean FD_ISSET(int fd) {
+			return (bits[fd / NFBBITS] & (1 << (fd % NFBBITS))) != 0;
+		}
 
-                public void FD_ZERO() {
-                        java.util.Arrays.fill(bits, 0);
-                }
+		public void FD_SET(int fd) {
+			bits[fd / NFBBITS] |= 1 << (fd % NFBBITS);
+		}
+
+		public void FD_ZERO() {
+			java.util.Arrays.fill(bits, 0);
+		}
 	}
 
 	public JTermiosImpl() {
@@ -835,7 +835,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 							if (port.m_WaitPending) {
 								if (!SetCommMask(port.m_Comm, 0))
 									port.fail();
-								GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false);
+								if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false)) {
+									if (GetLastError() != ERROR_IO_INCOMPLETE)
+										port.fail();
+								}
 								port.m_WaitPending = false;
 							}
 
@@ -859,7 +862,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 								ready = maskToFDSets(port, readfds, writefds, exceptfds, ready);
 							} else {
 								// FIXME if the port dies on us what happens
-								if (GetLastError() != ERROR_IO_PENDING)
+								// FIXME Under Windows sometimes the error code 87 (ERROR_INVALID_PARAMETER) is returned.
+								// it has not been not investigated why but this appears to work
+								if (GetLastError() != ERROR_IO_PENDING && GetLastError() != ERROR_INVALID_PARAMETER)
 									port.fail();
 								waiting.add(port);
 								port.m_WaitPending = true;
@@ -955,12 +960,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		m_ErrNo = EINVAL;
 		return -1;
 	}
-	
-    public boolean canPoll() {
-        return false;
-    }
 
-
+	public boolean canPoll() {
+		return false;
+	}
 
 	public void perror(String msg) {
 		if (msg != null && msg.length() > 0)
@@ -1133,7 +1136,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			s.append((char) c);
 		return s.toString();
 	}
-
 
 	public String getPortNamePattern() {
 		return "^COM.*";
