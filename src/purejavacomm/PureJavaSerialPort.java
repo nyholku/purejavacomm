@@ -1077,6 +1077,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 		int tries = (timeout + 5) / 10;
 		while ((m_FD = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+			int errno = errno();
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
@@ -1084,11 +1085,13 @@ public class PureJavaSerialPort extends SerialPort {
 				Thread.currentThread().interrupt();
 			}
 			if (tries-- < 0)
-				throw new PortInUseException("Unknown Application");
+				throw new PortInUseException("Unknown Application", errno);
 		}
 
 		m_MinVTIME = Integer.getInteger("purejavacomm.minvtime", 100);
 		int flags = fcntl(m_FD, F_GETFL, 0);
+		if (flags<0)
+			checkReturnCode(flags);
 		flags &= ~O_NONBLOCK;
 		checkReturnCode(fcntl(m_FD, F_SETFL, flags));
 
