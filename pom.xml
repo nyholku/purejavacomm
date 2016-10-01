@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.sparetimelabs</groupId>
 	<artifactId>purejavacomm</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 
 	<name>PureJavaComm</name>
 	<url>http://www.sparetimelabs.com/purejavacomm/purejavacomm.php</url>

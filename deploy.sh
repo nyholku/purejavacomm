@@ -1,2 +1,2 @@
-#!/bin/bash
+    #!/bin/bash
 mvn deploy -Duser.name=sparetimelabs.com
