@@ -1,0 +1,40 @@
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+compileJava {
+    sourceCompatibility = 1.5
+    options.bootClasspath = "F:\\Java\\legacy\\jdk1.5.0_22\\jre\\lib\\rt.jar"
+}
+
+compileTestJava {
+    sourceCompatibility = 1.6
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+            exclude 'jtermios/testsuite**'
+            exclude 'purejavacomm/testsuite**'
+        }
+    }
+
+    test {
+        java {
+            srcDirs = ['src']
+            include 'jtermios/testsuite**'
+            include 'purejavacomm/testsuite**'
+        }
+    }
+}
+
+dependencies {
+    compile 'net.java.dev.jna:jna:4.2.2'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
+}
