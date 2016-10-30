@@ -62,10 +62,6 @@ uploadArchives {
                         id 'nyholku'
                         name 'Kustaa Nyholm'
                     }
-                    developer {
-                        id 'masterav10'
-                        name 'Daniel Avila'
-                    }
                 }
             }
         }
