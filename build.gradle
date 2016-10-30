@@ -1,5 +1,5 @@
 apply plugin: 'java'
-// apply from: 'deploy.gradle'
+apply from: 'deploy.gradle'
 
 group "com.sparetimelabs"
 version "1.0.1.RELEASE"
