@@ -1,4 +1,8 @@
 apply plugin: 'java'
+// apply from: 'deploy.gradle'
+
+group "com.sparetimelabs"
+version "1.0.2.RELEASE"
 
 repositories {
     mavenCentral()
@@ -6,11 +10,10 @@ repositories {
 
 compileJava {
     sourceCompatibility = 1.5
-    options.bootClasspath = "F:\\Java\\legacy\\jdk1.5.0_22\\jre\\lib\\rt.jar"
-}
-
-compileTestJava {
-    sourceCompatibility = 1.6
+    // Copy the rt.jar from the appropriate JDK distribution.
+    // Older versions can be obtained from this site:
+    // http://www.oracle.com/technetwork/java/javase/archive-139210.html
+    options.bootClasspath = "lib-rt/rt.jar"
 }
 
 sourceSets {

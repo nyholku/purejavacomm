@@ -6,3 +6,4 @@ classes/
 .idea/
 build/
 purejavacomm.iml
+lib-rt/
