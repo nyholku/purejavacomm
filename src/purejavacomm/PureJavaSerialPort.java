@@ -557,7 +557,6 @@ public class PureJavaSerialPort extends SerialPort {
 	 * JTermios functionality.
 	 * 
 	 * <pre>
-	 * <code>
 	 * 		// import the JTermios functionality like this
 	 * 		import jtermios.*;
 	 * 		import static jtermios.JTermios.*;
@@ -585,16 +584,15 @@ public class PureJavaSerialPort extends SerialPort {
 	 * 		if (0 != tcsetattr(FD, TCSANOW, termios))
 	 * 			errorHandling();
 	 * 
-	 *      ...
+	 * 		...
 	 * 		// allocate read buffer
 	 * 		byte[] readBuffer = new byte[messageLength];
-	 *      ...
+	 *		...
 	 * 
 	 * 		// then perform raw read, not this may block indefinitely
 	 * 		int n = read(FD, readBuffer, messageLength);
-	 * 		if (n < 0)
+	 * 		if (n &lt; 0)
 	 * 			errorHandling();
-	 * <code>
 	 * </pre>
 	 * 
 	 * @return the native OS file descriptor as int
