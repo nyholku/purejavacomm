@@ -1,3 +1,9 @@
 bin/maven-archiver/
 bin/maven-status/
 classes/
+
+.gradle/
+.idea/
+build/
+purejavacomm.iml
+lib-rt/
