@@ -1,0 +1,43 @@
+apply plugin: 'java'
+apply from: 'deploy.gradle'
+
+group "com.sparetimelabs"
+version "1.0.1.RELEASE"
+
+repositories {
+    mavenCentral()
+}
+
+compileJava {
+    sourceCompatibility = 1.5
+    // Copy the rt.jar from the appropriate JDK distribution.
+    // Older versions can be obtained from this site:
+    // http://www.oracle.com/technetwork/java/javase/archive-139210.html
+    options.bootClasspath = "lib-rt/rt.jar"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+            exclude 'jtermios/testsuite**'
+            exclude 'purejavacomm/testsuite**'
+        }
+    }
+
+    test {
+        java {
+            srcDirs = ['src']
+            include 'jtermios/testsuite**'
+            include 'purejavacomm/testsuite**'
+        }
+    }
+}
+
+dependencies {
+    compile 'net.java.dev.jna:jna:4.2.2'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
+}

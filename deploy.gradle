@@ -1,0 +1,69 @@
+// This file was created from:
+// http://central.sonatype.org/pages/gradle.html
+
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+signing {
+    sign configurations.archives
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'PureJavaComm'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'PureJavaComm is an Application Programmin Interface (API) for accessing serial ports from' +
+                        ' Java. PureJavaComm aims to be a drop-in replacement for Sun\'s (now Oracle) abandoned' +
+                        ' JavaComm and an easier to deploy alternative to RXTX.'
+                url 'http://www.sparetimelabs.com/purejavacomm/purejavacomm.php'
+
+                scm {
+                    connection 'scm:git:https://github.com/nyholku/purejavacomm.git'
+                    developerConnection 'scm:git:http://github.com/nyholku/purejavacomm.git'
+                    url 'https://github.com/nyholku/purejavacomm'
+                }
+
+                licenses {
+                    license {
+                        name 'Simplified BSD License'
+                        url 'http://www.opensource.org/licenses/BSD-3-Clause'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'nyholku'
+                        name 'Kustaa Nyholm'
+                    }
+                }
+            }
+        }
+    }
+}
