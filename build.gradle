@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply from: 'deploy.gradle'
 
-group "com.sparetimelabs"
+group "com.github.purejavacomm"
 version "1.0.1.RELEASE"
 
 repositories {
