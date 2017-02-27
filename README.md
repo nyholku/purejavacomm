@@ -1,3 +1,7 @@
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.purejavacomm/purejavacomm/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.purejavacomm/purejavacomm)
+[![Javadocs](https://www.javadoc.io/badge/com.github.purejavacomm/purejavacomm.svg)](https://www.javadoc.io/doc/com.github.purejavacomm/purejavacomm)
+
+
 PureJavaComm is an Application Programmin Interface (API) for accessing serial ports from Java, so this is a library aimed at programmers, not end users.
 
 PureJavaComm aims to be a drop-in replacement for Sun's (now Oracle) abandoned JavaComm and an easier to deploy alternative to RXTX.
