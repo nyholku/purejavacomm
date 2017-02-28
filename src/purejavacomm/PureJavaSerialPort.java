@@ -463,7 +463,7 @@ public class PureJavaSerialPort extends SerialPort {
 						// As nobody is aware of course, we silently use 1.5 and 2
 						// stop bits interchangeably (just as the hardware does)
 						// Many linux drivers follow this convention and termios
-						// can't even differ between 1.5 and 2 stop bits 
+						// can't even differ between 1.5 and 2 stop bits
 						sb = 2;
 						break;
 					case SerialPort.STOPBITS_2:
@@ -555,46 +555,46 @@ public class PureJavaSerialPort extends SerialPort {
 	 * <p>
 	 * Below is a sketch of minimum necessary to perform a read using raw
 	 * JTermios functionality.
-	 * 
+	 *
 	 * <pre>
 	 * 		// import the JTermios functionality like this
 	 * 		import jtermios.*;
 	 * 		import static jtermios.JTermios.*;
-	 * 
+	 *
 	 * 		SerialPort port = ...;
-	 * 
+	 *
 	 * 		// cast the port to PureJavaSerialPort to get access to getNativeFileDescriptor
 	 * 		int FD = ((PureJavaSerialPort) port).getNativeFileDescriptor();
-	 * 
+	 *
 	 * 		// timeout and threshold values
 	 * 		int messageLength = 25; // bytes
 	 * 		int timeout = 200; // msec
-	 * 
+	 *
 	 * 		// to initialize timeout and threshold first read current termios
 	 * 		Termios termios = new Termios();
-	 * 
+	 *
 	 * 		if (0 != tcgetattr(FD, termios))
 	 * 			errorHandling();
-	 * 
+	 *
 	 * 		// then set VTIME and VMIN, note VTIME in 1/10th of sec and both max 255
 	 * 		termios.c_cc[VTIME] = (byte) ((timeout+99) / 100);
 	 * 		termios.c_cc[VMIN] = (byte) messageLength;
-	 * 
+	 *
 	 * 		// update termios
 	 * 		if (0 != tcsetattr(FD, TCSANOW, termios))
 	 * 			errorHandling();
-	 * 
+	 *
 	 * 		...
 	 * 		// allocate read buffer
 	 * 		byte[] readBuffer = new byte[messageLength];
 	 *		...
-	 * 
+	 *
 	 * 		// then perform raw read, not this may block indefinitely
 	 * 		int n = read(FD, readBuffer, messageLength);
 	 * 		if (n &lt; 0)
 	 * 			errorHandling();
 	 * </pre>
-	 * 
+	 *
 	 * @return the native OS file descriptor as int
 	 */
 	public int getNativeFileDescriptor() {
@@ -603,7 +603,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 	@Override
 	synchronized public OutputStream getOutputStream() throws IOException {
-		checkState();
+		checkStateIOException();
 		if (m_OutputStream == null) {
 			m_OutputStream = new OutputStream() {
 				// im_ for inner class member
@@ -611,7 +611,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 				@Override
 				final public void write(int b) throws IOException {
-					checkState();
+					checkStateIOException();
 					byte[] buf = { (byte) b };
 					write(buf, 0, 1);
 				}
@@ -622,7 +622,7 @@ public class PureJavaSerialPort extends SerialPort {
 						throw new IllegalArgumentException();
 					if (offset < 0 || length < 0 || offset + length > buffer.length)
 						throw new IndexOutOfBoundsException("buffer.lengt " + buffer.length + " offset " + offset + " length " + length);
-					checkState();
+					checkStateIOException();
 					while (length > 0) {
 						int n = buffer.length - offset;
 						if (n > im_Buffer.length)
@@ -658,7 +658,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 				@Override
 				final public void flush() throws IOException {
-					checkState();
+					checkStateIOException();
 					if (tcdrain(m_FD) < 0) {
 						close();
 						throw new IOException();
@@ -670,7 +670,7 @@ public class PureJavaSerialPort extends SerialPort {
 	}
 
 	synchronized public InputStream getInputStream() throws IOException {
-		checkState();
+		checkStateIOException();
 		if (m_InputStream == null) {
 			// NOTE: Windows and unixes are so different that it actually might
 			// make sense to have the backend (ie JTermiosImpl) to provide
@@ -712,18 +712,17 @@ public class PureJavaSerialPort extends SerialPort {
 
 				@Override
 				final public int available() throws IOException {
-					checkState();
+					checkStateIOException();
 					if (ioctl(m_FD, FIONREAD, im_Available) < 0) {
 						PureJavaSerialPort.this.close();
-						System.out.println(Native.getLastError());
-						throw new IOException();
+                        int error = Native.getLastError();
+						throw new IOException("IOCTL(FIONREAD) error:" + error);
 					}
 					return im_Available[0];
 				}
 
 				@Override
 				final public int read() throws IOException {
-					checkState();
 					byte[] buf = { 0 };
 					int n = read(buf, 0, 1);
 
@@ -744,6 +743,9 @@ public class PureJavaSerialPort extends SerialPort {
 						return 0;
 					if (offset < 0 || length < 0 || offset + length > buffer.length)
 						throw new IndexOutOfBoundsException("buffer.length " + buffer.length + " offset " + offset + " length " + length);
+
+					if (m_FD < 0) // replaces checkState call
+						return -1;
 
 					if (RAW_READ_MODE) {
 						if (m_TimeoutThresholdChanged) { // does not need the lock if we just check the value
@@ -772,9 +774,6 @@ public class PureJavaSerialPort extends SerialPort {
 						return bytesRead;
 
 					} // End of raw read mode code
-
-					if (m_FD < 0) // replaces checkState call
-						failWithIllegalStateException();
 
 					if (m_TimeoutThresholdChanged) { // does not need the lock if we just check the alue
 						synchronized (m_ThresholdTimeoutLock) {
@@ -850,7 +849,7 @@ public class PureJavaSerialPort extends SerialPort {
 											// Windows or Mac OS X
 								n = poll(im_ReadPollFD, im_PollFDn, timeoutValue);
 								if (n < 0 || m_FD < 0) // the port closed while we were blocking in poll
-									throw new IOException();
+									return -1;
 
 								if ((im_ReadPollFD[1].revents & POLLIN) != 0)
 									jtermios.JTermios.read(m_PipeRdFD, im_Nudge, 1);
@@ -879,11 +878,11 @@ public class PureJavaSerialPort extends SerialPort {
 								}
 								n = select(maxFD + 1, im_ReadFDSet, null, null, im_ReadTimeVal);
 								if (n < 0)
-									throw new IOException();
+									return -1;
 								if (m_FD < 0) // the port closed while we were
 												// blocking in select
-									throw new IOException();
-								dataAvailable = FD_ISSET(m_FD, im_ReadFDSet);
+									return -1;
+							dataAvailable = FD_ISSET(m_FD, im_ReadFDSet);
 							}
 							if (n == 0 && m_ReceiveTimeoutEnabled)
 								timedout = true;
@@ -1287,6 +1286,11 @@ public class PureJavaSerialPort extends SerialPort {
 	private void checkState() {
 		if (m_FD < 0)
 			failWithIllegalStateException();
+	}
+
+    private void checkStateIOException() throws IOException {
+		if (m_FD < 0)
+			throw new IOException("File descriptor is " + m_FD + " < 0, maybe closed by previous error condition");
 	}
 
 	private void checkReturnCode(int code) {
