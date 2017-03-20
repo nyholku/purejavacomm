@@ -49,6 +49,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private volatile boolean m_PortFDs[] = new boolean[FDSetImpl.FD_SET_SIZE];
 
 	private volatile Hashtable<Integer, Port> m_OpenPorts = new Hashtable<Integer, Port>();
+	
+	static final int WRITE_TIMEOUT = 1000;
 
 	private class Port {
 		volatile int m_FD = -1;
@@ -495,22 +497,22 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		synchronized (port.m_WrBuffer) {
 			try {
 				if (port.m_WritePending > 0) {
-					while (true) {
-						port.m_WriteWaitObjects[0] = port.m_WrOVL.hEvent;
+					port.m_WriteWaitObjects[0] = port.m_WrOVL.hEvent;
 
-						int res = WaitForMultipleObjects(2, port.m_WriteWaitObjects, false, INFINITE);
-						if (res == WAIT_TIMEOUT) { // Hmmm, can this ever happen, why we have that here
-							clearCommErrors(port);
-							log = log && log(1, "write pending, cbInQue %d cbOutQue %d\n", port.m_COMSTAT.cbInQue, port.m_COMSTAT.cbOutQue);
-							continue;
-						}
+					int res = WaitForMultipleObjects(2, port.m_WriteWaitObjects, false, WRITE_TIMEOUT);
+					if (res == WAIT_TIMEOUT) { 
+						// if we have a timeout - return 0 (0 bytes written) as result and try again
+						// this is to prevent an infinite wait here when the connection is broken during a pending
+						clearCommErrors(port);
+						log = log && log(1, "write pending, cbInQue %d cbOutQue %d\n", port.m_COMSTAT.cbInQue, port.m_COMSTAT.cbOutQue);
+						return 0;
+					}
+					else {
 						if (!GetOverlappedResult(port.m_Comm, port.m_WrOVL, port.m_WrN, false))
 							port.fail();
 						if (port.m_WrN[0] != port.m_WritePending) // I exptect this is never going to happen, if it does
 							new RuntimeException("Windows OVERLAPPED WriteFile failed to write all, tried to write " + port.m_WritePending + " but got " + port.m_WrN[0]);
-						break;
 					}
-					port.m_WritePending = 0;
 				}
 				if ((port.m_OpenFlags & O_NONBLOCK) != 0) {
 					if (!ClearCommError(port.m_Comm, port.m_WrErr, port.m_WrStat))
