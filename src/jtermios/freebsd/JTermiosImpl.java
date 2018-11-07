@@ -56,7 +56,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     static NonDirectCLib m_ClibND;
 
     static {
-        Native.setPreserveLastError(true);
+//        Native.setPreserveLastError(true);
         m_ClibND = (NonDirectCLib) Native.loadLibrary(Platform.C_LIBRARY_NAME, NonDirectCLib.class);
         Native.register(C_lib_DirectMapping.class, NativeLibrary.getInstance(Platform.C_LIBRARY_NAME));
         m_ClibDM = new C_lib_DirectMapping();
