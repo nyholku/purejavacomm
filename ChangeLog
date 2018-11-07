@@ -1,3 +1,14 @@
+Version 1.0.1
+
+* Fixed a missing timeout that caused hangs with in pollmode
+* Upgraded maven pom to use JNA 4.2.2
+* Some other minor fixes
+
+Version 1.0.0
+
+* Fixed some logging bugs that prevented use of logging
+* Improved timeout handling when opening a serial port
+
 Version 0.0.29
 
 * Added missing 'currentOwner' field for PortInUseException

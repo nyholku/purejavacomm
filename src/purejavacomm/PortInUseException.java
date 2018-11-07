@@ -38,4 +38,9 @@ public class PortInUseException extends Exception {
 		currentOwner = str;
 	}
 
+	PortInUseException(String str, int errno) {
+		super("errno() == " + errno);
+		currentOwner = str;
+	}
+
 }

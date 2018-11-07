@@ -350,7 +350,7 @@ abstract public class SerialPort extends CommPort {
 	 * 
 	 * <p>
 	 * 
-	 * <table border="3" cellpadding="4">
+	 * <table summary="" border="3" cellpadding="4">
 	 * <tr>
 	 * <th colspan="2" align="center">threshold</th>
 	 * <th colspan="2"align="center" >timeout</th>

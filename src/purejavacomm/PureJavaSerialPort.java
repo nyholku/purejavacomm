@@ -517,7 +517,7 @@ public class PureJavaSerialPort extends SerialPort {
 				// Even if termios(3) tells us that tcsetattr succeeds if any change
 				// has been made, not necessary all of them  we cannot check them by reading back
 				// and checking the result as not every driver/OS playes by the rules
-				
+
 				// finally everything went ok, so we can update our settings
 				m_BaudRate = baudRate;
 				m_Parity = parity;
@@ -557,7 +557,6 @@ public class PureJavaSerialPort extends SerialPort {
 	 * JTermios functionality.
 	 * 
 	 * <pre>
-	 * <code>
 	 * 		// import the JTermios functionality like this
 	 * 		import jtermios.*;
 	 * 		import static jtermios.JTermios.*;
@@ -585,16 +584,15 @@ public class PureJavaSerialPort extends SerialPort {
 	 * 		if (0 != tcsetattr(FD, TCSANOW, termios))
 	 * 			errorHandling();
 	 * 
-	 *      ...
+	 * 		...
 	 * 		// allocate read buffer
 	 * 		byte[] readBuffer = new byte[messageLength];
-	 *      ...
+	 *		...
 	 * 
 	 * 		// then perform raw read, not this may block indefinitely
 	 * 		int n = read(FD, readBuffer, messageLength);
-	 * 		if (n < 0)
+	 * 		if (n &lt; 0)
 	 * 			errorHandling();
-	 * <code>
 	 * </pre>
 	 * 
 	 * @return the native OS file descriptor as int
@@ -689,7 +687,7 @@ public class PureJavaSerialPort extends SerialPort {
 				// this stuff is just cached/precomputed stuff to make read() faster
 				private int im_VTIME = -1;
 				private int im_VMIN = -1;
-				private final jtermios.Pollfd[] im_ReadPollFD = new Pollfd[]{new Pollfd(), new Pollfd()};
+				private final jtermios.Pollfd[] im_ReadPollFD = new Pollfd[] { new Pollfd(), new Pollfd() };
 				private byte[] im_Nudge;
 				private FDSet im_ReadFDSet;
 				private TimeVal im_ReadTimeVal;
@@ -1075,22 +1073,23 @@ public class PureJavaSerialPort extends SerialPort {
 
 		this.name = name;
 
-		// unbelievable, sometimes quickly closing and re-opening fails on
-		// Windows
-		// so try a few times
-		int tries = 100;
-		long T0 = System.currentTimeMillis();
+		int tries = (timeout + 5) / 10;
 		while ((m_FD = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+			int errno = errno();
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
+				e.printStackTrace();
+				Thread.currentThread().interrupt();
 			}
-			if (tries-- < 0 || System.currentTimeMillis() - T0 >= timeout)
-				throw new PortInUseException("Unknown Application");
+			if (tries-- < 0)
+				throw new PortInUseException("Unknown Application", errno);
 		}
 
 		m_MinVTIME = Integer.getInteger("purejavacomm.minvtime", 100);
 		int flags = fcntl(m_FD, F_GETFL, 0);
+		if (flags<0)
+			checkReturnCode(flags);
 		flags &= ~O_NONBLOCK;
 		checkReturnCode(fcntl(m_FD, F_SETFL, flags));
 
@@ -1159,7 +1158,7 @@ public class PureJavaSerialPort extends SerialPort {
 					byte[] nudge = null;
 
 					if (USE_POLL) {
-						pollfd = new Pollfd[]{new Pollfd(), new Pollfd()};
+						pollfd = new Pollfd[] { new Pollfd(), new Pollfd() };
 						nudge = new byte[1];
 						pollfd[0].fd = m_FD;
 						pollfd[1].fd = m_PipeRdFD;
@@ -1189,7 +1188,7 @@ public class PureJavaSerialPort extends SerialPort {
 								pollfd[0].events = e;
 								pollfd[1].events = POLLIN;
 								if (m_HaveNudgePipe)
-									n = poll(pollfd, 2, -1);
+									n = poll(pollfd, 2, TIMEOUT);
 								else
 									n = poll(pollfd, 1, TIMEOUT);
 
@@ -1304,8 +1303,10 @@ public class PureJavaSerialPort extends SerialPort {
 			throw new PureJavaIllegalStateException(msg);
 		}
 	}
+
 	/**
-	 * This is not part of the PureJavaComm API, this is purely for testing, do not depend on this
+	 * This is not part of the PureJavaComm API, this is purely for testing, do
+	 * not depend on this
 	 */
 	public boolean isInternalThreadRunning() {
 		return m_ThreadRunning;

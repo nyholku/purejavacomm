@@ -153,11 +153,11 @@ public class WinAPI {
 
 		native public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn, Pointer lpOverlapped) throws LastErrorException;
 
-		native public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, OVERLAPPED lpOverlapped) throws LastErrorException;
+		native public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, Pointer lpOverlapped) throws LastErrorException;
 
 		native public boolean ReadFile(HANDLE hFile, byte[] buf, int rdn, int[] nrd, Pointer lpOverlapped) throws LastErrorException;
 
-		native public boolean ReadFile(HANDLE hFile, Pointer lpBuffer, int rdn, int[] nrd, OVERLAPPED lpOverlapped) throws LastErrorException;
+		native public boolean ReadFile(HANDLE hFile, Pointer lpBuffer, int rdn, int[] nrd, Pointer lpOverlapped) throws LastErrorException;
 
 		native public boolean FlushFileBuffers(HANDLE hFile) throws LastErrorException;
 
@@ -195,11 +195,11 @@ public class WinAPI {
 
 		native public boolean SetEvent(HANDLE hEvent) throws LastErrorException;
 
-		native public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, OVERLAPPED lpOverlapped) throws LastErrorException;
+		native public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, Pointer lpOverlapped) throws LastErrorException;
 
 		native public int WaitForSingleObject(HANDLE hHandle, int dwMilliseconds);
 
-		native public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait) throws LastErrorException;
+		native public boolean GetOverlappedResult(HANDLE hFile, Pointer lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait) throws LastErrorException;
 
 		native public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
 
@@ -216,11 +216,11 @@ public class WinAPI {
 
 		public boolean WriteFile(HANDLE hFile, byte[] buf, int wrn, int[] nwrtn, Pointer lpOverlapped);
 
-		public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, OVERLAPPED lpOverlapped);
+		public boolean WriteFile(HANDLE hFile, Pointer buf, int wrn, int[] nwrtn, Pointer lpOverlapped);
 
 		public boolean ReadFile(HANDLE hFile, byte[] buf, int rdn, int[] nrd, Pointer lpOverlapped);
 
-		public boolean ReadFile(HANDLE hFile, Pointer lpBuffer, int rdn, int[] nrd, OVERLAPPED lpOverlapped);
+		public boolean ReadFile(HANDLE hFile, Pointer lpBuffer, int rdn, int[] nrd, Pointer lpOverlapped);
 
 		public boolean FlushFileBuffers(HANDLE hFile);
 
@@ -258,11 +258,11 @@ public class WinAPI {
 
 		public boolean SetEvent(HANDLE hEvent);
 
-		public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, OVERLAPPED lpOverlapped);
+		public boolean WaitCommEvent(HANDLE hFile, IntByReference lpEvtMask, Pointer lpOverlapped);
 
 		public int WaitForSingleObject(HANDLE hHandle, int dwMilliseconds);
 
-		public boolean GetOverlappedResult(HANDLE hFile, OVERLAPPED lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait);
+		public boolean GetOverlappedResult(HANDLE hFile, Pointer lpOverlapped, int[] lpNumberOfBytesTransferred, boolean bWait);
 
 		public int FormatMessageW(int flags, Pointer src, int msgId, int langId, Pointer dst, int sze, Pointer va_list);
 
@@ -324,6 +324,7 @@ public class WinAPI {
 	public static final int ERROR_OPERATION_ABORTED = 995;
 	public static final int ERROR_IO_INCOMPLETE = 996;
 	public static final int ERROR_IO_PENDING = 997;
+	public static final int ERROR_INVALID_PARAMETER = 87;
 	public static final int ERROR_BROKEN_PIPE = 109;
 	public static final int ERROR_MORE_DATA = 234;
 	public static final int ERROR_FILE_NOT_FOUND = 2;
@@ -624,7 +625,7 @@ public class WinAPI {
 		log = log && log(5, "> WriteFile(%s, %s, %d, [%d], %s)\n", hFile, log(buf.getByteArray(0, wrn), 5), wrn, nwrtn[0], ref(ovrlp));
                 boolean res;
                 try {
-                    res = m_K32lib.WriteFile(hFile, buf, wrn, nwrtn, ovrlp);
+                    res = m_K32lib.WriteFile(hFile, buf, wrn, nwrtn, ovrlp.getPointer());
                     LastError.get()[0] = 0;
                 } catch (LastErrorException le) {
                     res = false;
@@ -654,7 +655,7 @@ public class WinAPI {
 		log = log && log(5, "> ReadFile(%s, %s, %d, [%d], %s)\n", hFile, log(buf.getByteArray(0, rdn), 5), rdn, nrd[0], ref(ovrlp));
                 boolean res;
                 try {
-                    res = m_K32lib.ReadFile(hFile, buf, rdn, nrd, ovrlp);
+                    res = m_K32lib.ReadFile(hFile, buf, rdn, nrd, ovrlp.getPointer());
                     LastError.get()[0] = 0;
                 } catch (LastErrorException le) {
                     res = false;
@@ -920,7 +921,7 @@ public class WinAPI {
 		log = log && log(5, "> WaitCommEvent(%s, [%d], %s)\n", hFile, lpEvtMask.getValue(), ref(ovl));
                 boolean res;
                 try {
-                    res = m_K32lib.WaitCommEvent(hFile, lpEvtMask, ovl);
+                    res = m_K32lib.WaitCommEvent(hFile, lpEvtMask, ovl.getPointer());
                     LastError.get()[0] = 0;
                 } catch (LastErrorException le) {
                     res = false;
@@ -964,7 +965,7 @@ public class WinAPI {
 		log = log && log(5, "> GetOverlappedResult(%s, %s, [%d], %s)\n", hFile, ref(ovl), ntfrd[0], wait);
                 boolean res;
                 try {
-                    res = m_K32lib.GetOverlappedResult(hFile, ovl, ntfrd, wait);
+                    res = m_K32lib.GetOverlappedResult(hFile, ovl.getPointer(), ntfrd, wait);
                     LastError.get()[0] = 0;
                 } catch (LastErrorException le) {
                     res = false;
