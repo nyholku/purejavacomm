@@ -98,7 +98,6 @@ public class WinAPI {
         private static WaitMultiple m_K32libWM;
         static {
             // Moved to static per JNA recommendations
-            Native.setPreserveLastError(true); // For older JNA to hopefully preserve last error although we don't use it with Windows
             // This had to be separated out for Direct Mapping (no non-primative arrays)
             m_K32libWM = (WaitMultiple) Native.loadLibrary("kernel32", WaitMultiple.class, com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS);
             // Added com.sun.jna.win32.W32APIOptions.ASCII_OPTIONS so we don't mix/match WString and String
@@ -145,7 +144,7 @@ public class WinAPI {
 		}
 	}
 
-	public static HANDLE INVALID_HANDLE_VALUE = new HANDLE(Pointer.createConstant(Pointer.SIZE == 8 ? -1 : 0xFFFFFFFFL));
+	public static HANDLE INVALID_HANDLE_VALUE = new HANDLE(Pointer.createConstant(Native.POINTER_SIZE == 8 ? -1 : 0xFFFFFFFFL));
 	public static HANDLE NULL = new HANDLE(Pointer.createConstant(0));
 
 	public static class Windows_kernel32_lib_Direct implements Windows_kernel32_lib {
@@ -405,7 +404,7 @@ public class WinAPI {
 		}
 
 		public ULONG_PTR(long value) {
-			super(Pointer.SIZE, value);
+			super(Native.POINTER_SIZE, value);
 		}
 	}
 
