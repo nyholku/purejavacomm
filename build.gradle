@@ -1,8 +1,8 @@
 apply plugin: 'java'
 apply from: 'deploy.gradle'
 
-group "com.sparetimelabs"
-version "1.0.2.RELEASE"
+group "com.github.purejavacomm"
+version "1.0.1.RELEASE"
 
 repositories {
     mavenCentral()
