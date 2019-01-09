@@ -1,3 +1,7 @@
+Version 1.0.2
+
+* Changed PureJavaSerialPort input stream to throw IOException if the port is closed from an other thread or otherwise
+
 Version 1.0.1
 
 * Fixed a missing timeout that caused hangs with in pollmode

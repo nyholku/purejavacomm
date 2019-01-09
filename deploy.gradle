@@ -38,8 +38,9 @@ uploadArchives {
             pom.project {
                 name 'PureJavaComm'
                 packaging 'jar'
-                // optionally artifactId can be defined here
-                description 'PureJavaComm is an Application Programmin Interface (API) for accessing serial ports from' +
+                groupId 'com.github.purejavacomm'
+                artifactId 'purejavacomm'
+               description 'PureJavaComm is an Application Programmin Interface (API) for accessing serial ports from' +
                         ' Java. PureJavaComm aims to be a drop-in replacement for Sun\'s (now Oracle) abandoned' +
                         ' JavaComm and an easier to deploy alternative to RXTX.'
                 url 'http://www.sparetimelabs.com/purejavacomm/purejavacomm.php'

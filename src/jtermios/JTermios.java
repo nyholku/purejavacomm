@@ -201,7 +201,6 @@ public class JTermios {
 	public static short POLLERR = 0x0008;
 	public static short POLLERR_OUT = 0x0008;
 	public static short POLLNVAL = 0x0020;
-	public static int POLLNVAL_OUT = 0x0020;
 
 	// misc stuff
 	public static int DC1 = 0x11; // Ctrl-Q;

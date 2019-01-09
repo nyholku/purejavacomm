@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply from: 'deploy.gradle'
 
 group "com.github.purejavacomm"
-version "1.0.1.RELEASE"
+version "1.0.3.RELEASE"
 
 repositories {
     mavenCentral()
