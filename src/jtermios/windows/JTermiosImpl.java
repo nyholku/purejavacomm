@@ -514,15 +514,21 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						port.m_WriteWaitObjects[0] = port.m_WrOVL.hEvent;
 
 						int res = WaitForMultipleObjects(2, port.m_WriteWaitObjects, false, INFINITE);
-						if (res == WAIT_TIMEOUT) { // Hmmm, can this ever happen, why we have that here
+						if (res == WAIT_TIMEOUT) {
+							// This should actually never happen.
+							// I am not certain that this code works correctly if it does happen.
+							assert false;
+
 							clearCommErrors(port);
 							log = log && log(1, "write pending, cbInQue %d cbOutQue %d\n", port.m_COMSTAT.cbInQue, port.m_COMSTAT.cbOutQue);
 							continue;
 						}
 						if (!GetOverlappedResult(port.m_Comm, port.m_WrOVL, port.m_WrN, false))
 							port.fail();
-						if (port.m_WrN[0] != port.m_WritePending) // I exptect this is never going to happen, if it does
-							new RuntimeException("Windows OVERLAPPED WriteFile failed to write all, tried to write " + port.m_WritePending + " but got " + port.m_WrN[0]);
+						if (port.m_WrN[0] != port.m_WritePending) {
+							assert false;  // This case should never happen.
+							throw new RuntimeException("Windows OVERLAPPED WriteFile failed to write all, tried to write " + port.m_WritePending + " but got " + port.m_WrN[0]);
+						}
 						break;
 					}
 					port.m_WritePending = 0;
