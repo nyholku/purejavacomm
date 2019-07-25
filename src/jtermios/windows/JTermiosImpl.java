@@ -137,7 +137,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						if (!filename.startsWith("\\\\"))
 							filename = "\\\\.\\" + filename;
 
-						m_Comm = CreateFile(filename, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
+						int openFlags = FILE_ATTRIBUTE_NORMAL;
+						if (((m_OpenFlags & O_NONBLOCK) != 0) || ((m_OpenFlags & O_NDELAY) != 0)) {
+							openFlags = FILE_FLAG_OVERLAPPED;
+						}
+						m_Comm = CreateFile(filename, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, openFlags, null);
 
 						if (INVALID_HANDLE_VALUE == m_Comm) {
 							if (GetLastError() == ERROR_FILE_NOT_FOUND)
@@ -224,7 +228,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 					if (m_WriteCancelObject != null && m_WriteCancelObject != NULL && m_WriteCancelObject != INVALID_HANDLE_VALUE)
 						CloseHandle(m_WriteCancelObject);
-					m_ReadCancelObject = null;
+					m_WriteCancelObject = null;
 				}
 
 				if (WaitCommEventCancelObject != null)

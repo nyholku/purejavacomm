@@ -309,6 +309,7 @@ public class WinAPI {
 	public static final int SETBREAK = 8;
 	public static final int CLRBREAK = 9;
 
+	public static final int FILE_ATTRIBUTE_NORMAL = 0x00000080;
 	public static final int FILE_FLAG_WRITE_THROUGH = 0x80000000;
 	public static final int FILE_FLAG_OVERLAPPED = 0x40000000;
 	public static final int FILE_FLAG_NO_BUFFERING = 0x20000000;
