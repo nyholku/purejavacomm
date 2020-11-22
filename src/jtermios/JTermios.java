@@ -322,6 +322,8 @@ public class JTermios {
 			m_Termios = new jtermios.solaris.JTermiosImpl();
 		} else if (Platform.isFreeBSD()) {
 			m_Termios = new jtermios.freebsd.JTermiosImpl();
+		} else if (Platform.isOpenBSD()) {
+			m_Termios = new jtermios.openbsd.JTermiosImpl();
 		} else {
 			log(0, "JTermios has no support for OS %s\n", System.getProperty("os.name"));
 		}
