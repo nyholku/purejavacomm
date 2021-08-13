@@ -511,7 +511,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						if (!GetOverlappedResult(port.m_Comm, port.m_WrOVL, port.m_WrN, false))
 							port.fail();
 						if (port.m_WrN[0] != port.m_WritePending) // I exptect this is never going to happen, if it does
-							new RuntimeException("Windows OVERLAPPED WriteFile failed to write all, tried to write " + port.m_WritePending + " but got " + port.m_WrN[0]);
+							throw new RuntimeException("Windows OVERLAPPED WriteFile failed to write all, tried to write " + port.m_WritePending + " but got " + port.m_WrN[0]);
 						break;
 					}
 					port.m_WritePending = 0;
