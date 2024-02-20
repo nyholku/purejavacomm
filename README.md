@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.github.purejavacomm:purejavacomm:1.0.1.RELEASE"
+    compile "com.github.purejavacomm:purejavacomm:1.0.4"
 }
 ```
 Using Maven:
@@ -29,6 +29,6 @@ Using Maven:
 <dependency>
     <groupId>com.github.purejavacomm</groupId>
     <artifactId>purejavacomm</artifactId>
-    <version>1.0.1.RELEASE</version>
+    <version>1.0.4</version>
 </dependency>
 ```
