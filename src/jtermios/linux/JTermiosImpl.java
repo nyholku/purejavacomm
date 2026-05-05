@@ -53,12 +53,14 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
     static C_lib_DirectMapping m_ClibDM;
     static C_lib m_Clib;
     static NonDirectCLib m_ClibND;
+    static boolean modernSpeedSetting;
 
     static {
         m_ClibND = (NonDirectCLib) Native.loadLibrary(Platform.C_LIBRARY_NAME, NonDirectCLib.class);
         Native.register(C_lib_DirectMapping.class, NativeLibrary.getInstance(Platform.C_LIBRARY_NAME));
         m_ClibDM = new C_lib_DirectMapping();
         m_Clib = m_ClibDM;
+        modernSpeedSetting=Boolean.parseBoolean(System.getProperty("jtermios.modern.speed", "false"));
     }
 
     private final static int TIOCGSERIAL = 0x0000541E;
@@ -713,8 +715,11 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
                     r = ioctl(fd, TIOCSSERIAL, ss);
                 }
 
-                // now set the speed with the constant from the table
-                c = m_BaudRates[i + 1];
+                // now set the speed with the constant from the table - or not, if modern speed setting
+                if( ! modernSpeedSetting ) {
+                    c = m_BaudRates[i + 1];
+                    log = log && log(1, "Using legacy flag %d to set speed %d\n", c, speed);
+                }
                 if ((r = JTermios.cfsetispeed(termios, c)) != 0) {
                     return r;
                 }
