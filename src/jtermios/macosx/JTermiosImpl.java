@@ -49,10 +49,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static String DEVICE_DIR_PATH = "/dev/";
 	static C_lib_DirectMapping m_ClibDM;
 	static C_lib m_Clib;
-//	static NonDirectCLib m_ClibND;
+	static NonDirectCLib m_ClibND;
 
 	static {
-//		m_ClibND = (NonDirectCLib) Native.loadLibrary(Platform.C_LIBRARY_NAME, NonDirectCLib.class);
+		m_ClibND = (NonDirectCLib) Native.loadLibrary(Platform.C_LIBRARY_NAME, NonDirectCLib.class);
 		Native.register(C_lib_DirectMapping.class, NativeLibrary.getInstance(Platform.C_LIBRARY_NAME));
 		m_ClibDM = new C_lib_DirectMapping();
 		m_Clib = m_ClibDM;
@@ -146,12 +146,10 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	}
 
-//	public interface NonDirectCLib extends com.sun.jna.Library {
-//
-//		public int ioctl(int fd, NativeLong cmd, NativeLong[] arg);
-//
-//		//       public int poll(pollfd.ByReference pfds, int nfds, int timeout);
-//	}
+	public interface NonDirectCLib extends com.sun.jna.Library {
+
+		public int poll(pollfd.ByReference pfds, int nfds, int timeout);
+	}
 
 	static public class timeval extends Structure {
 
@@ -376,11 +374,24 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int poll(Pollfd fds[], int nfds, int timeout) {
-		throw new UnsupportedOperationException("Poll not supported");
+		if (nfds <= 0 || nfds > fds.length) {
+			throw new java.lang.IllegalArgumentException("nfds " + nfds + " must be <= fds.length " + fds.length);
+		}
+		pollfd.ByReference parampfds = new pollfd.ByReference();
+		pollfd[] pfds = (pollfd[]) parampfds.toArray(nfds);
+		for (int i = 0; i < nfds; i++) {
+			pfds[i].fd = fds[i].fd;
+			pfds[i].events = fds[i].events;
+		}
+		int ret = m_ClibND.poll(parampfds, nfds, timeout);
+		for (int i = 0; i < nfds; i++) {
+			fds[i].revents = pfds[i].revents;
+		}
+		return ret;
 	}
 
 	public boolean canPoll() {
-		return false;
+		return true;
 	}
 
 	public FDSet newFDSet() {
